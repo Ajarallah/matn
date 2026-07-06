@@ -49,3 +49,38 @@ test("file API only serves markdown under the configured root", async (t) => {
   assert.equal(listed.status, 200);
   assert.deepEqual(await listed.json(), [{ path: join(root, "notes", "a.md"), rel: "notes/a.md" }]);
 });
+
+test("exposes its containment root and default target", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-root2-"));
+  await writeFile(join(root, "x.md"), "# x\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const rootRes = await fetch(`${base}/api/root`);
+  assert.equal(rootRes.status, 200);
+  const { root: reported } = await rootRes.json();
+  assert.equal(typeof reported, "string");
+  assert.equal(basename(reported), basename(root)); // realpath may differ (/var vs /private/var)
+
+  const def = await fetch(`${base}/api/default`);
+  assert.deepEqual(await def.json(), { dir: root });
+});
+
+test("serves the vendored Mermaid bundle", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-root3-"));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const res = await fetch(`${base}/mermaid.js`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type"), /javascript/);
+  const body = await res.arrayBuffer();
+  assert.ok(body.byteLength > 100000, "mermaid bundle should be large");
+});

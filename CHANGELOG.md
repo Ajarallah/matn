@@ -19,6 +19,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com).
 - GitHub Actions CI for tests and package dry-run checks.
 - Security policy for public GitHub publication.
 
+## [1.0.0] — 2026-07-06
+
+First stable release. Matn is now a full-featured RTL reader.
+
+### Added
+- **Mermaid diagrams** — fenced ` ```mermaid ` blocks render inline, theme-aware, lazy-loaded, sandboxed (`securityLevel: strict`).
+- **GFM callouts** — `> [!NOTE|TIP|IMPORTANT|WARNING|CAUTION|…]` with per-type icon, colour and title.
+- **Wikilinks** — `[[page]]` and `[[page|alias]]` render as styled references.
+- **In-document search** — press `/` to search, `Enter`/`Shift+Enter` to move between hits; native find stays intact.
+- **Browser tab favicon**; Linux installer (`scripts/install-linux.sh`) and a reproducible Pages build (`scripts/build-docs.mjs`).
+
+### Fixed
+- **Open files from any folder** — a target outside a running instance's containment root now spawns its own contained instance on the next free port (was: refused). Adds `/api/root`.
+- Callout title/body split; progress bar via transform; favicon 404 silenced.
+
+### Security
+- Path-traversal containment (realpath + root check) on every file, folder and image request; images restricted to safe raster types under the opened root; raw HTML escaped; unsafe link schemes (`javascript:`) blocked. See [SECURITY.md](./SECURITY.md).
+
 ## [0.1.1] — 2026-07-06
 
 Design-system refinement pass (grounded in Carbon tokens, shadcn palette, and

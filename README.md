@@ -30,12 +30,16 @@ reading experience built for long-form Arabic.
 - 🔤 **5 Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal. All OFL, bundled, **work offline**.
 - 🔧 **Reading controls** — font, size, line-height, and text width (measure), all saved.
 - 🌈 **Syntax highlighting** — theme-aware, powered by highlight.js.
+- 📊 **Mermaid diagrams** — flowcharts, sequences and more, rendered inline.
+- 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
+- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
+- 🔎 **In-document search** — press `/` to find and jump between matches.
 - 🧭 **Table of contents** — auto-generated with scroll-spy; heading anchors.
 - ♻️ **Live reload** — edit the file in any editor, the view updates on save.
 - 🖱️ **Drag & drop** — drop any `.md` onto the window to read it.
 - 🖨️ **Print / Export PDF** — one click, clean print layout.
 - ⏱️ **Reading time & word count**, ✅ GFM task lists, tables, blockquotes.
-- 📦 **Zero runtime dependencies** — pure Node + vendored assets.
+- 📦 **Zero runtime dependencies** — pure Node + vendored assets, fully offline.
 
 ## Screenshots
 
@@ -99,8 +103,14 @@ brew install duti
 duti -s $(osascript -e 'id of app "Matn"' 2>/dev/null || echo com.ajarallah.matn) net.daringfireball.markdown all
 ```
 
-Or set it per file: **Get Info → Open with → Change All**. See [`scripts/`](./scripts) for
-a ready Finder droplet you can build.
+Or set it per file: **Get Info → Open with → Change All**. Run
+[`scripts/install-macos.sh --default`](./scripts/install-macos.sh) to build a Finder
+app and register it in one step.
+
+**Linux:** run [`scripts/install-linux.sh --default`](./scripts/install-linux.sh) to add a
+`.desktop` entry and make Matn the handler for `text/markdown`.
+**Windows:** `matn file.md` works from any shell; associate `.md` via
+*Open with → Choose another app* pointing at `matn`.
 
 ## How it works
 
@@ -130,8 +140,8 @@ Full third-party notices in [NOTICE](./NOTICE).
 
 ## Contributing
 
-Issues and PRs welcome. Roadmap ideas: Mermaid diagrams, presentation mode,
-in-document search, more themes. See [CHANGELOG](./CHANGELOG.md).
+Issues and PRs welcome. Roadmap: KaTeX math, footnotes, presentation mode,
+more themes. See [CHANGELOG](./CHANGELOG.md).
 
 ---
 

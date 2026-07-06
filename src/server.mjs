@@ -13,6 +13,7 @@ const VENDOR = join(PKG, "vendor");
 const INDEX = readFileSync(join(HERE, "index.html"), "utf8");
 const MARKED = readFileSync(join(VENDOR, "marked.min.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
+let MERMAID = null; // large (~3.5 MB) — loaded on first request only
 
 const isMd = (f) => /\.(md|markdown|mdown|mkd)$/i.test(f);
 const imageTypes = new Map([
@@ -110,6 +111,11 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/") return send(200, "text/html; charset=utf-8", INDEX);
     if (u.pathname === "/marked.js") return send(200, "text/javascript; charset=utf-8", MARKED);
     if (u.pathname === "/highlight.js") return send(200, "text/javascript; charset=utf-8", HLJS);
+    if (u.pathname === "/mermaid.js") {
+      try { if (!MERMAID) MERMAID = readFileSync(join(VENDOR, "mermaid.min.js")); }
+      catch { return send(404, "text/plain", "nf"); }
+      return send(200, "text/javascript; charset=utf-8", MERMAID, { "cache-control": "max-age=86400" });
+    }
 
     if (u.pathname.startsWith("/fonts/")) {
       const name = u.pathname.slice(7);
@@ -119,6 +125,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     }
     const image = safeImage(u.pathname);
     if (image) return send(200, image.type, readFileSync(image.abs), { "cache-control": "no-store" });
+    if (u.pathname === "/api/root") return send(200, "application/json", JSON.stringify({ root: rootReal }));
     if (u.pathname === "/api/default") return send(200, "application/json", JSON.stringify(defaultTarget()));
     if (u.pathname === "/api/list") {
       const dir = u.searchParams.get("dir");

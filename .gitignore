@@ -6,3 +6,4 @@ node_modules/
 .vscode/
 *.tmp
 .code-review-graph/
+/*.png

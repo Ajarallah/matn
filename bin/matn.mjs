@@ -3,8 +3,8 @@
 //   matn [file|dir] [--port N] [--host H] [--no-open]
 
 import { spawn } from "node:child_process";
-import { readFileSync, existsSync, statSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { readFileSync, existsSync, statSync, realpathSync } from "node:fs";
+import { resolve, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createConnection } from "node:net";
 import { startServer } from "../src/server.mjs";
@@ -45,7 +45,8 @@ Examples:
   matn PLAN.md --port 5000
 
 In the browser: click the gear for theme, Arabic font, size, line-height & width.
-Drag any .md onto the window to open it. The view live-reloads on save.`;
+Drag any .md onto the window to open it. The view live-reloads on save.
+Mermaid diagrams, math, GFM callouts, footnotes and wikilinks all render.`;
 
 function openBrowser(url) {
   const cmd = process.platform === "darwin" ? ["open", [url]]
@@ -53,6 +54,8 @@ function openBrowser(url) {
     : ["xdg-open", [url]];
   try { spawn(cmd[0], cmd[1], { detached: true, stdio: "ignore" }).unref(); } catch {}
 }
+
+const hostForUrl = (h) => (h === "0.0.0.0" ? "localhost" : h);
 
 // Resolve which URL to open for the given target.
 function targetUrl(base, target) {
@@ -73,24 +76,51 @@ function portInUse(host, port) {
   });
 }
 
+// Ask a running instance for its containment root.
+async function runningRoot(host, port) {
+  try {
+    const r = await fetch(`http://${hostForUrl(host)}:${port}/api/root`, { signal: AbortSignal.timeout(700) });
+    const j = await r.json();
+    return j && j.root ? j.root : null;
+  } catch { return null; }
+}
+
+// Is `target` inside `root` (both real paths)?
+function withinRoot(root, target) {
+  try {
+    const t = realpathSync(resolve(target));
+    return t === root || t.startsWith(root + sep);
+  } catch { return false; }
+}
+
 const o = parseArgs(process.argv.slice(2));
 if (o.help) { console.log(HELP); process.exit(0); }
 if (o.version) { console.log("matn v" + VERSION); process.exit(0); }
 
-const base = `http://${o.host === "0.0.0.0" ? "localhost" : o.host}:${o.port}`;
-const url = targetUrl(base, o.target);
 const defaultArg = resolve(o.target || ".");
+let port = o.port;
 
-const busy = await portInUse(o.host, o.port);
-if (busy) {
-  // Reuse the running instance — just open the requested file in it.
-  if (o.open) openBrowser(url);
-  console.log("[matn] reusing instance on " + base);
-  console.log("[matn] " + url);
-  process.exit(0);
+// If the requested port is busy, reuse that instance only when it can serve the
+// target (same containment root). Otherwise open a fresh, contained instance on
+// the next free port — so you can read files from any folder.
+if (await portInUse(o.host, port)) {
+  const root = await runningRoot(o.host, port);
+  if (root && withinRoot(root, defaultArg)) {
+    const base = `http://${hostForUrl(o.host)}:${port}`;
+    const url = targetUrl(base, o.target);
+    if (o.open) openBrowser(url);
+    console.log("[matn] reusing instance on " + base);
+    console.log("[matn] " + url);
+    process.exit(0);
+  }
+  let p = port + 1;
+  while (p < port + 64 && (await portInUse(o.host, p))) p++;
+  port = p;
 }
 
-await startServer({ port: o.port, host: o.host, defaultArg });
+const base = `http://${hostForUrl(o.host)}:${port}`;
+const url = targetUrl(base, o.target);
+await startServer({ port, host: o.host, defaultArg });
 console.log("متن — Matn  ·  " + base);
 if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
 console.log("[matn] Ctrl+C to stop");
