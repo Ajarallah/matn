@@ -3,6 +3,16 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.1.0] — 2026-07-07
+
+### Added
+- **Dominant-language direction** — the whole document flows RTL/LTR by the majority script (Arabic-leaning bias), so files that merely start with Latin no longer flip to LTR.
+- **Bilingual UI** — Arabic/English interface toggle in settings (chrome direction, labels, find bar, sidebar).
+- **Hover zoom lens** on Mermaid diagrams and images — magnifies at the cursor.
+- **Export menu** — PDF (print), standalone HTML, Word (docx via html-docx-js), EPUB 3 (via JSZip, RTL page progression), and raw Markdown.
+- **Consistent labeled toolbar** — one stroke-icon set with visible names (Open, Save, Print, Settings).
+- **Thmanyah font support** — Display for headings + Text for body, loaded from a local, gitignored folder (its license forbids redistribution; see vendor/fonts-local/README.md).
+
 ## [0.1.2] — 2026-07-06
 
 ### Security
@@ -18,16 +28,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com).
 - Basic Node test coverage for file API root isolation.
 - GitHub Actions CI for tests and package dry-run checks.
 - Security policy for public GitHub publication.
-
-## [1.1.0] — 2026-07-07
-
-### Added
-- **Dominant-language direction** — the whole document flows RTL/LTR by the majority script (Arabic-leaning bias), so files that merely start with Latin no longer flip to LTR.
-- **Bilingual UI** — Arabic/English interface toggle in settings (chrome direction, labels, find bar, sidebar).
-- **Hover zoom lens** on Mermaid diagrams and images — magnifies at the cursor.
-- **Export menu** — PDF (print), standalone HTML, Word (docx via html-docx-js), EPUB 3 (via JSZip, RTL page progression), and raw Markdown.
-- **Consistent labeled toolbar** — one stroke-icon set with visible names (Open, Save, Print, Settings).
-- **Thmanyah font support** — Display for headings + Text for body, loaded from a local, gitignored folder (its license forbids redistribution; see vendor/fonts-local/README.md).
 
 ## [1.0.0] — 2026-07-06
 
