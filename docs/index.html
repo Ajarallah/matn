@@ -6,14 +6,14 @@
 <meta name="description" content="متن · Matn — a calm right-to-left Markdown reader for Arabic.">
 <title>متن · Matn</title>
 <style>
-@font-face{font-family:"Amiri";font-weight:400;font-display:swap;src:url("/fonts/amiri-400.woff2") format("woff2")}
-@font-face{font-family:"Amiri";font-weight:700;font-display:swap;src:url("/fonts/amiri-700.woff2") format("woff2")}
-@font-face{font-family:"Noto Naskh Arabic";font-weight:400;font-display:swap;src:url("/fonts/noto-naskh-400.woff2") format("woff2")}
-@font-face{font-family:"Noto Naskh Arabic";font-weight:700;font-display:swap;src:url("/fonts/noto-naskh-700.woff2") format("woff2")}
-@font-face{font-family:"IBM Plex Sans Arabic";font-weight:400;font-display:swap;src:url("/fonts/plex-arabic-400.woff2") format("woff2")}
-@font-face{font-family:"IBM Plex Sans Arabic";font-weight:700;font-display:swap;src:url("/fonts/plex-arabic-700.woff2") format("woff2")}
-@font-face{font-family:"Tajawal";font-weight:400;font-display:swap;src:url("/fonts/tajawal-400.woff2") format("woff2")}
-@font-face{font-family:"Tajawal";font-weight:700;font-display:swap;src:url("/fonts/tajawal-700.woff2") format("woff2")}
+@font-face{font-family:"Amiri";font-weight:400;font-display:swap;src:url("./vendor/fonts/amiri-400.woff2") format("woff2")}
+@font-face{font-family:"Amiri";font-weight:700;font-display:swap;src:url("./vendor/fonts/amiri-700.woff2") format("woff2")}
+@font-face{font-family:"Noto Naskh Arabic";font-weight:400;font-display:swap;src:url("./vendor/fonts/noto-naskh-400.woff2") format("woff2")}
+@font-face{font-family:"Noto Naskh Arabic";font-weight:700;font-display:swap;src:url("./vendor/fonts/noto-naskh-700.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Arabic";font-weight:400;font-display:swap;src:url("./vendor/fonts/plex-arabic-400.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Arabic";font-weight:700;font-display:swap;src:url("./vendor/fonts/plex-arabic-700.woff2") format("woff2")}
+@font-face{font-family:"Tajawal";font-weight:400;font-display:swap;src:url("./vendor/fonts/tajawal-400.woff2") format("woff2")}
+@font-face{font-family:"Tajawal";font-weight:700;font-display:swap;src:url("./vendor/fonts/tajawal-700.woff2") format("woff2")}
 
 :root{
   /* type scale — 1.2 ratio, fixed rem for chrome */
@@ -232,7 +232,7 @@ article#doc{max-width:var(--rmeasure);margin:0 auto;padding:44px 28px 40vh;width
     <span class="cluster">
       <button class="iconbtn" id="printbtn" title="طباعة / حفظ PDF" aria-label="طباعة أو حفظ PDF">&#9113;</button>
       <button class="iconbtn" id="gearbtn" title="إعدادات القراءة" aria-label="إعدادات القراءة" aria-expanded="false">&#9881;</button>
-      <span class="live" id="live" title="تحديث حيّ"><span class="dot"></span>حيّ</span>
+      <label class="iconbtn" title="فتح ملف .md" aria-label="فتح ملف"><input id="fileinput" type="file" accept=".md,.markdown,.mdown,.mkd" hidden>&#128193;</label><a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn على GitHub" aria-label="GitHub">&#9733;</a>
     </span>
   </header>
   <article id="doc"><div class="empty"><div class="big">قارئ ماركداون عربي</div>اسحب ملف <code dir="ltr">.md</code> إلى هنا، أو مرّره عبر <code dir="ltr">?path=/abs/file.md</code></div></article>
@@ -273,8 +273,56 @@ article#doc{max-width:var(--rmeasure);margin:0 auto;padding:44px 28px 40vh;width
 
 <div class="dropzone" id="dropzone">أفلِت ملف Markdown هنا</div>
 
-<script src="/marked.js"></script>
-<script src="/highlight.js"></script>
+<script type="text/markdown" id="sample">
+# متن · Matn
+
+**قارئ ماركداون عربي** من اليمين إلى اليسار، يعمل في متصفحك. هذه صفحة تجربة حيّة — بدّل **السمة** و**الخط** و**الحجم** من زرّ الإعدادات ⚙، أو افتح ملفك عبر 📁 أو بسحبه إلى الصفحة.
+
+## لماذا متن
+
+الطرفية وكثير من المحرّرات تعرض العربية مكسورة: بلا اتجاه ثنائي، ووصل حروف متقطّع. متن يصيّر كل كتلة بضبط `dir="auto"`، فتنساب العربية يميناً ويبقى الكود والإنجليزية LTR.
+
+## أمثلة كود
+
+```python
+def greet(name: str) -> str:
+    return f"مرحباً يا {name}!"
+
+print(greet("علي"))
+```
+
+```javascript
+const sum = (a, b) => a + b;   // دالة سهمية
+console.log(sum(2, 3));         // 5
+```
+
+## قائمة المهام
+
+- [x] اتجاه RTL لكل كتلة
+- [x] أربع سمات وخمسة خطوط
+- [x] تلوين صياغي وفهرس محتويات
+- [ ] مخططات Mermaid
+
+## جدول مقارنة
+
+| الميزة | متن | محرّر عادي |
+|---|---|---|
+| اتجاه RTL | تام | جزئي |
+| خطوط عربية | ٥ مضمّنة | حسب النظام |
+| تصدير PDF | نعم | أحياناً |
+
+> **للاستعمال المحلي مع تحديث حيّ:** نصّب عبر `npm install -g Ajarallah/matn` ثم `matn ملفك.md`.
+
+## التثبيت
+
+```bash
+npm install -g Ajarallah/matn
+npx github:Ajarallah/matn file.md
+```
+
+</script>
+<script src="./vendor/marked.min.js"></script>
+<script src="./vendor/highlight.min.js"></script>
 <script>
 "use strict";
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
@@ -375,7 +423,7 @@ var dz=$("dropzone"),dragN=0;
 window.addEventListener("dragenter",function(e){e.preventDefault();dragN++;dz.classList.add("show");});
 window.addEventListener("dragover",function(e){e.preventDefault();});
 window.addEventListener("dragleave",function(e){e.preventDefault();dragN--;if(dragN<=0)dz.classList.remove("show");});
-window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!/\.(md|markdown|mdown|mkd)$/i.test(f.name))return;var rd=new FileReader();rd.onload=function(){cur=null;$("fname").textContent=f.name;document.title=f.name+" · متن";$("live").classList.remove("on");render(String(rd.result));scroller.scrollTop=0;$("files-sec").style.display="none";syncSide();};rd.readAsText(f);});
+window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!/\.(md|markdown|mdown|mkd)$/i.test(f.name))return;var rd=new FileReader();rd.onload=function(){cur=null;$("fname").textContent=f.name;document.title=f.name+" · متن";render(String(rd.result));scroller.scrollTop=0;$("files-sec").style.display="none";syncSide();};rd.readAsText(f);});
 
 document.addEventListener("keydown",function(e){
   if(e.target.tagName==="INPUT")return;
@@ -387,11 +435,12 @@ document.addEventListener("keydown",function(e){
 });
 
 applyS();
-var params=new URLSearchParams(location.search);
-if(params.get("dir"))openDir(params.get("dir"));
-else if(params.get("path"))loadFile(params.get("path"));
-else fetch("/api/default").then(function(r){return r.json();}).then(function(d){if(d.dir)openDir(d.dir);else if(d.path)loadFile(d.path);}).catch(function(){});
-try{var es=new EventSource("/api/events");es.onopen=function(){$("live").classList.add("on");};es.onerror=function(){$("live").classList.remove("on");};es.onmessage=function(ev){try{var d=JSON.parse(ev.data);if(d.type==="reload"&&d.path===cur)loadFile(cur);}catch(e){}};}catch(e){}
+var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
+$("fname").textContent="نموذج · متن";document.title="متن · Matn";
+render(SAMPLE);
+var fi=$("fileinput");
+if(fi)fi.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){cur=null;$("fname").textContent=f.name;document.title=f.name+" · متن";render(String(rd.result));scroller.scrollTop=0;};rd.readAsText(f);});
+
 </script>
 </body>
 </html>

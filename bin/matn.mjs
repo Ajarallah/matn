@@ -79,7 +79,7 @@ if (o.version) { console.log("matn v" + VERSION); process.exit(0); }
 
 const base = `http://${o.host === "0.0.0.0" ? "localhost" : o.host}:${o.port}`;
 const url = targetUrl(base, o.target);
-const defaultArg = o.target ? resolve(o.target) : null;
+const defaultArg = resolve(o.target || ".");
 
 const busy = await portInUse(o.host, o.port);
 if (busy) {
@@ -92,6 +92,6 @@ if (busy) {
 
 await startServer({ port: o.port, host: o.host, defaultArg });
 console.log("متن — Matn  ·  " + base);
-if (defaultArg) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
+if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
 console.log("[matn] Ctrl+C to stop");
 if (o.open) openBrowser(url);

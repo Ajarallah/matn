@@ -109,6 +109,15 @@ every text block for correct bidi, highlights code with
 events over Server-Sent Events. Fonts and libraries are vendored, so it runs fully
 offline and never phones home.
 
+## Security notes
+
+Matn binds to `127.0.0.1` by default and serves Markdown plus referenced raster
+images only from the file or folder root you opened. Raw HTML in Markdown is
+escaped, and unsafe link schemes such as `javascript:` are blocked.
+
+Avoid `--host 0.0.0.0` unless you intentionally want other devices on your
+network to reach the reader. See [SECURITY.md](./SECURITY.md).
+
 ## Credits & licenses
 
 - Code: **MIT** — see [LICENSE](./LICENSE).

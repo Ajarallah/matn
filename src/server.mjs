@@ -2,8 +2,8 @@
 // with live-reload over SSE. No external dependencies.
 
 import { createServer } from "node:http";
-import { readFileSync, statSync, existsSync, watch, readdirSync } from "node:fs";
-import { resolve, dirname, join, sep, relative } from "node:path";
+import { readFileSync, statSync, existsSync, watch, readdirSync, realpathSync } from "node:fs";
+import { resolve, dirname, join, sep, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -15,16 +15,27 @@ const MARKED = readFileSync(join(VENDOR, "marked.min.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
 
 const isMd = (f) => /\.(md|markdown|mdown|mkd)$/i.test(f);
+const imageTypes = new Map([
+  [".avif", "image/avif"],
+  [".gif", "image/gif"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".png", "image/png"],
+  [".webp", "image/webp"]
+]);
 
-export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = null } = {}) {
+export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = process.cwd() } = {}) {
   const clients = new Set();
   const watched = new Map();
+  const root = targetRoot(defaultArg);
+  const rootReal = realpathSync(root);
 
   function broadcast(absFile) {
     const data = "data: " + JSON.stringify({ type: "reload", path: absFile }) + "\n\n";
     for (const r of clients) r.write(data);
   }
   function ensureWatch(dir, recursive = false) {
+    if (!withinRoot(dir)) return;
     const key = dir + (recursive ? "|r" : "");
     if (watched.has(key)) return;
     try {
@@ -33,23 +44,41 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = null
       }));
     } catch {}
   }
+  function targetRoot(target) {
+    const abs = resolve(target || ".");
+    try {
+      if (statSync(abs).isDirectory()) return abs;
+      return dirname(abs);
+    } catch {
+      return process.cwd();
+    }
+  }
+  function withinRoot(p) {
+    try {
+      const real = realpathSync(resolve(p));
+      return real === rootReal || real.startsWith(rootReal + sep);
+    } catch {
+      return false;
+    }
+  }
   function safeMd(p) {
     if (!p) return null;
     const abs = resolve(p);
-    try { if (!isMd(abs) || !existsSync(abs) || !statSync(abs).isFile()) return null; }
+    try { if (!withinRoot(abs) || !isMd(abs) || !existsSync(abs) || !statSync(abs).isFile()) return null; }
     catch { return null; }
     return abs;
   }
   function listMd(dir) {
     const out = [];
     (function walk(d) {
+      if (!withinRoot(d)) return;
       let es = [];
       try { es = readdirSync(d, { withFileTypes: true }); } catch { return; }
       for (const e of es) {
         if (e.name.startsWith(".") || e.name === "node_modules") continue;
         const p = join(d, e.name);
         if (e.isDirectory()) walk(p);
-        else if (isMd(e.name)) out.push(p);
+        else if (isMd(e.name) && withinRoot(p)) out.push(p);
       }
     })(dir);
     return out.sort();
@@ -58,9 +87,19 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = null
     if (!defaultArg || !existsSync(defaultArg)) return {};
     try {
       if (statSync(defaultArg).isDirectory()) return { dir: defaultArg };
-      if (isMd(defaultArg)) return { path: defaultArg };
+      if (isMd(defaultArg) && withinRoot(defaultArg)) return { path: defaultArg };
     } catch {}
     return {};
+  }
+  function safeImage(pathname) {
+    let decoded = "";
+    try { decoded = decodeURIComponent(pathname); } catch { return null; }
+    const abs = resolve(root, "." + decoded);
+    const type = imageTypes.get(extname(abs).toLowerCase());
+    if (!type) return null;
+    try { if (!withinRoot(abs) || !statSync(abs).isFile()) return null; }
+    catch { return null; }
+    return { abs, type };
   }
 
   const server = createServer((req, res) => {
@@ -78,10 +117,12 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = null
       try { return send(200, "font/woff2", readFileSync(join(VENDOR, "fonts", name)), { "cache-control": "max-age=31536000" }); }
       catch { return send(404, "text/plain", "nf"); }
     }
+    const image = safeImage(u.pathname);
+    if (image) return send(200, image.type, readFileSync(image.abs), { "cache-control": "no-store" });
     if (u.pathname === "/api/default") return send(200, "application/json", JSON.stringify(defaultTarget()));
     if (u.pathname === "/api/list") {
       const dir = u.searchParams.get("dir");
-      if (!dir || !existsSync(dir)) return send(400, "application/json", "[]");
+      if (!dir || !existsSync(dir) || !withinRoot(dir)) return send(400, "application/json", "[]");
       const root = resolve(dir);
       ensureWatch(root, true);
       const files = listMd(root).map((p) => ({ path: p, rel: relative(root, p).split(sep).join("/") }));
@@ -102,6 +143,12 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = null
       return;
     }
     send(404, "text/plain", "not found");
+  });
+
+  server.on("close", () => {
+    for (const watcher of watched.values()) watcher.close();
+    watched.clear();
+    clients.clear();
   });
 
   return new Promise((res) => server.listen(port, host, () => res(server)));

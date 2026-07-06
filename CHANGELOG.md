@@ -3,6 +3,22 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.1.2] — 2026-07-06
+
+### Security
+- Restrict the local file API to the file or directory root used to start Matn.
+- Escape raw HTML in rendered Markdown and block unsafe link/image URL schemes.
+- Serve referenced raster images only from within the active reading root.
+
+### Fixed
+- `matn` with no arguments now opens the current directory as documented.
+- File watchers are closed when the HTTP server shuts down.
+
+### Added
+- Basic Node test coverage for file API root isolation.
+- GitHub Actions CI for tests and package dry-run checks.
+- Security policy for public GitHub publication.
+
 ## [0.1.1] — 2026-07-06
 
 Design-system refinement pass (grounded in Carbon tokens, shadcn palette, and
