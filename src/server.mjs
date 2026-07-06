@@ -116,6 +116,19 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       catch { return send(404, "text/plain", "nf"); }
       return send(200, "text/javascript; charset=utf-8", MERMAID, { "cache-control": "max-age=86400" });
     }
+    if (u.pathname === "/html-docx.js" || u.pathname === "/jszip.js") {
+      const f = u.pathname === "/jszip.js" ? "jszip.min.js" : "html-docx.min.js";
+      try { return send(200, "text/javascript; charset=utf-8", readFileSync(join(VENDOR, f)), { "cache-control": "max-age=86400" }); }
+      catch { return send(404, "text/plain", "nf"); }
+    }
+    // user-supplied fonts (e.g. Thmanyah — non-redistributable, lives outside git)
+    if (u.pathname.startsWith("/fonts-local/")) {
+      const name = u.pathname.slice(13);
+      if (!/^[a-z0-9._ -]+\.(woff2?|otf|ttf)$/i.test(name)) return send(400, "text/plain", "bad");
+      const type = /\.woff2$/i.test(name) ? "font/woff2" : /\.woff$/i.test(name) ? "font/woff" : /\.otf$/i.test(name) ? "font/otf" : "font/ttf";
+      try { return send(200, type, readFileSync(join(VENDOR, "fonts-local", name)), { "cache-control": "max-age=3600" }); }
+      catch { return send(404, "text/plain", "nf"); }
+    }
 
     if (u.pathname.startsWith("/fonts/")) {
       const name = u.pathname.slice(7);

@@ -15,11 +15,11 @@ s = s.replace(/url\("\/fonts\//g, 'url("./vendor/fonts/');
 s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marked.min.js"></script>');
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
+s = s.replace('DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js"', 'DOCX_SRC="./vendor/html-docx.min.js",ZIP_SRC="./vendor/jszip.min.js"');
 
 // 2) header: swap the live-reload indicator for an open-file button + a GitHub link
-const live = '<span class="live" id="live" title="تحديث حيّ"><span class="dot"></span>حيّ</span>';
-const openctrl = '<label class="iconbtn" title="فتح ملف .md" aria-label="فتح ملف"><input id="fileinput" type="file" accept=".md,.markdown,.mdown,.mkd" hidden>&#128193;</label>'
-  + '<a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn على GitHub" aria-label="GitHub">&#9733;</a>';
+const live = '<span class="live" id="live" title="تحديث حيّ"><span class="dot"></span><span data-i18n="live">حيّ</span></span>';
+const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn on GitHub"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4 6.7 19l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">GitHub</span></a>';
 if (!s.includes(live)) { console.error("build-docs: live indicator markup not found — aborting"); process.exit(1); }
 s = s.replace(live, openctrl);
 
@@ -40,9 +40,7 @@ const boot = `applyS();
 var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
 render(SAMPLE);
-var fi=$("fileinput");
-if(fi)fi.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){cur=null;$("fname").textContent=f.name;document.title=f.name+" · متن";render(String(rd.result));scroller.scrollTop=0;};rd.readAsText(f);});
-`;
+`; // file-open is handled by the app's own #fileinput listener
 s = s.slice(0, i) + boot + "\n" + s.slice(j);
 
 // 6) write docs/index.html + copy vendored assets
@@ -52,6 +50,8 @@ writeFileSync(join(DOCS, "index.html"), s, "utf8");
 copyFileSync(join(ROOT, "vendor", "marked.min.js"), join(DOCS, "vendor", "marked.min.js"));
 copyFileSync(join(ROOT, "vendor", "highlight.min.js"), join(DOCS, "vendor", "highlight.min.js"));
 copyFileSync(join(ROOT, "vendor", "mermaid.min.js"), join(DOCS, "vendor", "mermaid.min.js"));
+copyFileSync(join(ROOT, "vendor", "html-docx.min.js"), join(DOCS, "vendor", "html-docx.min.js"));
+copyFileSync(join(ROOT, "vendor", "jszip.min.js"), join(DOCS, "vendor", "jszip.min.js"));
 for (const f of readdirSync(join(ROOT, "vendor", "fonts")))
   copyFileSync(join(ROOT, "vendor", "fonts", f), join(DOCS, "vendor", "fonts", f));
 

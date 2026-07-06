@@ -7,3 +7,7 @@ node_modules/
 *.tmp
 .code-review-graph/
 /*.png
+vendor/fonts-local/*.ttf
+vendor/fonts-local/*.otf
+vendor/fonts-local/*.woff
+vendor/fonts-local/*.woff2

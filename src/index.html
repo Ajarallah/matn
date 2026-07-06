@@ -118,6 +118,21 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
   transition:background var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur) var(--ease)}
 .iconbtn:hover{background:var(--surface);color:var(--ink)}
 .iconbtn:active{transform:scale(.94)}
+.iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.iconbtn .lbl{font-size:var(--text-sm)}
+.menuwrap{position:relative;display:inline-flex}
+.menu{position:absolute;top:calc(100% + 6px);inset-inline-end:0;min-width:150px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r);padding:5px;display:none;z-index:44;box-shadow:0 10px 30px -8px rgb(var(--shadow)/.28)}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:start;border:0;background:none;color:var(--ink);font-family:var(--f-mono);font-size:var(--text-sm);padding:8px 11px;border-radius:var(--r-sm);cursor:pointer;direction:ltr}
+.menu button:hover{background:var(--surface);color:var(--accent)}
+/* hover zoom lens for images & diagrams */
+.zoomable{overflow:hidden;cursor:zoom-in}
+.zoomable>img,.zoomable>svg{transition:transform .18s var(--ease)}
+.zoomable.zooming>img,.zoomable.zooming>svg{transform:scale(1.9)}
+/* Thmanyah (user-supplied, not redistributed) */
+@font-face{font-family:"Thmanyah Serif Display";font-weight:400 700;font-display:swap;src:url("/fonts-local/thmanyah-display.woff2") format("woff2"),url("/fonts-local/thmanyah-display.otf") format("opentype"),url("/fonts-local/thmanyah-display.ttf") format("truetype")}
+@font-face{font-family:"Thmanyah Serif Text";font-weight:400 700;font-display:swap;src:url("/fonts-local/thmanyah-text.woff2") format("woff2"),url("/fonts-local/thmanyah-text.otf") format("opentype"),url("/fonts-local/thmanyah-text.ttf") format("truetype")}
+#doc h1,#doc h2,#doc h3,#doc h4{font-family:var(--rfont-display,inherit)}
 .live{font-size:var(--text-xs);color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;margin-inline-start:6px}
 .live .dot{width:6px;height:6px;border-radius:50%;background:var(--faint)}
 .live.on{color:var(--accent)}.live.on .dot{background:var(--accent);box-shadow:0 0 0 3px rgb(var(--sel)/.15)}
@@ -261,9 +276,18 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
     <span class="fname" id="fname">متن · Matn</span>
     <span class="meta" id="rtime"></span>
     <span class="cluster">
-      <button class="iconbtn" id="printbtn" title="طباعة / حفظ PDF" aria-label="طباعة أو حفظ PDF">&#9113;</button>
-      <button class="iconbtn" id="gearbtn" title="إعدادات القراءة" aria-label="إعدادات القراءة" aria-expanded="false">&#9881;</button>
-      <span class="live" id="live" title="تحديث حيّ"><span class="dot"></span>حيّ</span>
+      <label class="iconbtn" id="openbtn"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H5.6a2 2 0 0 0-1.9 1.4L3 15.5V7z"/><path d="M3 18l2.2-6.2A1 1 0 0 1 6.2 11H22l-2.3 6.6a2 2 0 0 1-1.9 1.4H4a1 1 0 0 1-1-1z"/></svg><span class="lbl" data-i18n="open">فتح</span><input id="fileinput" type="file" accept=".md,.markdown,.mdown,.mkd" hidden></label>
+      <span class="menuwrap"><button class="iconbtn" id="exportbtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg><span class="lbl" data-i18n="export">حفظ</span></button>
+        <div class="menu" id="exportmenu" role="menu">
+          <button role="menuitem" data-export="pdf">PDF</button>
+          <button role="menuitem" data-export="html">HTML</button>
+          <button role="menuitem" data-export="docx">Word (docx)</button>
+          <button role="menuitem" data-export="epub">EPUB</button>
+          <button role="menuitem" data-export="md">Markdown</button>
+        </div></span>
+      <button class="iconbtn" id="printbtn"><svg viewBox="0 0 24 24"><path d="M7 8V3h10v5"/><rect x="4" y="8" width="16" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/></svg><span class="lbl" data-i18n="print">طباعة</span></button>
+      <button class="iconbtn" id="gearbtn" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2"/><circle cx="10" cy="16" r="2"/></svg><span class="lbl" data-i18n="settings">الإعدادات</span></button>
+      <span class="live" id="live" title="تحديث حيّ"><span class="dot"></span><span data-i18n="live">حيّ</span></span>
     </span>
   </header>
   <article id="doc"><div class="empty"><div class="big">قارئ ماركداون عربي</div>اسحب ملف <code dir="ltr">.md</code> إلى هنا، أو مرّره عبر <code dir="ltr">?path=/abs/file.md</code></div></article>
@@ -274,7 +298,11 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 </aside>
 
 <div class="panel" id="panel" role="dialog" aria-label="إعدادات القراءة">
-  <div class="grp"><div class="lbl">السمة</div>
+  <div class="grp"><div class="lbl" data-i18n="uilang">لغة الواجهة</div>
+    <div class="seg" id="uilang">
+      <button data-lang-val="ar">العربية</button><button data-lang-val="en">English</button>
+    </div></div>
+  <div class="grp"><div class="lbl" data-i18n="theme">السمة</div>
     <div class="themes" id="themes">
       <button data-theme-val="light" style="background:#fbfaf6;color:#22201b">فاتح</button>
       <button data-theme-val="sepia" style="background:#f1e6ce;color:#453620">سيبيا</button>
@@ -289,6 +317,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
       <button data-font-val="amiri"><span class="fn" style="font-family:'Amiri',serif">أبجد هوز</span><span class="fd">أميري · نسخ كلاسيكي</span></button>
       <button data-font-val="plex"><span class="fn" style="font-family:'IBM Plex Sans Arabic',sans-serif">أبجد هوز</span><span class="fd">IBM بلكس · حديث</span></button>
       <button data-font-val="tajawal"><span class="fn" style="font-family:'Tajawal',sans-serif">أبجد هوز</span><span class="fd">تجوّل · هندسي</span></button>
+      <button data-font-val="thmanyah"><span class="fn" style="font-family:'Thmanyah Serif Text','Noto Naskh Arabic',serif">أبجد هوز</span><span class="fd" data-i18n="thmanyahNote">ثمانية · نص + عناوين Display (يتطلّب تنزيله)</span></button>
     </div>
   </div>
   <div class="grp"><div class="lbl">حجم الخط</div>
@@ -317,9 +346,13 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 <script>
 "use strict";
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
-var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif"};
+var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif",thmanyah:"'Thmanyah Serif Text','Noto Naskh Arabic',serif"};
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
-var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:64};
+var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:64,lang:"ar"};
+var I18N={
+ ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا"},
+ en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here"}};
+function T(k){return (I18N[S.lang]||I18N.ar)[k]||I18N.ar[k]||k;}
 var S=loadS(),cur=null;
 function loadS(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem("matn.reading")||"{}"));}catch(e){return Object.assign({},DEF);}}
 function saveS(){try{localStorage.setItem("matn.reading",JSON.stringify(S));}catch(e){}}
@@ -332,12 +365,25 @@ function applyS(){
   r.setProperty("--rsize",S.size+"px");
   r.setProperty("--rlh",String(S.lh));
   r.setProperty("--rmeasure",S.measure+"ch");
+  if(S.font==="thmanyah")r.setProperty("--rfont-display","'Thmanyah Serif Display','Amiri',serif");else r.removeProperty("--rfont-display");
   $("szval").textContent=S.size+"px";$("lhval").textContent=S.lh.toFixed(2);
-  mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));
+  mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));mark("uilang","lang-val",S.lang);
+  applyLang();
+}
+function applyLang(){
+  var rtl=S.lang!=="en";
+  document.documentElement.setAttribute("lang",rtl?"ar":"en");
+  document.documentElement.setAttribute("dir",rtl?"rtl":"ltr");
+  var els=document.querySelectorAll("[data-i18n]");
+  for(var i=0;i<els.length;i++)els[i].textContent=T(els[i].getAttribute("data-i18n"));
+  var fi=$("findinput");if(fi)fi.setAttribute("placeholder",T("findph"));
+  var dz=$("dropzone");if(dz)dz.textContent=T("drop");
+  var fs=document.querySelector("#files-sec h2");if(fs)fs.textContent=T("files");
+  var ts=document.querySelector("#toc-sec h2");if(ts)ts.textContent=T("contents");
 }
 function mark(id,attr,val){var e=$(id).querySelectorAll("[data-"+attr+"]");for(var i=0;i<e.length;i++)e[i].setAttribute("data-active",e[i].getAttribute("data-"+attr)===val?"1":"0");}
 function bindG(id,attr,key,cast){$(id).addEventListener("click",function(e){var b=e.target.closest("[data-"+attr+"]");if(!b)return;S[key]=cast(b.getAttribute("data-"+attr));saveS();applyS();});}
-bindG("themes","theme-val","theme",String);bindG("fonts","font-val","font",String);bindG("measure","measure-val","measure",Number);
+bindG("themes","theme-val","theme",String);bindG("fonts","font-val","font",String);bindG("measure","measure-val","measure",Number);bindG("uilang","lang-val","lang",String);
 function step(key,d,min,max,round){return function(){var v=S[key]+d;v=Math.min(max,Math.max(min,v));S[key]=round?Math.round(v):Math.round(v*100)/100;saveS();applyS();};}
 $("szplus").onclick=step("size",1,15,28,true);$("szminus").onclick=step("size",-1,15,28,true);
 $("lhplus").onclick=step("lh",0.05,1.4,2.4,false);$("lhminus").onclick=step("lh",-0.05,1.4,2.4,false);
@@ -391,8 +437,33 @@ function buildToc(doc){
   for(var i=0;i<hs.length;i++){var h=hs[i];var a=document.createElement("a");a.textContent=h.textContent.replace(/#$/,"");a.href="#"+h.id;a.className="lvl"+h.tagName.charAt(1);a.dataset.id=h.id;a.onclick=function(e){e.preventDefault();var el=document.getElementById(this.dataset.id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});};nav.appendChild(a);arr.push(h);}
   syncSide();return arr;
 }
-function readingTime(text){var w=(text.trim().match(/\S+/g)||[]).length;var m=Math.max(1,Math.round(w/200));$("rtime").textContent="~ "+m+" دقيقة · "+w+" كلمة";}
-function render(md){var doc=$("doc");doc.innerHTML=marked.parse(md,{renderer:safeRenderer()});enhance(doc);stampDir(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
+function readingTime(text){var w=(text.trim().match(/\S+/g)||[]).length;var m=Math.max(1,Math.round(w/200));$("rtime").textContent="~ "+m+" "+T("min")+" · "+w+" "+T("words");}
+// dominant-script detection: whole-document direction follows the majority language,
+// so a file that merely STARTS with Latin still reads RTL when Arabic dominates.
+function docDir(text){
+  var ar=(text.match(/[؀-ۿݐ-ݿࢠ-ࣿ]/g)||[]).length;
+  var lat=(text.match(/[A-Za-z]/g)||[]).length;
+  if(!ar&&!lat)return "rtl";
+  return ar*2>=lat?"rtl":"ltr"; // Arabic-leaning bias: Latin tech terms shouldn't flip an Arabic doc
+}
+function zoomify(doc){
+  var targets=doc.querySelectorAll(".mermaid, img");
+  for(var i=0;i<targets.length;i++){(function(el){
+    var box=el.classList&&el.classList.contains("mermaid")?el:null;
+    if(!box){if(el.parentNode&&el.parentNode.classList&&el.parentNode.classList.contains("zoomable"))return;
+      box=document.createElement("span");box.style.display="block";el.parentNode.replaceChild(box,el);box.appendChild(el);}
+    box.classList.add("zoomable");
+    var inner=function(){return box.querySelector("img,svg");}; // resolved lazily — mermaid SVG arrives after async render
+    box.addEventListener("mousemove",function(e){var t=inner();if(!t)return;var r=box.getBoundingClientRect();
+      t.style.transformOrigin=((e.clientX-r.left)/r.width*100)+"% "+((e.clientY-r.top)/r.height*100)+"%";});
+    box.addEventListener("mouseenter",function(){if(inner())box.classList.add("zooming");});
+    box.addEventListener("mouseleave",function(){box.classList.remove("zooming");var t=inner();if(t)t.style.transformOrigin="50% 50%";});
+  })(targets[i]);}
+}
+var lastMD="";
+function render(md){lastMD=md;var doc=$("doc");doc.innerHTML=marked.parse(md,{renderer:safeRenderer()});
+  doc.setAttribute("dir",docDir(doc.textContent));
+  enhance(doc);stampDir(doc);zoomify(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
 
 var spyObs=null;
 function setupSpy(heads){
@@ -476,6 +547,39 @@ function closeFind(){findbar.classList.remove("open");unwrapFind();findCount();}
 findinput.addEventListener("input",function(){doFind(findinput.value);});
 findinput.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();findNav(e.shiftKey?-1:1);}else if(e.key==="Escape"){e.preventDefault();closeFind();}});
 $("findnext").onclick=function(){findNav(1);};$("findprev").onclick=function(){findNav(-1);};$("findclose").onclick=closeFind;
+
+// ---- export ----
+var DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js";
+function fname(ext){return (base(cur)||$("fname").textContent||"matn").replace(/\.(md|markdown|mdown|mkd)$/i,"")+"."+ext;}
+function saveBlob(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);}
+function docHTML(){
+  var dir=$("doc").getAttribute("dir")||"rtl";
+  var css="body{font-family:"+(FONTS[S.font]||FONTS.system)+";line-height:"+S.lh+";font-size:"+S.size+"px;max-width:46em;margin:2em auto;padding:0 1.5em;color:#1b1a17;background:#fff}pre{direction:ltr;text-align:left;background:#f4f3ee;padding:1em;border-radius:8px;overflow-x:auto}code{background:#eee;padding:.1em .35em;border-radius:4px}blockquote{border-inline-start:3px solid #999;margin-inline-start:0;padding:.2em 1em;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.4em .8em}img,svg{max-width:100%}";
+  return "<!doctype html><html lang=\""+(dir==="rtl"?"ar":"en")+"\" dir=\""+dir+"\"><head><meta charset=\"utf-8\"><title>"+esc($("fname").textContent)+"</title><style>"+css+"</style></head><body>"+$("doc").innerHTML.replace(/<button class=\"copybtn\"[^<]*<\/button>/g,"")+"</body></html>";
+}
+function doExport(kind){
+  if(kind==="pdf"){window.print();return;}
+  if(kind==="md"){saveBlob(new Blob([lastMD],{type:"text/markdown"}),fname("md"));return;}
+  if(kind==="html"){saveBlob(new Blob([docHTML()],{type:"text/html"}),fname("html"));return;}
+  if(kind==="docx"){loadScriptOnce(DOCX_SRC).then(function(){saveBlob(window.htmlDocx.asBlob(docHTML()),fname("docx"));}).catch(function(){});return;}
+  if(kind==="epub"){loadScriptOnce(ZIP_SRC).then(function(){
+    var dir=$("doc").getAttribute("dir")||"rtl",title=esc($("fname").textContent);
+    var xhtml='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" dir="'+dir+'"><head><title>'+title+'</title></head><body>'+docHTML().split("<body>")[1].replace("</body></html>","")+"</body></html>";
+    var zip=new window.JSZip();
+    zip.file("mimetype","application/epub+zip",{compression:"STORE"});
+    zip.file("META-INF/container.xml",'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+    zip.file("OEBPS/content.opf",'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:matn-'+Date.now()+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+(dir==="rtl"?"ar":"en")+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>');
+    zip.file("OEBPS/nav.xhtml",'<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>nav</title></head><body><nav epub:type="toc"><ol><li><a href="doc.xhtml">'+title+'</a></li></ol></nav></body></html>');
+    zip.file("OEBPS/doc.xhtml",xhtml);
+    zip.generateAsync({type:"blob",mimeType:"application/epub+zip"}).then(function(b){saveBlob(b,fname("epub"));});
+  }).catch(function(){});return;}
+}
+var exportbtn=$("exportbtn"),exportmenu=$("exportmenu");
+exportbtn.onclick=function(e){e.stopPropagation();var o=exportmenu.classList.toggle("open");exportbtn.setAttribute("aria-expanded",o?"true":"false");};
+document.addEventListener("click",function(e){if(!exportmenu.contains(e.target)&&e.target!==exportbtn)exportmenu.classList.remove("open");});
+exportmenu.addEventListener("click",function(e){var b=e.target.closest("[data-export]");if(!b)return;exportmenu.classList.remove("open");doExport(b.getAttribute("data-export"));});
+var fi2=$("fileinput");
+if(fi2)fi2.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){cur=null;$("fname").textContent=f.name;document.title=f.name+" · متن";render(String(rd.result));scroller.scrollTop=0;};rd.readAsText(f);e.target.value="";});
 
 document.addEventListener("keydown",function(e){
   if(e.target.tagName==="INPUT")return;
