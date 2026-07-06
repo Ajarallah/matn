@@ -1,0 +1,45 @@
+{
+  "name": "matn",
+  "version": "0.1.0",
+  "description": "A calm, right-to-left Markdown reader for Arabic — reading themes, embedded Arabic fonts, syntax highlighting, TOC, and live reload. Runs locally in your browser.",
+  "type": "module",
+  "bin": {
+    "matn": "bin/matn.mjs"
+  },
+  "scripts": {
+    "start": "node bin/matn.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "vendor",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "keywords": [
+    "markdown",
+    "arabic",
+    "rtl",
+    "reader",
+    "viewer",
+    "preview",
+    "md",
+    "bidi",
+    "عربي",
+    "ماركداون"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ajarallah/matn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ajarallah/matn/issues"
+  },
+  "homepage": "https://github.com/Ajarallah/matn#readme",
+  "author": "Ali Aljarallah",
+  "license": "MIT"
+}

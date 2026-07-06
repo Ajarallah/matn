@@ -1,0 +1,25 @@
+Matn — third-party notices
+===========================
+
+Matn (MIT) bundles the following third-party assets. Their license texts are in
+vendor/licenses/.
+
+Fonts (SIL Open Font License 1.1 — vendor/licenses/OFL-1.1.txt)
+--------------------------------------------------------------
+- Amiri — Copyright The Amiri Project Authors (https://github.com/aliftype/amiri)
+- Noto Naskh Arabic — Copyright The Noto Project Authors (https://github.com/notofonts/arabic)
+- IBM Plex Sans Arabic — Copyright IBM Corp. (https://github.com/IBM/plex)
+- Tajawal — Copyright The Tajawal Project Authors
+
+The bundled .woff2 files are unmodified subsets distributed by the Fontsource
+project (https://fontsource.org). Each font is licensed under the SIL OFL 1.1.
+
+Libraries
+---------
+- marked — MIT License — https://github.com/markedjs/marked
+  (vendor/licenses/marked-LICENSE.txt)
+- highlight.js — BSD 3-Clause License — https://github.com/highlightjs/highlight.js
+  (vendor/licenses/highlightjs-LICENSE.txt)
+
+All bundled assets are redistributed unmodified. Matn's own source code is
+licensed under the MIT License (see LICENSE).
