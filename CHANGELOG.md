@@ -3,6 +3,22 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.1.1] — 2026-07-06
+
+Design-system refinement pass (grounded in Carbon tokens, shadcn palette, and
+restraint/typography principles).
+
+### Changed
+- Rebuilt the theme palettes with consistent tinted neutrals per theme (warm paper, calibrated sepia, warm charcoal, true black) instead of mixed warm/cool grays.
+- Lighter, more intentional type weights; a fixed modular type scale; `text-wrap: balance/pretty`, tabular figures for metadata, `ch`-based reading measure.
+- Quieter chrome: ghost header buttons, subtler live indicator, refined settings popover with live font previews.
+- Table of contents active state uses a small accent dot instead of a heavy side border.
+- Added a subtle grain overlay, tinted shadows, focus-visible rings, press states, and `prefers-reduced-motion` support.
+
+### Fixed
+- Progress bar animates via `transform: scaleX` (GPU) instead of `width`.
+- Removed em-dash-heavy UI copy.
+
 ## [0.1.0] — 2026-07-06
 
 Initial release.
