@@ -3,6 +3,8 @@
 **A calm, right-to-left Markdown reader for Arabic.**
 Themes, embedded Arabic fonts, syntax highlighting, a table of contents, and live reload — running locally in your browser.
 
+**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+
 <div align="right"><a href="./README.ar.md"><b>العربية ←</b></a></div>
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
