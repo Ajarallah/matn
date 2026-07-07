@@ -21,7 +21,7 @@
   --text-xs:.6875rem; --text-sm:.8125rem; --text-ui:.875rem; --text-md:1rem;
   --f-mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
   /* reading (user-adjustable) */
-  --rsize:18px; --rlh:1.85; --rmeasure:64ch;
+  --rsize:18px; --rlh:1.85; --rmeasure:64ch; --measure:576px;
   --rfont:-apple-system,"SF Arabic","Geeza Pro","Noto Sans Arabic",sans-serif;
   /* geometry */
   --r:10px; --r-sm:7px; --r-lg:15px;
@@ -175,8 +175,11 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
   transition:color var(--dur) var(--ease)}
 .reset:hover{color:var(--accent)}
 
-article#doc{max-width:var(--rmeasure);margin:0 auto;padding:44px 28px 40vh;width:100%;
+article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 28px 40vh;width:100%;
   line-height:var(--rlh);font-size:var(--rsize);font-family:var(--rfont)}
+/* prose stays at the comfortable reading measure (centered); wide blocks use the room */
+#doc>p,#doc>ul,#doc>ol,#doc>dl,#doc>h1,#doc>h2,#doc>h3,#doc>h4,#doc>h5,#doc>h6,#doc>blockquote,#doc>hr{max-width:var(--measure);margin-inline:auto}
+#doc>.tablewrap,#doc>pre,#doc>.mermaid{max-width:100%}
 #doc>*:first-child{margin-top:0}
 #doc p{margin:.7em 0;text-wrap:pretty}
 #doc h1,#doc h2,#doc h3,#doc h4{line-height:1.3;text-wrap:balance;scroll-margin-top:66px;font-weight:600}
@@ -200,9 +203,11 @@ article#doc{max-width:var(--rmeasure);margin:0 auto;padding:44px 28px 40vh;width
 #doc blockquote{margin:1.1em 0;padding:.4em 16px;border-inline-start:2px solid var(--line-strong);
   color:var(--ink-soft);background:var(--surface);border-radius:0 var(--r-sm) var(--r-sm) 0}
 #doc blockquote p{margin:.3em 0}
+.tablewrap{overflow-x:auto;margin:1.2em 0;max-width:100%}
+.tablewrap table{margin:0!important;width:auto;min-width:100%}
 #doc table{border-collapse:collapse;margin:1.2em 0;width:100%;font-size:.95em}
-#doc th,#doc td{border:1px solid var(--line);padding:9px 13px;text-align:start}
-#doc thead{background:var(--surface)}#doc th{font-weight:600}
+#doc th,#doc td{border:1px solid var(--line);padding:9px 13px;text-align:start;vertical-align:top;min-width:8em}
+#doc thead{background:var(--surface)}#doc th{font-weight:600;white-space:nowrap}
 #doc tbody tr:nth-child(even){background:color-mix(in srgb,var(--surface) 45%,transparent)}
 #doc img{max-width:100%;height:auto;border-radius:var(--r-sm)}
 #doc hr{border:none;border-top:1px solid var(--line);margin:2em 0}
@@ -365,6 +370,7 @@ function applyS(){
   r.setProperty("--rsize",S.size+"px");
   r.setProperty("--rlh",String(S.lh));
   r.setProperty("--rmeasure",S.measure+"ch");
+  r.setProperty("--measure",Math.round(S.size*S.measure/2)+"px"); // font-size-independent measure so headings match body width
   if(S.font==="thmanyah")r.setProperty("--rfont-display","'Thmanyah Serif Display','Amiri',serif");else r.removeProperty("--rfont-display");
   $("szval").textContent=S.size+"px";$("lhval").textContent=S.lh.toFixed(2);
   mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));mark("uilang","lang-val",S.lang);
@@ -403,6 +409,10 @@ function enhance(doc){
   var blocks=doc.querySelectorAll("pre");for(var k=0;k<blocks.length;k++){(function(pre){var b=document.createElement("button");b.className="copybtn";b.type="button";b.textContent="نسخ";b.onclick=function(){var c=pre.querySelector("code");navigator.clipboard.writeText(c?c.innerText:pre.innerText).then(function(){b.textContent="✓ نُسخ";setTimeout(function(){b.textContent="نسخ";},1400);});};pre.appendChild(b);})(blocks[k]);}
   var hs=doc.querySelectorAll("h1,h2,h3");for(var n=0;n<hs.length;n++){var h=hs[n];if(!h.id)h.id=slug(h.textContent,n);var a=document.createElement("a");a.className="anchor";a.href="#"+h.id;a.textContent="#";a.setAttribute("aria-hidden","true");h.appendChild(a);}
   processCallouts(doc);
+  // wide tables scroll inside their own container instead of breaking the column
+  var tbls=doc.querySelectorAll("table");
+  for(var t=0;t<tbls.length;t++){var tb=tbls[t];if(tb.parentNode.classList&&tb.parentNode.classList.contains("tablewrap"))continue;
+    var w=document.createElement("div");w.className="tablewrap";tb.parentNode.replaceChild(w,tb);w.appendChild(tb);}
   if(mnodes.length)renderMermaid(mnodes);
 }
 var _scripts={};
@@ -440,12 +450,21 @@ function buildToc(doc){
 function readingTime(text){var w=(text.trim().match(/\S+/g)||[]).length;var m=Math.max(1,Math.round(w/200));$("rtime").textContent="~ "+m+" "+T("min")+" · "+w+" "+T("words");}
 // dominant-script detection: whole-document direction follows the majority language,
 // so a file that merely STARTS with Latin still reads RTL when Arabic dominates.
-function docDir(text){
-  var ar=(text.match(/[؀-ۿݐ-ݿࢠ-ࣿ]/g)||[]).length;
-  var lat=(text.match(/[A-Za-z]/g)||[]).length;
+function docDir(doc){
+  // vote on PROSE blocks only — tables/code are full of Latin identifiers and
+  // must not flip an Arabic document to LTR
+  var blocks=doc.querySelectorAll("p,li,h1,h2,h3,h4,h5,h6,blockquote,dd,dt");
+  var ar=0,lat=0;
+  for(var i=0;i<blocks.length;i++){var el=blocks[i];
+    if(el.closest("table,pre"))continue;
+    var t=el.textContent||"";
+    ar+=(t.match(/[؀-ۿݐ-ݿࢠ-ࣿ]/g)||[]).length;
+    lat+=(t.match(/[A-Za-z]/g)||[]).length;}
   if(!ar&&!lat)return "rtl";
   return ar*2>=lat?"rtl":"ltr"; // Arabic-leaning bias: Latin tech terms shouldn't flip an Arabic doc
 }
+var autoDir="rtl";
+function setDocDir(){var d=$("doc");d.setAttribute("dir",S.docdir==="ltr"||S.docdir==="rtl"?S.docdir:autoDir);}
 function zoomify(doc){
   var targets=doc.querySelectorAll(".mermaid, img");
   for(var i=0;i<targets.length;i++){(function(el){
@@ -462,7 +481,7 @@ function zoomify(doc){
 }
 var lastMD="";
 function render(md){lastMD=md;var doc=$("doc");doc.innerHTML=marked.parse(md,{renderer:safeRenderer()});
-  doc.setAttribute("dir",docDir(doc.textContent));
+  autoDir=docDir(doc);setDocDir();
   enhance(doc);stampDir(doc);zoomify(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
 
 var spyObs=null;
@@ -554,7 +573,7 @@ function fname(ext){return (base(cur)||$("fname").textContent||"matn").replace(/
 function saveBlob(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);}
 function docHTML(){
   var dir=$("doc").getAttribute("dir")||"rtl";
-  var css="body{font-family:"+(FONTS[S.font]||FONTS.system)+";line-height:"+S.lh+";font-size:"+S.size+"px;max-width:46em;margin:2em auto;padding:0 1.5em;color:#1b1a17;background:#fff}pre{direction:ltr;text-align:left;background:#f4f3ee;padding:1em;border-radius:8px;overflow-x:auto}code{background:#eee;padding:.1em .35em;border-radius:4px}blockquote{border-inline-start:3px solid #999;margin-inline-start:0;padding:.2em 1em;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.4em .8em}img,svg{max-width:100%}";
+  var css="body{font-family:"+(FONTS[S.font]||FONTS.system)+";line-height:"+S.lh+";font-size:"+S.size+"px;max-width:46em;margin:2em auto;padding:0 1.5em;color:#1b1a17;background:#fff}pre{direction:ltr;text-align:left;background:#f4f3ee;padding:1em;border-radius:8px;overflow-x:auto}code{background:#eee;padding:.1em .35em;border-radius:4px}blockquote{border-inline-start:2px solid #999;margin-inline-start:0;padding:.2em 1em;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.4em .8em}img,svg{max-width:100%}";
   return "<!doctype html><html lang=\""+(dir==="rtl"?"ar":"en")+"\" dir=\""+dir+"\"><head><meta charset=\"utf-8\"><title>"+esc($("fname").textContent)+"</title><style>"+css+"</style></head><body>"+$("doc").innerHTML.replace(/<button class=\"copybtn\"[^<]*<\/button>/g,"")+"</body></html>";
 }
 function doExport(kind){

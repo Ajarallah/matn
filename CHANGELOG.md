@@ -3,6 +3,18 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.1.1] — 2026-07-07
+
+### Fixed
+- **Wide tables no longer clip or collapse.** Tables now sit in a horizontally
+  scrollable wrapper and — like code blocks and diagrams — expand beyond the
+  reading measure to use the full pane width, so 4-column bilingual tables read
+  cleanly instead of being cut off or squeezed into one-word-per-line columns.
+- **Headings now match body width** — the reading measure is font-size-independent
+  (px), so headings align with paragraphs instead of overhanging.
+- Document-direction voting ignores tables and code, so Latin identifiers in a
+  data table can't flip an Arabic document to LTR.
+
 ## [1.1.0] — 2026-07-07
 
 ### Added
