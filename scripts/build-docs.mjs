@@ -16,7 +16,7 @@ s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marke
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
 s = s.replace('DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js"', 'DOCX_SRC="./vendor/html-docx.min.js",ZIP_SRC="./vendor/jszip.min.js"');
-s = s.replace('KATEX_JS="/katex.js",KATEX_AUTO="/katex-auto.js",KATEX_CSS="/katex.css"', 'KATEX_JS="./vendor/katex.min.js",KATEX_AUTO="./vendor/katex-auto.min.js",KATEX_CSS="./vendor/katex.min.css"');
+s = s.replace('KATEX_JS="/katex.js",KATEX_CSS="/katex.css"', 'KATEX_JS="./vendor/katex.min.js",KATEX_CSS="./vendor/katex.min.css"');
 s = s.replace('<script src="/marked-footnote.js"></script>', '<script src="./vendor/marked-footnote.umd.js"></script>');
 
 // 2) header: swap the live-reload indicator for an open-file button + a GitHub link
@@ -30,8 +30,10 @@ s = s.replace('$("live").classList.remove("on");', "");
 
 // 4) bundled sample (non-executed markdown), inserted before marked loads
 const SAMPLE = readFileSync(join(ROOT, "scripts", "demo-sample.md"), "utf8");
-const sampleBlock = '<script type="text/markdown" id="sample">\n' + SAMPLE + '\n</script>\n';
-s = s.replace('<script src="./vendor/marked.min.js"></script>', sampleBlock + '<script src="./vendor/marked.min.js"></script>');
+const sampleBlock = '<script type="text/markdown" id="sample">' + SAMPLE + '</script>\n';
+// replacement via a function: the sample contains `$$` (math), a special pattern in
+// String.replace string-replacements that would otherwise collapse to a single `$`.
+s = s.replace('<script src="./vendor/marked.min.js"></script>', () => sampleBlock + '<script src="./vendor/marked.min.js"></script>');
 
 // 5) replace the server-dependent boot block with a static boot
 const anchor = "applyS();\nvar params=new URLSearchParams";

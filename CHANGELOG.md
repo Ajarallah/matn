@@ -3,6 +3,15 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.1] — 2026-07-07
+
+### Fixed
+- **Math now renders reliably everywhere.** LaTeX is extracted before Markdown
+  runs (so CommonMark can't strip `\,`/`\{` backslashes) and rendered with
+  `katex.render`; block `$$…$$` shows as centered display math. The static demo
+  build no longer collapses `$$` to `$` (a `String.replace` `$$` gotcha).
+- Frontmatter detection tolerates a leading blank line.
+
 ## [1.2.0] — 2026-07-07
 
 ### Added

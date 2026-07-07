@@ -261,8 +261,10 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 #files .tree-dir>summary:hover{background:var(--bg)}
 #files a.tree-file{direction:ltr;text-align:right}
 /* katex math */
-#doc .katex-display{direction:ltr;overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:1em 0}
+#doc .katex-block{display:block;margin:1em 0;overflow-x:auto;overflow-y:hidden;direction:ltr;text-align:center}
+#doc .katex-display{direction:ltr;overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:.4em 0}
 #doc .katex{direction:ltr;text-align:left}
+#doc .katex-inline{direction:ltr;display:inline-block}
 /* mermaid diagrams */
 #doc .mermaid{direction:ltr;text-align:center;margin:1.4em 0;overflow-x:auto}
 #doc .mermaid svg{max-width:100%;height:auto}
@@ -459,7 +461,9 @@ function processCallouts(doc){
     bq.insertBefore(head,bq.firstChild);
   }
 }
-if(window.marked&&marked.use){try{marked.use({extensions:[{name:"wikilink",level:"inline",start:function(s){return s.indexOf("[[");},tokenizer:function(s){var m=/^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},renderer:function(t){return '<span class="wikilink" title="'+esc(t.target)+'">'+esc(t.text)+"</span>";}}]});}catch(e){}
+if(window.marked&&marked.use){try{marked.use({extensions:[
+  {name:"wikilink",level:"inline",start:function(s){return s.indexOf("[[");},tokenizer:function(s){var m=/^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},renderer:function(t){return '<span class="wikilink" title="'+esc(t.target)+'">'+esc(t.text)+"</span>";}}
+]});}catch(e){}
   try{if(window.markedFootnote)marked.use(markedFootnote());}catch(e){}}
 function buildToc(doc){
   var hs=doc.querySelectorAll("h1,h2,h3"),nav=$("toc");nav.innerHTML="";
@@ -502,7 +506,7 @@ function zoomify(doc){
 }
 var lastMD="";
 function parseFrontmatter(md){
-  var m=/^﻿?---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/.exec(md);
+  var m=/^[\s﻿]*---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/.exec(md);
   if(!m)return {body:md,card:null};
   var body=md.slice(m[0].length),lines=m[1].split(/\r?\n/),pairs=[];
   for(var i=0;i<lines.length;i++){var mm=/^([A-Za-z0-9_.\- ]{1,40}):[ \t]*(.*)$/.exec(lines[i]);
@@ -514,17 +518,28 @@ function parseFrontmatter(md){
   for(var j=0;j<pairs.length;j++){var dt=document.createElement("dt");dt.textContent=pairs[j][0];var dd=document.createElement("dd");dd.textContent=pairs[j][1]||"—";dd.setAttribute("dir","auto");dl.appendChild(dt);dl.appendChild(dd);}
   d.appendChild(dl);return {body:body,card:d};
 }
-var KATEX_JS="/katex.js",KATEX_AUTO="/katex-auto.js",KATEX_CSS="/katex.css";
+var KATEX_JS="/katex.js",KATEX_CSS="/katex.css";
 function loadCssOnce(href){return _scripts["css:"+href]||(_scripts["css:"+href]=new Promise(function(res){var l=document.createElement("link");l.rel="stylesheet";l.href=href;l.onload=res;l.onerror=res;document.head.appendChild(l);}));}
-function hasMath(t){return /\$\$[\s\S]+?\$\$|\$[^\s$][^$\n]*\$|\\\(|\\\[/.test(t);}
 function renderMath(doc){
-  if(!hasMath(doc.textContent))return;
-  loadScriptOnce(KATEX_JS).then(function(){return loadScriptOnce(KATEX_AUTO);}).then(function(){return loadCssOnce(KATEX_CSS);}).then(function(){
-    if(!window.renderMathInElement)return;
-    try{window.renderMathInElement(doc,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],ignoredTags:["script","style","pre","code","textarea"],throwOnError:false});}catch(e){}
+  var els=doc.querySelectorAll(".katex-block,.katex-inline");
+  if(!els.length)return;
+  loadScriptOnce(KATEX_JS).then(function(){return loadCssOnce(KATEX_CSS);}).then(function(){
+    if(!window.katex)return;
+    for(var i=0;i<els.length;i++){var el=els[i],tex=el.getAttribute("data-tex")||"";
+      try{katex.render(tex,el,{displayMode:el.classList.contains("katex-block"),throwOnError:false});}
+      catch(e){el.textContent=tex;}}
   }).catch(function(){});
 }
-function render(md){lastMD=md;var fm=parseFrontmatter(md);var doc=$("doc");doc.innerHTML=marked.parse(fm.body,{renderer:safeRenderer()});
+function extractMath(src){
+  // pull math out BEFORE markdown so it can't strip LaTeX backslashes; PUA placeholders survive markdown untouched
+  var store=[];
+  src=src.replace(/\$\$([\s\S]+?)\$\$/g,function(_,tex){store.push({d:true,t:tex});return ""+(store.length-1)+"";});
+  src=src.replace(/(^|[^\\$])\$([^\s$][^$\n]*?)\$/g,function(m0,pre,tex){if(!/[\\a-zA-Z]/.test(tex))return m0;store.push({d:false,t:tex});return pre+""+(store.length-1)+"";});
+  return {src:src,store:store};
+}
+function restoreMath(html,store){return html.replace(/(\d+)/g,function(_,i){var m=store[+i];if(!m)return "";return '<span class="'+(m.d?"katex-block":"katex-inline")+'" data-tex="'+esc(m.t)+'"></span>';});}
+function render(md){lastMD=md;var fm=parseFrontmatter(md);var mx=extractMath(fm.body);
+  var doc=$("doc");doc.innerHTML=restoreMath(marked.parse(mx.src,{renderer:safeRenderer()}),mx.store);
   autoDir=docDir(doc);setDocDir();
   if(fm.card)doc.insertBefore(fm.card,doc.firstChild);
   enhance(doc);stampDir(doc);zoomify(doc);renderMath(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
