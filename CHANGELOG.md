@@ -3,6 +3,19 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.0] — 2026-07-07
+
+### Added
+- **Frontmatter card** — leading YAML `---…---` is parsed into a collapsible
+  metadata card (collapsed by default) instead of being dumped as raw text.
+- **Math (KaTeX)** — inline `$…$` / `\(…\)` and block `$$…$$` / `\[…\]`
+  render with KaTeX, lazy-loaded and offline (fonts vendored). A price like
+  `$5` won't trigger it.
+- **Footnotes** — GitHub-style `[^ref]` with a linked footnotes section
+  (via marked-footnote).
+- **File tree** — folder mode now shows a nested, collapsible directory tree
+  instead of a flat list.
+
 ## [1.1.1] — 2026-07-07
 
 ### Fixed

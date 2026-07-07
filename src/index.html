@@ -244,6 +244,25 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 #doc mark.find-hit{background:color-mix(in srgb,var(--accent) 26%,transparent);color:inherit;border-radius:3px}
 #doc mark.find-cur{background:var(--accent);color:#fff}
 
+/* frontmatter card */
+#doc details.frontmatter{max-width:var(--measure);margin:0 auto 1.4em;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:2px 14px}
+#doc details.frontmatter summary{cursor:pointer;color:var(--muted);font-size:var(--text-sm);padding:8px 0;list-style:none;user-select:none}
+#doc details.frontmatter summary::before{content:"▸";margin-inline-end:8px;display:inline-block;transition:transform var(--dur) var(--ease)}
+#doc details.frontmatter[open] summary::before{transform:rotate(90deg)}
+#doc details.frontmatter summary::-webkit-details-marker{display:none}
+#doc details.frontmatter dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:4px 0 12px;font-size:.92em}
+#doc details.frontmatter dt{color:var(--muted);font-family:var(--f-mono);font-size:.85em;white-space:nowrap}
+#doc details.frontmatter dd{margin:0;color:var(--ink)}
+/* file tree */
+#files .tree-dir>summary{cursor:pointer;list-style:none;color:var(--ink-soft);font-weight:600;padding:5px 9px;border-radius:var(--r-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#files .tree-dir>summary::-webkit-details-marker{display:none}
+#files .tree-dir>summary::before{content:"▸";margin-inline-end:6px;font-size:.8em;color:var(--muted);display:inline-block;transition:transform var(--dur) var(--ease)}
+#files .tree-dir[open]>summary::before{transform:rotate(90deg)}
+#files .tree-dir>summary:hover{background:var(--bg)}
+#files a.tree-file{direction:ltr;text-align:right}
+/* katex math */
+#doc .katex-display{direction:ltr;overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:1em 0}
+#doc .katex{direction:ltr;text-align:left}
 /* mermaid diagrams */
 #doc .mermaid{direction:ltr;text-align:center;margin:1.4em 0;overflow-x:auto}
 #doc .mermaid svg{max-width:100%;height:auto}
@@ -347,6 +366,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 <div class="dropzone" id="dropzone">أفلِت ملف Markdown هنا</div>
 
 <script src="/marked.js"></script>
+<script src="/marked-footnote.js"></script>
 <script src="/highlight.js"></script>
 <script>
 "use strict";
@@ -355,8 +375,8 @@ var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
 var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:64,lang:"ar"};
 var I18N={
- ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا"},
- en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here"}};
+ ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
+ en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
 function T(k){return (I18N[S.lang]||I18N.ar)[k]||I18N.ar[k]||k;}
 var S=loadS(),cur=null;
 function loadS(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem("matn.reading")||"{}"));}catch(e){return Object.assign({},DEF);}}
@@ -439,7 +459,8 @@ function processCallouts(doc){
     bq.insertBefore(head,bq.firstChild);
   }
 }
-if(window.marked&&marked.use){try{marked.use({extensions:[{name:"wikilink",level:"inline",start:function(s){return s.indexOf("[[");},tokenizer:function(s){var m=/^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},renderer:function(t){return '<span class="wikilink" title="'+esc(t.target)+'">'+esc(t.text)+"</span>";}}]});}catch(e){}}
+if(window.marked&&marked.use){try{marked.use({extensions:[{name:"wikilink",level:"inline",start:function(s){return s.indexOf("[[");},tokenizer:function(s){var m=/^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},renderer:function(t){return '<span class="wikilink" title="'+esc(t.target)+'">'+esc(t.text)+"</span>";}}]});}catch(e){}
+  try{if(window.markedFootnote)marked.use(markedFootnote());}catch(e){}}
 function buildToc(doc){
   var hs=doc.querySelectorAll("h1,h2,h3"),nav=$("toc");nav.innerHTML="";
   if(hs.length<2){$("toc-sec").style.display="none";return [];}
@@ -480,9 +501,33 @@ function zoomify(doc){
   })(targets[i]);}
 }
 var lastMD="";
-function render(md){lastMD=md;var doc=$("doc");doc.innerHTML=marked.parse(md,{renderer:safeRenderer()});
+function parseFrontmatter(md){
+  var m=/^﻿?---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/.exec(md);
+  if(!m)return {body:md,card:null};
+  var body=md.slice(m[0].length),lines=m[1].split(/\r?\n/),pairs=[];
+  for(var i=0;i<lines.length;i++){var mm=/^([A-Za-z0-9_.\- ]{1,40}):[ \t]*(.*)$/.exec(lines[i]);
+    if(mm){var k=mm[1].trim(),v=mm[2].trim().replace(/^["']|["']$/g,"");if(k)pairs.push([k,v]);}}
+  if(!pairs.length)return {body:body,card:null};
+  var d=document.createElement("details");d.className="frontmatter";
+  var s=document.createElement("summary");s.textContent=T("frontmatter");d.appendChild(s);
+  var dl=document.createElement("dl");
+  for(var j=0;j<pairs.length;j++){var dt=document.createElement("dt");dt.textContent=pairs[j][0];var dd=document.createElement("dd");dd.textContent=pairs[j][1]||"—";dd.setAttribute("dir","auto");dl.appendChild(dt);dl.appendChild(dd);}
+  d.appendChild(dl);return {body:body,card:d};
+}
+var KATEX_JS="/katex.js",KATEX_AUTO="/katex-auto.js",KATEX_CSS="/katex.css";
+function loadCssOnce(href){return _scripts["css:"+href]||(_scripts["css:"+href]=new Promise(function(res){var l=document.createElement("link");l.rel="stylesheet";l.href=href;l.onload=res;l.onerror=res;document.head.appendChild(l);}));}
+function hasMath(t){return /\$\$[\s\S]+?\$\$|\$[^\s$][^$\n]*\$|\\\(|\\\[/.test(t);}
+function renderMath(doc){
+  if(!hasMath(doc.textContent))return;
+  loadScriptOnce(KATEX_JS).then(function(){return loadScriptOnce(KATEX_AUTO);}).then(function(){return loadCssOnce(KATEX_CSS);}).then(function(){
+    if(!window.renderMathInElement)return;
+    try{window.renderMathInElement(doc,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],ignoredTags:["script","style","pre","code","textarea"],throwOnError:false});}catch(e){}
+  }).catch(function(){});
+}
+function render(md){lastMD=md;var fm=parseFrontmatter(md);var doc=$("doc");doc.innerHTML=marked.parse(fm.body,{renderer:safeRenderer()});
   autoDir=docDir(doc);setDocDir();
-  enhance(doc);stampDir(doc);zoomify(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
+  if(fm.card)doc.insertBefore(fm.card,doc.firstChild);
+  enhance(doc);stampDir(doc);zoomify(doc);renderMath(doc);var heads=buildToc(doc);readingTime(doc.textContent);setupSpy(heads);progress();}
 
 var spyObs=null;
 function setupSpy(heads){
@@ -522,10 +567,24 @@ function loadFile(absPath){
   var links=document.querySelectorAll("#files a");for(var i=0;i<links.length;i++)links[i].classList.toggle("active",links[i].dataset.p===absPath);
   try{history.replaceState(null,"","/?path="+encodeURIComponent(absPath));}catch(e){}
 }
+function fileLink(name,path,depth){var a=document.createElement("a");a.textContent=name;a.href="#";a.dataset.p=path;a.title=path;a.className="tree-file";a.style.paddingInlineStart=(depth*13+6)+"px";a.onclick=function(e){e.preventDefault();loadFile(path);};return a;}
+function renderTree(node,depth){
+  var frag=document.createDocumentFragment();
+  Object.keys(node.dirs).sort().forEach(function(name){
+    var det=document.createElement("details");det.className="tree-dir";if(depth<1)det.open=true;
+    var sum=document.createElement("summary");sum.textContent=name;sum.style.paddingInlineStart=(depth*13)+"px";det.appendChild(sum);
+    det.appendChild(renderTree(node.dirs[name],depth+1));frag.appendChild(det);});
+  node.files.sort(function(a,b){return a.name<b.name?-1:1;}).forEach(function(f){frag.appendChild(fileLink(f.name,f.path,depth));});
+  return frag;
+}
 function buildList(files){
   var nav=$("files");if(!files.length){$("files-sec").style.display="none";syncSide();return;}
   $("files-sec").style.display="block";nav.innerHTML="";
-  files.forEach(function(f){var a=document.createElement("a");a.textContent=f.rel;a.href="#";a.dataset.p=f.path;a.title=f.path;a.onclick=function(e){e.preventDefault();loadFile(f.path);};nav.appendChild(a);});
+  var root={dirs:{},files:[]};
+  files.forEach(function(f){var parts=f.rel.split("/"),node=root;
+    for(var i=0;i<parts.length-1;i++){node.dirs[parts[i]]=node.dirs[parts[i]]||{dirs:{},files:[]};node=node.dirs[parts[i]];}
+    node.files.push({name:parts[parts.length-1],path:f.path});});
+  nav.appendChild(renderTree(root,0));
   syncSide();
 }
 function openDir(dir){fetch("/api/list?dir="+encodeURIComponent(dir)).then(function(r){return r.json();}).then(function(files){buildList(files);var q=new URLSearchParams(location.search).get("path");if(q)loadFile(q);else if(files.length)loadFile(files[0].path);});}

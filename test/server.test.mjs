@@ -84,3 +84,18 @@ test("serves the vendored Mermaid bundle", async (t) => {
   const body = await res.arrayBuffer();
   assert.ok(body.byteLength > 100000, "mermaid bundle should be large");
 });
+
+test("serves KaTeX and footnote assets", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-root4-"));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  for (const [path, type] of [["/katex.js", /javascript/], ["/katex.css", /css/], ["/marked-footnote.js", /javascript/]]) {
+    const res = await fetch(base + path);
+    assert.equal(res.status, 200, path);
+    assert.match(res.headers.get("content-type"), type, path);
+  }
+});

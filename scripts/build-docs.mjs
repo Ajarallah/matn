@@ -16,6 +16,8 @@ s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marke
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
 s = s.replace('DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js"', 'DOCX_SRC="./vendor/html-docx.min.js",ZIP_SRC="./vendor/jszip.min.js"');
+s = s.replace('KATEX_JS="/katex.js",KATEX_AUTO="/katex-auto.js",KATEX_CSS="/katex.css"', 'KATEX_JS="./vendor/katex.min.js",KATEX_AUTO="./vendor/katex-auto.min.js",KATEX_CSS="./vendor/katex.min.css"');
+s = s.replace('<script src="/marked-footnote.js"></script>', '<script src="./vendor/marked-footnote.umd.js"></script>');
 
 // 2) header: swap the live-reload indicator for an open-file button + a GitHub link
 const live = '<span class="live" id="live" title="تحديث حيّ"><span class="dot"></span><span data-i18n="live">حيّ</span></span>';
@@ -52,6 +54,7 @@ copyFileSync(join(ROOT, "vendor", "highlight.min.js"), join(DOCS, "vendor", "hig
 copyFileSync(join(ROOT, "vendor", "mermaid.min.js"), join(DOCS, "vendor", "mermaid.min.js"));
 copyFileSync(join(ROOT, "vendor", "html-docx.min.js"), join(DOCS, "vendor", "html-docx.min.js"));
 copyFileSync(join(ROOT, "vendor", "jszip.min.js"), join(DOCS, "vendor", "jszip.min.js"));
+for (const f of ["katex.min.js","katex-auto.min.js","katex.min.css","marked-footnote.umd.js"]) copyFileSync(join(ROOT, "vendor", f), join(DOCS, "vendor", f));
 for (const f of readdirSync(join(ROOT, "vendor", "fonts")))
   copyFileSync(join(ROOT, "vendor", "fonts", f), join(DOCS, "vendor", "fonts", f));
 

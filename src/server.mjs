@@ -121,6 +121,17 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       try { return send(200, "text/javascript; charset=utf-8", readFileSync(join(VENDOR, f)), { "cache-control": "max-age=86400" }); }
       catch { return send(404, "text/plain", "nf"); }
     }
+    {
+      const jsmap = { "/katex.js": "katex.min.js", "/katex-auto.js": "katex-auto.min.js", "/marked-footnote.js": "marked-footnote.umd.js" };
+      if (jsmap[u.pathname]) {
+        try { return send(200, "text/javascript; charset=utf-8", readFileSync(join(VENDOR, jsmap[u.pathname])), { "cache-control": "max-age=86400" }); }
+        catch { return send(404, "text/plain", "nf"); }
+      }
+      if (u.pathname === "/katex.css") {
+        try { return send(200, "text/css; charset=utf-8", readFileSync(join(VENDOR, "katex.min.css")), { "cache-control": "max-age=86400" }); }
+        catch { return send(404, "text/plain", "nf"); }
+      }
+    }
     // user-supplied fonts (e.g. Thmanyah — non-redistributable, lives outside git)
     if (u.pathname.startsWith("/fonts-local/")) {
       const name = u.pathname.slice(13);
