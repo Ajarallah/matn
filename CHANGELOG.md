@@ -3,6 +3,20 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.3] — 2026-07-08
+
+### Added
+- **Text alignment control (Word-style).** A new setting lets the reader choose
+  how paragraphs sit: **من اليمين / Start** (natural RTL, ragged edge) or
+  **ضبط الأسطر / Justify** (even line lengths on both edges). Headings and tables
+  always stay start-aligned.
+
+### Changed
+- **Wider reading space.** The reading column now uses much more of the pane —
+  «واسع/Wide» fills it almost edge to edge (page cap raised 1120→1320px; width
+  presets are now 88 / 112 / 136, default medium 112 ≈ 1008px at the base font
+  size). Text still starts from the right.
+
 ## [1.2.2] — 2026-07-08
 
 ### Fixed

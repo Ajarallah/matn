@@ -178,7 +178,7 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
 /* full-bleed grid: a centered reading column, with side tracks that wide blocks
    (tables, code, diagrams) break out into. Grid placement centers the column
    reliably — unlike margin-inline:auto, which per-element margin shorthands clobber. */
-article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:100%;
+article#doc{max-width:min(1320px,100%);margin:0 auto;padding:44px 0 40vh;width:100%;
   line-height:var(--rlh);font-size:var(--rsize);font-family:var(--rfont);
   display:grid;
   grid-template-columns:
@@ -191,6 +191,8 @@ article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:1
 #doc>.tablewrap,#doc>pre,#doc>.mermaid{grid-column:wide;max-width:100%}
 #doc>*:first-child{margin-top:0}
 #doc p{margin:.7em 0;text-wrap:pretty}
+/* user-chosen alignment: start (natural, ragged edge) or justify (even line lengths). headings/tables keep start. */
+#doc p,#doc li,#doc dd,#doc blockquote{text-align:var(--text-align,start)}
 #doc h1,#doc h2,#doc h3,#doc h4{line-height:1.3;text-wrap:balance;scroll-margin-top:66px;font-weight:600}
 #doc h1{font-size:1.72em;font-weight:700;letter-spacing:-.02em;margin:0 0 .55em;padding-bottom:.35em;border-bottom:1px solid var(--line)}
 #doc h2{font-size:1.34em;letter-spacing:-.015em;margin:1.7em 0 .5em}
@@ -359,9 +361,13 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
     <div class="row"><button class="rowbtn" id="szminus" aria-label="تصغير">&minus;</button><span class="val" id="szval">18px</span><button class="rowbtn" id="szplus" aria-label="تكبير">+</button></div></div>
   <div class="grp"><div class="lbl">تباعد الأسطر</div>
     <div class="row"><button class="rowbtn" id="lhminus" aria-label="أقل">&minus;</button><span class="val" id="lhval">1.85</span><button class="rowbtn" id="lhplus" aria-label="أكثر">+</button></div></div>
-  <div class="grp"><div class="lbl">عرض النص</div>
+  <div class="grp"><div class="lbl" data-i18n="width">عرض النص</div>
     <div class="seg" id="measure">
-      <button data-measure-val="56">ضيّق</button><button data-measure-val="72">متوسط</button><button data-measure-val="88">واسع</button>
+      <button data-measure-val="88" data-i18n="narrow">ضيّق</button><button data-measure-val="112" data-i18n="mid">متوسط</button><button data-measure-val="136" data-i18n="wide">واسع</button>
+    </div></div>
+  <div class="grp"><div class="lbl" data-i18n="align">محاذاة النص</div>
+    <div class="seg" id="align">
+      <button data-align-val="start" data-i18n="alignStart">من اليمين</button><button data-align-val="justify" data-i18n="alignJustify">ضبط الأسطر</button>
     </div></div>
   <button class="reset" id="reset">إعادة الضبط الافتراضي</button>
 </div>
@@ -384,10 +390,10 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
 var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif",thmanyah:"'Thmanyah Serif Text','Noto Naskh Arabic',serif"};
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
-var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:72,lang:"ar"};
+var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:112,align:"start",lang:"ar"};
 var I18N={
- ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
- en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
+ ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",align:"محاذاة النص",alignStart:"من اليمين",alignJustify:"ضبط الأسطر",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
+ en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",align:"Alignment",alignStart:"Start",alignJustify:"Justify",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
 function T(k){return (I18N[S.lang]||I18N.ar)[k]||I18N.ar[k]||k;}
 var S=loadS(),cur=null;
 function loadS(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem("matn.reading")||"{}"));}catch(e){return Object.assign({},DEF);}}
@@ -404,7 +410,8 @@ function applyS(){
   r.setProperty("--measure",Math.round(S.size*S.measure/2)+"px"); // font-size-independent measure so headings match body width
   if(S.font==="thmanyah")r.setProperty("--rfont-display","'Thmanyah Serif Display','Amiri',serif");else r.removeProperty("--rfont-display");
   $("szval").textContent=S.size+"px";$("lhval").textContent=S.lh.toFixed(2);
-  mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));mark("uilang","lang-val",S.lang);
+  r.setProperty("--text-align",S.align==="justify"?"justify":"start");
+  mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));mark("align","align-val",S.align||"start");mark("uilang","lang-val",S.lang);
   applyLang();
 }
 function applyLang(){
@@ -420,7 +427,7 @@ function applyLang(){
 }
 function mark(id,attr,val){var e=$(id).querySelectorAll("[data-"+attr+"]");for(var i=0;i<e.length;i++)e[i].setAttribute("data-active",e[i].getAttribute("data-"+attr)===val?"1":"0");}
 function bindG(id,attr,key,cast){$(id).addEventListener("click",function(e){var b=e.target.closest("[data-"+attr+"]");if(!b)return;S[key]=cast(b.getAttribute("data-"+attr));saveS();applyS();});}
-bindG("themes","theme-val","theme",String);bindG("fonts","font-val","font",String);bindG("measure","measure-val","measure",Number);bindG("uilang","lang-val","lang",String);
+bindG("themes","theme-val","theme",String);bindG("fonts","font-val","font",String);bindG("measure","measure-val","measure",Number);bindG("align","align-val","align",String);bindG("uilang","lang-val","lang",String);
 function step(key,d,min,max,round){return function(){var v=S[key]+d;v=Math.min(max,Math.max(min,v));S[key]=round?Math.round(v):Math.round(v*100)/100;saveS();applyS();};}
 $("szplus").onclick=step("size",1,15,28,true);$("szminus").onclick=step("size",-1,15,28,true);
 $("lhplus").onclick=step("lh",0.05,1.4,2.4,false);$("lhminus").onclick=step("lh",-0.05,1.4,2.4,false);
