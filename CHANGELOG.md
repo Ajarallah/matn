@@ -3,6 +3,14 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.7] — 2026-07-08
+
+### Added
+- **Ignores GitHub layout wrappers.** A `<div dir="rtl">` or `<div align="…">`
+  wrapper (the common way to force RTL on a GitHub README) no longer shows up as
+  escaped text — Matn sets direction itself, so those standalone wrapper tags are
+  dropped. Arabic READMEs written for GitHub now render cleanly in Matn too.
+
 ## [1.2.6] — 2026-07-08
 
 ### Fixed

@@ -1,171 +1,166 @@
+<div dir="rtl">
+
 # متن · Matn
 
-**A calm, right-to-left Markdown reader for Arabic.**
-Reading themes, embedded Arabic fonts, math, diagrams, and export — all in your browser, fully offline.
+**قارئ ماركداون للعربية، من اليمين إلى اليسار.**
+سمات للقراءة، خطوط عربية مدمجة، معادلات، مخططات، وتصدير — يعمل في متصفحك دون اتصال.
 
-**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)**
 
-**[العربية ←](./README.ar.md)**
+**[English →](./README.en.md)**
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
-[![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
-![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
+[![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
+[![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
+![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
+![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
-![Matn — light theme](./assets/screenshot-light.png)
+![متن — السمة الفاتحة](./assets/screenshot-light.png)
 
 ---
 
-## Why
+## لماذا متن
 
-Terminals and many editors mangle Arabic Markdown: no bidirectional reordering,
-broken letter-joining, mixed Arabic/Latin lines collapsing, and a heading that
-merely starts with a Latin word flips the whole line to left-to-right. **Matn**
-renders your `.md` in the browser as a genuine right-to-left document — Arabic
-flows RTL while code and English read LTR inside it — wrapped in a reading
-experience built for long-form Arabic.
+كثير من المحرّرات والطرفيات تعرض ماركداون العربي بشكل سيّئ: لا تدعم الاتجاهين، وتقطّع
+الحروف، وتخلط أسطر العربي والإنجليزي حتى تنكسر، وإذا بدأ عنوان بكلمة إنجليزية انقلب السطر
+كله إلى اليسار. **متن** يعرض ملف `.md` في المتصفح مستندا عربيا صحيحا من اليمين إلى اليسار،
+مع بقاء الكود والإنجليزية داخله من اليسار إلى اليمين، ضمن تجربة قراءة مريحة للنصوص الطويلة.
 
-## Features
+## المزايا
 
-**Reading**
+**القراءة**
 
-- 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
-- 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
-- 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
-- 🔧 **Reading controls** — font, size, line-height, column width, and text alignment (start / justify); every choice is saved locally.
-- 🌍 **Bilingual interface** — switch the whole UI between Arabic and English.
+- 🪶 **اتجاه عربي صحيح** — يتبع المستند لغته الغالبة، فيبقى الملف العربي من اليمين إلى اليسار حتى لو بدأ سطر أو عنوان بكلمة إنجليزية، وتبقى الكلمات الإنجليزية داخل السطر من اليسار إلى اليمين.
+- 🎨 **أربع سمات** — فاتح، وسيبيا، وداكن، وليلي (أسود كامل)؛ يتبع نظامك تلقائيا.
+- 🔤 **خطوط عربية مدمجة** — النظام، ونوتو نسخ، وأميري، وIBM Plex، وتجوّل (كلها برخصة SIL OFL، مدمجة، وتعمل دون اتصال)، وخط ثمانية (Display و Text) اختياري.
+- 🔧 **تحكّم بالقراءة** — الخط، والحجم، وتباعد الأسطر، وعرض العمود، ومحاذاة النص (من اليمين أو ضبط الأسطر)؛ وكل اختيار يُحفظ.
+- 🌍 **واجهة بلغتين** — بدّل الواجهة كاملة بين العربية والإنجليزية.
 
-**Content**
+**المحتوى**
 
-- 🌈 **Syntax highlighting** — theme-aware, via highlight.js.
-- 🧮 **Math** — inline `$…$` and block `$$…$$` rendered with KaTeX, offline.
-- 📊 **Mermaid diagrams** — rendered inline and theme-aware; hover to magnify.
-- 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
-- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
-- 📝 **Footnotes**, a **YAML frontmatter card**, task lists, tables, blockquotes.
-- 🖼️ **Hover zoom** — magnify diagrams and images at the cursor.
+- 🌈 **تلوين الكود** حسب السمة (highlight.js).
+- 🧮 **معادلات** — `$…$` داخل السطر و `$$…$$` مستقلة، عبر KaTeX ودون اتصال.
+- 📊 **مخططات Mermaid** — داخل النص، وحسب السمة؛ ضع المؤشّر فوقها لتكبيرها.
+- 💬 **صناديق تنبيه GFM** — `> [!NOTE]`، و`[!TIP]`، و`[!WARNING]` … بشكل مميّز لكل نوع.
+- 🔗 **روابط ويكي** — `[[صفحة]]` و `[[صفحة|اسم]]`، كما في أوبسيديان.
+- 📝 **حواشٍ**، و**بطاقة للبيانات الوصفية (YAML)**، وقوائم مهام، وجداول، واقتباسات.
+- 🖼️ **تكبير عند التمرير** — كبّر المخططات والصور عند المؤشّر.
 
-**Navigation & files**
+**التنقّل والملفات**
 
-- 🧭 **Table of contents** — auto-generated, with scroll-spy and heading anchors.
-- 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
-- 🔎 **In-document search** — press `/` to find and jump between matches.
-- ♻️ **Live reload** — edit in any editor; the view updates on save.
-- 🖱️ **Drag & drop** any `.md` onto the window.
+- 🧭 **فهرس محتويات** يُبنى تلقائيا، مع متابعة موضع القراءة وروابط للعناوين.
+- 🗂️ **شجرة ملفات** — افتح مجلدا لتتصفّح أدلّته متداخلة وقابلة للطي.
+- 🔎 **بحث داخل المستند** — اضغط `/` للبحث والتنقّل بين النتائج.
+- ♻️ **تحديث فوري** — حرّر الملف بأي محرّر، فتتحدّث الصفحة عند الحفظ.
+- 🖱️ **سحب وإفلات** لأي `.md` على النافذة.
 
-**Output**
+**الإخراج**
 
-- 📤 **Export** — PDF, standalone HTML, Word (`.docx`), EPUB 3 (RTL page progression), or raw Markdown.
-- 🖨️ **Print** — a clean print layout.
+- 📤 **تصدير** — PDF، أو HTML مستقل، أو Word‏ (`.docx`)، أو EPUB 3 (ترتيب صفحات من اليمين)، أو ماركداون.
+- 🖨️ **طباعة** بتنسيق نظيف.
 
-**Foundations**
+**الأساس**
 
-- 📦 **Zero runtime dependencies** — pure Node plus vendored assets, fully offline; never phones home.
-- 🔒 **Contained** — binds to `127.0.0.1`, serves only from the folder you opened, escapes raw HTML, and blocks unsafe URL schemes.
+- 📦 **بلا تبعيات تشغيل** — Node فقط مع ملفات مدمجة، يعمل دون اتصال ولا يرسل أي بيانات.
+- 🔒 **محدود النطاق** — يرتبط بـ `127.0.0.1`، ويعرض فقط من المجلد الذي فتحته، ويعزل HTML الخام، ويمنع الروابط غير الآمنة.
 
-## Screenshots
+## لقطات
 
-| Sepia · Amiri | Dark · syntax + math |
+| سيبيا · أميري | داكن · تلوين ومعادلات |
 |---|---|
-| ![sepia](./assets/screenshot-sepia.png) | ![dark](./assets/screenshot-dark.png) |
+| ![سيبيا](./assets/screenshot-sepia.png) | ![داكن](./assets/screenshot-dark.png) |
 
-| Reading settings |
+| لوحة الإعدادات |
 |---|
-| ![settings](./assets/screenshot-settings.png) |
+| ![الإعدادات](./assets/screenshot-settings.png) |
 
-## Install
+## التثبيت
 
-**Global (from GitHub):**
+**تثبيت عام (من GitHub):**
 ```bash
 npm install -g Ajarallah/matn
 matn README.md
 ```
 
-**Run without installing:**
+**تشغيل بلا تثبيت:**
 ```bash
 npx github:Ajarallah/matn README.md
 ```
 
-**From source:**
+**من المصدر:**
 ```bash
 git clone https://github.com/Ajarallah/matn.git
 cd matn && npm link
 matn README.md
 ```
 
-> Requires Node.js ≥ 18. No other dependencies.
+> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره.
 
-## Usage
+## الاستعمال
 
 ```bash
-matn <file.md>        # open a single file
-matn ./docs           # browse a folder (file-tree sidebar)
-matn                  # open the current directory
-matn PLAN.md -p 5000  # custom port
+matn <file.md>        # فتح ملف واحد
+matn ./docs           # تصفّح مجلد (شجرة ملفات جانبية)
+matn                  # فتح المجلد الحالي
+matn PLAN.md -p 5000  # منفذ مختار
 ```
 
-Options: `-p, --port` · `--host` · `--no-open` · `-h, --help` · `-v, --version`.
+الخيارات: `-p, --port` · `--host` · `--no-open` · `-h, --help` · `-v, --version`.
 
-Matn opens your browser automatically and reuses a running instance, so `matn a.md`
-then `matn b.md` both land in the same window.
+يفتح متن المتصفح تلقائيا ويعيد استخدام نسخة قائمة، فـ`matn a.md` ثم `matn b.md` يفتحان في النافذة نفسها.
 
-### In the browser
+### داخل المتصفح
 
-- Click **⚙** for language, theme, font, size, line-height, width, and alignment — all remembered.
-- **Drag** any `.md` onto the window to open it.
-- **Save ▾** exports PDF / HTML / Word / EPUB / Markdown; **🖨️** prints.
-- Press **/** to search. Keys: `+` / `−` size · `g` / `G` top / bottom · `Esc` close the panel.
+- **⚙** للّغة، والسمة، والخط، والحجم، والتباعد، والعرض، والمحاذاة — وكلها محفوظة.
+- **اسحب** أي `.md` إلى النافذة لفتحه.
+- **حفظ ▾** يصدّر PDF أو HTML أو Word أو EPUB أو ماركداون، و**🖨️** للطباعة.
+- اضغط **/** للبحث. مفاتيح: `+` / `−` للحجم · `g` / `G` للأعلى / الأسفل · `Esc` لإغلاق اللوحة.
 
-## Open `.md` on double-click
+## فتح `.md` بنقرة مزدوجة
 
-**macOS** — make Matn the default reader for Markdown, in one step:
+**macOS** — اجعل متن القارئ الافتراضي لماركداون بخطوة واحدة:
 
 ```bash
 bash scripts/install-macos.sh --default
 ```
 
-This builds a small Finder app and registers it for `.md`. To point an existing
-install manually: **Get Info → Open with → Change All**.
+يبني تطبيق Finder صغيرا ويسجّله لملفات `.md`. ولتوجيه تثبيت قائم يدويا:
+**Get Info ← Open with ← Change All**.
 
-**Linux** — `bash scripts/install-linux.sh --default` adds a `.desktop` entry and
-makes Matn the handler for `text/markdown`.
-**Windows** — `matn file.md` works from any shell; associate `.md` via
-*Open with → Choose another app* pointing at `matn`.
+**Linux** — الأمر `bash scripts/install-linux.sh --default` يضيف مدخل `.desktop` ويجعل متن معالج `text/markdown`.
+**Windows** — الأمر `matn file.md` يعمل من أي طرفية؛ واربط `.md` من
+*Open with ← Choose another app* بالإشارة إلى `matn`.
 
-## How it works
+## كيف يعمل
 
-Matn is a small local HTTP server (`src/server.mjs`, no dependencies). It renders
-Markdown with [marked](https://github.com/markedjs/marked), gives each text block
-the document's dominant direction for correct bidi, highlights code with
-[highlight.js](https://github.com/highlightjs/highlight.js), renders math with
-[KaTeX](https://katex.org) and diagrams with [Mermaid](https://mermaid.js.org)
-(both lazy-loaded), and pushes live-reload events over Server-Sent Events. Fonts
-and libraries are vendored, so it runs fully offline and never phones home.
+متن خادم HTTP محلي صغير (`src/server.mjs`، بلا تبعيات). يعرض الماركداون عبر
+[marked](https://github.com/markedjs/marked)، ويعطي كل كتلة نص اتجاه المستند الغالب لضبط
+الاتجاهين، ويلوّن الكود عبر [highlight.js](https://github.com/highlightjs/highlight.js)،
+ويعرض المعادلات عبر [KaTeX](https://katex.org) والمخططات عبر [Mermaid](https://mermaid.js.org)
+(كلاهما يُحمّل عند الحاجة)، ويحدّث الصفحة فوريا عبر SSE. الخطوط والمكتبات مدمجة، فيعمل دون
+اتصال ولا يرسل أي بيانات.
 
-## Security
+## الأمان
 
-Matn binds to `127.0.0.1` by default and serves Markdown plus referenced raster
-images only from the file or folder you opened. Raw HTML in Markdown is escaped,
-and unsafe link schemes such as `javascript:` are blocked. Avoid `--host 0.0.0.0`
-unless you intentionally want other devices on your network to reach the reader.
-See [SECURITY.md](./SECURITY.md).
+يرتبط متن تلقائيا بـ `127.0.0.1`، ولا يعرض ملفات ماركداون والصور المشار إليها إلا من الملف
+أو المجلد الذي فتحته. ويعزل HTML الخام داخل الماركداون، ويمنع الروابط غير الآمنة مثل
+`javascript:`. تجنّب `--host 0.0.0.0` إلا إذا أردت عمدا إتاحة القارئ لأجهزة أخرى على شبكتك.
+راجع [SECURITY.md](./SECURITY.md).
 
-## Credits & licenses
+## الرخص والاعتمادات
 
-- Code: **MIT** — see [LICENSE](./LICENSE).
-- Fonts: **SIL OFL 1.1** — Amiri, Noto Naskh Arabic, IBM Plex Sans Arabic, Tajawal.
-- Libraries: [marked](https://github.com/markedjs/marked) (MIT),
-  [highlight.js](https://github.com/highlightjs/highlight.js) (BSD-3-Clause),
-  [KaTeX](https://katex.org) (MIT), [Mermaid](https://mermaid.js.org) (MIT),
-  marked-footnote (MIT), html-docx-js (MIT), JSZip (MIT).
+- الكود: **MIT** — [LICENSE](./LICENSE).
+- الخطوط: **SIL OFL 1.1** — أميري، ونوتو نسخ، وIBM Plex، وتجوّل.
+- المكتبات: [marked](https://github.com/markedjs/marked)‏ (MIT)، و[highlight.js](https://github.com/highlightjs/highlight.js)‏ (BSD-3)، و[KaTeX](https://katex.org)‏ (MIT)، و[Mermaid](https://mermaid.js.org)‏ (MIT)، وmarked-footnote‏ (MIT)، وhtml-docx-js‏ (MIT)، وJSZip‏ (MIT).
 
-Full third-party notices in [NOTICE](./NOTICE).
+الإشعارات الكاملة في [NOTICE](./NOTICE).
 
-## Contributing
+## المساهمة
 
-Issues and PRs welcome. Roadmap: presentation mode, more themes and font
-pairings. See the [CHANGELOG](./CHANGELOG.md).
+المسائل وطلبات الدمج مرحّب بها. خارطة الطريق: وضع عرض تقديمي، وسمات وأزواج خطوط أكثر.
+راجع [CHANGELOG](./CHANGELOG.md).
 
 ---
 
-Made by [Ali Aljarallah](https://github.com/Ajarallah). **متن** — the core text of a book.
+صنعه [علي الجار الله](https://github.com/Ajarallah). **متن** — نصّ الكتاب الأساسي.
+
+</div>

@@ -555,7 +555,7 @@ function extractMath(src){
   return {src:src,store:store};
 }
 function restoreMath(html,store){return html.replace(/(\d+)/g,function(_,i){var m=store[+i];if(!m)return "";return '<span class="'+(m.d?"katex-block":"katex-inline")+'" data-tex="'+esc(m.t)+'"></span>';});}
-function render(md){lastMD=md;var fm=parseFrontmatter(md);var mx=extractMath(fm.body);
+function render(md){lastMD=md;var fm=parseFrontmatter(md);/* drop standalone layout-wrapper div tags (GitHub RTL/align idiom) — Matn sets direction itself, so these would only show as escaped text */var body=fm.body.replace(/^[ \t]*<\/?div\b[^>]*>[ \t]*$/gim,"");var mx=extractMath(body);
   var doc=$("doc");doc.innerHTML=restoreMath(marked.parse(mx.src,{renderer:safeRenderer()}),mx.store);
   autoDir=docDir(doc);setDocDir();
   if(fm.card)doc.insertBefore(fm.card,doc.firstChild);
