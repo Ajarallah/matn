@@ -1,6 +1,6 @@
 {
   "name": "matn",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "A calm, right-to-left Markdown reader for Arabic: reading themes, embedded Arabic fonts, syntax highlighting, Mermaid diagrams, callouts, wikilinks, search, and live reload. Runs locally in your browser.",
   "type": "module",
   "bin": {

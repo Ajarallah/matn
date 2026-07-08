@@ -179,12 +179,11 @@ article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:1
   display:grid;
   grid-template-columns:
     [full-start] minmax(28px,1fr)
-    [wide-start] minmax(0,140px)
     [content-start] min(var(--measure),100% - 56px) [content-end]
-    minmax(0,140px) [wide-end]
     minmax(28px,1fr) [full-end];}
-#doc>*{grid-column:content;min-width:0}
-#doc>.tablewrap,#doc>pre,#doc>.mermaid{grid-column:wide;max-width:100%}
+/* every block shares ONE reading column at the same edges; wide tables/code/diagrams
+   scroll inside it (overflow-x:auto) instead of bursting past the text width */
+#doc>*{grid-column:content;min-width:0;max-width:100%}
 #doc>*:first-child{margin-top:0}
 #doc p{margin:.7em 0;text-wrap:pretty}
 /* user-chosen alignment: start (natural, ragged edge) or justify (even line lengths). headings/tables keep start. */

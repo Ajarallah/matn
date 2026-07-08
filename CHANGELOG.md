@@ -3,6 +3,16 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.6] — 2026-07-08
+
+### Fixed
+- **One column for everything.** Code blocks, tables, and diagrams used to break
+  out wider than the prose, so their edges didn't line up with the text — it read
+  as content leaking past the column. Now every block shares the same reading
+  column; anything too wide (a big table, a long code line) scrolls inside its own
+  box instead of bursting past the text width. Verified on a real document, not
+  just the demo.
+
 ## [1.2.5] — 2026-07-08
 
 ### Changed
