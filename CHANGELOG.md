@@ -3,6 +3,16 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.4] — 2026-07-08
+
+### Changed
+- **Font picker is now a dropdown** instead of a full stack of preview buttons,
+  so the settings panel stays compact. Each option still previews in its own
+  typeface where the browser supports it.
+- **Wider width presets.** The narrowest step was dropped and the scale shifted
+  up: «ضيّق/Narrow» now equals the old medium, «متوسط/Medium» the old wide, and
+  «واسع/Wide» is wider still (112 / 136 / 160; default medium).
+
 ## [1.2.3] — 2026-07-08
 
 ### Added

@@ -151,16 +151,12 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
   transition:border-color var(--dur) var(--ease),transform var(--dur) var(--ease)}
 .themes button:active{transform:scale(.95)}
 .themes button[data-active="1"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.fonts{display:flex;flex-direction:column;gap:5px}
-.fonts button{text-align:start;border:1px solid transparent;background:var(--surface);color:var(--ink);
-  border-radius:var(--r-sm);padding:9px 12px;cursor:pointer;line-height:1.25;
-  transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease)}
-.fonts button:hover{border-color:var(--line-strong)}
-.fonts button .fn{font-size:1.05rem;display:block}
-.fonts button .fd{font-size:var(--text-xs);color:var(--muted);font-family:var(--rfont);margin-top:1px}
-.fonts button[data-active="1"]{background:var(--accent);border-color:var(--accent)}
-.fonts button[data-active="1"] .fn,.fonts button[data-active="1"] .fd{color:#fff}
-.fonts button[data-active="1"] .fd{color:rgb(255 255 255/.72)}
+.selwrap{position:relative}
+.selwrap::after{content:"";position:absolute;inset-inline-end:13px;top:calc(50% - 4px);width:7px;height:7px;border-right:1.6px solid var(--ink-soft);border-bottom:1.6px solid var(--ink-soft);transform:rotate(45deg);pointer-events:none;transition:border-color var(--dur) var(--ease)}
+.selwrap:hover::after{border-color:var(--ink)}
+.sel{appearance:none;-webkit-appearance:none;width:100%;font-family:inherit;font-size:var(--text-sm);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 0;padding-inline:12px 30px;cursor:pointer;line-height:1.3;transition:border-color var(--dur) var(--ease)}
+.sel:hover{border-color:var(--line-strong)}
+.sel:focus-visible{outline:none;border-color:var(--accent)}
 .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .row .val{font-family:var(--f-mono);font-size:var(--text-sm);min-width:52px;text-align:center;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .rowbtn{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
@@ -347,15 +343,15 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
       <button data-theme-val="night" style="background:#000;color:#ddd8cf">ليلي</button>
     </div>
   </div>
-  <div class="grp"><div class="lbl">الخط</div>
-    <div class="fonts" id="fonts">
-      <button data-font-val="system"><span class="fn" style="font-family:-apple-system,'SF Arabic',sans-serif">أبجد هوز</span><span class="fd">خط النظام · واجهة</span></button>
-      <button data-font-val="naskh"><span class="fn" style="font-family:'Noto Naskh Arabic',serif">أبجد هوز</span><span class="fd">نوتو نسخ · للقراءة الطويلة</span></button>
-      <button data-font-val="amiri"><span class="fn" style="font-family:'Amiri',serif">أبجد هوز</span><span class="fd">أميري · نسخ كلاسيكي</span></button>
-      <button data-font-val="plex"><span class="fn" style="font-family:'IBM Plex Sans Arabic',sans-serif">أبجد هوز</span><span class="fd">IBM بلكس · حديث</span></button>
-      <button data-font-val="tajawal"><span class="fn" style="font-family:'Tajawal',sans-serif">أبجد هوز</span><span class="fd">تجوّل · هندسي</span></button>
-      <button data-font-val="thmanyah"><span class="fn" style="font-family:'Thmanyah Serif Text','Noto Naskh Arabic',serif">أبجد هوز</span><span class="fd" data-i18n="thmanyahNote">ثمانية · نص + عناوين Display (يتطلّب تنزيله)</span></button>
-    </div>
+  <div class="grp"><div class="lbl" data-i18n="font">الخط</div>
+    <div class="selwrap"><select id="fontsel" class="sel" aria-label="الخط">
+        <option value="system" style="font-family:-apple-system,'SF Arabic',sans-serif">خط النظام · واجهة</option>
+        <option value="naskh" style="font-family:'Noto Naskh Arabic',serif">نوتو نسخ · قراءة طويلة</option>
+        <option value="amiri" style="font-family:'Amiri',serif">أميري · نسخ كلاسيكي</option>
+        <option value="plex" style="font-family:'IBM Plex Sans Arabic',sans-serif">IBM بلكس · حديث</option>
+        <option value="tajawal" style="font-family:'Tajawal',sans-serif">تجوّل · هندسي</option>
+        <option value="thmanyah" style="font-family:'Thmanyah Serif Text','Noto Naskh Arabic',serif" data-i18n="thmanyahNote">ثمانية · نص + عناوين (يتطلّب تنزيله)</option>
+      </select></div>
   </div>
   <div class="grp"><div class="lbl">حجم الخط</div>
     <div class="row"><button class="rowbtn" id="szminus" aria-label="تصغير">&minus;</button><span class="val" id="szval">18px</span><button class="rowbtn" id="szplus" aria-label="تكبير">+</button></div></div>
@@ -363,7 +359,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
     <div class="row"><button class="rowbtn" id="lhminus" aria-label="أقل">&minus;</button><span class="val" id="lhval">1.85</span><button class="rowbtn" id="lhplus" aria-label="أكثر">+</button></div></div>
   <div class="grp"><div class="lbl" data-i18n="width">عرض النص</div>
     <div class="seg" id="measure">
-      <button data-measure-val="88" data-i18n="narrow">ضيّق</button><button data-measure-val="112" data-i18n="mid">متوسط</button><button data-measure-val="136" data-i18n="wide">واسع</button>
+      <button data-measure-val="112" data-i18n="narrow">ضيّق</button><button data-measure-val="136" data-i18n="mid">متوسط</button><button data-measure-val="160" data-i18n="wide">واسع</button>
     </div></div>
   <div class="grp"><div class="lbl" data-i18n="align">محاذاة النص</div>
     <div class="seg" id="align">
@@ -390,7 +386,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
 var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif",thmanyah:"'Thmanyah Serif Text','Noto Naskh Arabic',serif"};
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
-var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:112,align:"start",lang:"ar"};
+var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:136,align:"start",lang:"ar"};
 var I18N={
  ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",align:"محاذاة النص",alignStart:"من اليمين",alignJustify:"ضبط الأسطر",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
  en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",align:"Alignment",alignStart:"Start",alignJustify:"Justify",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
@@ -411,7 +407,7 @@ function applyS(){
   if(S.font==="thmanyah")r.setProperty("--rfont-display","'Thmanyah Serif Display','Amiri',serif");else r.removeProperty("--rfont-display");
   $("szval").textContent=S.size+"px";$("lhval").textContent=S.lh.toFixed(2);
   r.setProperty("--text-align",S.align==="justify"?"justify":"start");
-  mark("themes","theme-val",S.theme);mark("fonts","font-val",S.font);mark("measure","measure-val",String(S.measure));mark("align","align-val",S.align||"start");mark("uilang","lang-val",S.lang);
+  mark("themes","theme-val",S.theme);(function(){var _f=$("fontsel");if(_f)_f.value=S.font;})();mark("measure","measure-val",String(S.measure));mark("align","align-val",S.align||"start");mark("uilang","lang-val",S.lang);
   applyLang();
 }
 function applyLang(){
@@ -427,7 +423,7 @@ function applyLang(){
 }
 function mark(id,attr,val){var e=$(id).querySelectorAll("[data-"+attr+"]");for(var i=0;i<e.length;i++)e[i].setAttribute("data-active",e[i].getAttribute("data-"+attr)===val?"1":"0");}
 function bindG(id,attr,key,cast){$(id).addEventListener("click",function(e){var b=e.target.closest("[data-"+attr+"]");if(!b)return;S[key]=cast(b.getAttribute("data-"+attr));saveS();applyS();});}
-bindG("themes","theme-val","theme",String);bindG("fonts","font-val","font",String);bindG("measure","measure-val","measure",Number);bindG("align","align-val","align",String);bindG("uilang","lang-val","lang",String);
+bindG("themes","theme-val","theme",String);$("fontsel").addEventListener("change",function(){S.font=this.value;saveS();applyS();});bindG("measure","measure-val","measure",Number);bindG("align","align-val","align",String);bindG("uilang","lang-val","lang",String);
 function step(key,d,min,max,round){return function(){var v=S[key]+d;v=Math.min(max,Math.max(min,v));S[key]=round?Math.round(v):Math.round(v*100)/100;saveS();applyS();};}
 $("szplus").onclick=step("size",1,15,28,true);$("szminus").onclick=step("size",-1,15,28,true);
 $("lhplus").onclick=step("lh",0.05,1.4,2.4,false);$("lhminus").onclick=step("lh",-0.05,1.4,2.4,false);
