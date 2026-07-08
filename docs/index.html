@@ -175,11 +175,20 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
   transition:color var(--dur) var(--ease)}
 .reset:hover{color:var(--accent)}
 
-article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 28px 40vh;width:100%;
-  line-height:var(--rlh);font-size:var(--rsize);font-family:var(--rfont)}
-/* prose stays at the comfortable reading measure (centered); wide blocks use the room */
-#doc>p,#doc>ul,#doc>ol,#doc>dl,#doc>h1,#doc>h2,#doc>h3,#doc>h4,#doc>h5,#doc>h6,#doc>blockquote,#doc>hr{max-width:var(--measure);margin-inline:auto}
-#doc>.tablewrap,#doc>pre,#doc>.mermaid{max-width:100%}
+/* full-bleed grid: a centered reading column, with side tracks that wide blocks
+   (tables, code, diagrams) break out into. Grid placement centers the column
+   reliably — unlike margin-inline:auto, which per-element margin shorthands clobber. */
+article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:100%;
+  line-height:var(--rlh);font-size:var(--rsize);font-family:var(--rfont);
+  display:grid;
+  grid-template-columns:
+    [full-start] minmax(28px,1fr)
+    [wide-start] minmax(0,140px)
+    [content-start] min(var(--measure),100% - 56px) [content-end]
+    minmax(0,140px) [wide-end]
+    minmax(28px,1fr) [full-end];}
+#doc>*{grid-column:content;min-width:0}
+#doc>.tablewrap,#doc>pre,#doc>.mermaid{grid-column:wide;max-width:100%}
 #doc>*:first-child{margin-top:0}
 #doc p{margin:.7em 0;text-wrap:pretty}
 #doc h1,#doc h2,#doc h3,#doc h4{line-height:1.3;text-wrap:balance;scroll-margin-top:66px;font-weight:600}
@@ -352,7 +361,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
     <div class="row"><button class="rowbtn" id="lhminus" aria-label="أقل">&minus;</button><span class="val" id="lhval">1.85</span><button class="rowbtn" id="lhplus" aria-label="أكثر">+</button></div></div>
   <div class="grp"><div class="lbl">عرض النص</div>
     <div class="seg" id="measure">
-      <button data-measure-val="52">ضيّق</button><button data-measure-val="64">متوسط</button><button data-measure-val="80">واسع</button>
+      <button data-measure-val="56">ضيّق</button><button data-measure-val="72">متوسط</button><button data-measure-val="88">واسع</button>
     </div></div>
   <button class="reset" id="reset">إعادة الضبط الافتراضي</button>
 </div>
@@ -451,7 +460,7 @@ npx github:Ajarallah/matn file.md
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
 var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif",thmanyah:"'Thmanyah Serif Text','Noto Naskh Arabic',serif"};
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
-var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:64,lang:"ar"};
+var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:72,lang:"ar"};
 var I18N={
  ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
  en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
@@ -498,7 +507,12 @@ document.addEventListener("click",function(e){if(!panel.contains(e.target)&&e.ta
 $("printbtn").onclick=function(){window.print();};
 
 function slug(t,i){return (t||"").trim().replace(/\s+/g,"-").replace(/[^\p{L}\p{N}-]/gu,"").slice(0,60)+"-"+i;}
-function stampDir(root){var n=root.querySelectorAll(SEL);for(var i=0;i<n.length;i++)if(n[i].getAttribute("dir")==null)n[i].setAttribute("dir","auto");}
+// Flow-text blocks follow the document's dominant direction (so an Arabic doc stays
+// RTL even when a heading/paragraph starts with a Latin word); table cells keep
+// per-content "auto" so mixed data still aligns naturally.
+function stampDir(root){var dd=$("doc").getAttribute("dir")||"rtl";var n=root.querySelectorAll(SEL);
+  for(var i=0;i<n.length;i++){var el=n[i];if(el.getAttribute("dir")!=null)continue;
+    var tag=el.tagName;el.setAttribute("dir",(tag==="TD"||tag==="TH")?"auto":dd);}}
 function enhance(doc){
   // pull ```mermaid fences out before highlighting
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");

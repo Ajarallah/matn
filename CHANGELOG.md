@@ -3,6 +3,32 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.2] — 2026-07-08
+
+### Fixed
+- **Consistent RTL for mixed-language text.** Flow-text blocks (headings,
+  paragraphs, list items, blockquotes) now follow the document's dominant
+  direction, so a heading that merely starts with a Latin word — e.g.
+  `Context (لماذا نبني هذا)` — no longer flips the whole line to LTR in an
+  Arabic document. Latin runs still read left-to-right inside the RTL line;
+  table cells keep per-content `auto` detection.
+- **Reading column is now truly centered.** The prose column used
+  `margin-inline:auto`, but per-element margin shorthands (`#doc p{margin:.7em 0}`,
+  heading margins, …) silently reset those inline margins to `0`, pinning the
+  whole column to the start edge and dumping all the empty space on the other
+  side. Replaced the fragile per-block centering with a full-bleed CSS grid:
+  a centered reading column with side tracks that wide blocks (tables, code,
+  diagrams) break out into. Whitespace is now symmetric.
+- **Double-click on macOS no longer hangs the app.** The `Matn.app` droplet ran
+  its launcher via AppleScript `do shell script`, which blocks until the command
+  returns — but `matn` is a persistent server that never returns, so the app hung
+  and ignored later double-clicks until a 120s timeout. The launcher now starts
+  matn detached and returns immediately.
+
+### Changed
+- Default reading width widened (medium 64→72) so the column fills more of the
+  pane on large screens; width options are now 56 / 72 / 88.
+
 ## [1.2.1] — 2026-07-07
 
 ### Fixed
