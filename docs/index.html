@@ -174,7 +174,7 @@ header .meta{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;font
 /* full-bleed grid: a centered reading column, with side tracks that wide blocks
    (tables, code, diagrams) break out into. Grid placement centers the column
    reliably — unlike margin-inline:auto, which per-element margin shorthands clobber. */
-article#doc{max-width:min(1320px,100%);margin:0 auto;padding:44px 0 40vh;width:100%;
+article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:100%;
   line-height:var(--rlh);font-size:var(--rsize);font-family:var(--rfont);
   display:grid;
   grid-template-columns:
@@ -359,7 +359,7 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
     <div class="row"><button class="rowbtn" id="lhminus" aria-label="أقل">&minus;</button><span class="val" id="lhval">1.85</span><button class="rowbtn" id="lhplus" aria-label="أكثر">+</button></div></div>
   <div class="grp"><div class="lbl" data-i18n="width">عرض النص</div>
     <div class="seg" id="measure">
-      <button data-measure-val="112" data-i18n="narrow">ضيّق</button><button data-measure-val="136" data-i18n="mid">متوسط</button><button data-measure-val="160" data-i18n="wide">واسع</button>
+      <button data-measure-val="80" data-i18n="narrow">ضيّق</button><button data-measure-val="96" data-i18n="mid">متوسط</button><button data-measure-val="112" data-i18n="wide">واسع</button>
     </div></div>
   <div class="grp"><div class="lbl" data-i18n="align">محاذاة النص</div>
     <div class="seg" id="align">
@@ -462,7 +462,7 @@ npx github:Ajarallah/matn file.md
 var SEL="p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,dd,dt,summary";
 var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans-serif",naskh:"'Noto Naskh Arabic',serif",amiri:"'Amiri',serif",plex:"'IBM Plex Sans Arabic',sans-serif",tajawal:"'Tajawal',sans-serif",thmanyah:"'Thmanyah Serif Text','Noto Naskh Arabic',serif"};
 var sysDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
-var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:136,align:"start",lang:"ar"};
+var DEF={theme:sysDark?"dark":"light",font:"system",size:18,lh:1.85,measure:112,align:"start",lang:"ar"};
 var I18N={
  ar:{open:"فتح",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",align:"محاذاة النص",alignStart:"من اليمين",alignJustify:"ضبط الأسطر",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية"},
  en:{open:"Open",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",align:"Alignment",alignStart:"Start",alignJustify:"Justify",reset:"Reset to defaults",contents:"Contents",files:"Files",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter"}};
@@ -478,6 +478,7 @@ function applyS(){
   r.setProperty("--rfont",FONTS[S.font]||FONTS.system);
   r.setProperty("--rsize",S.size+"px");
   r.setProperty("--rlh",String(S.lh));
+  if(S.measure>112)S.measure=112;
   r.setProperty("--rmeasure",S.measure+"ch");
   r.setProperty("--measure",Math.round(S.size*S.measure/2)+"px"); // font-size-independent measure so headings match body width
   if(S.font==="thmanyah")r.setProperty("--rfont-display","'Thmanyah Serif Display','Amiri',serif");else r.removeProperty("--rfont-display");

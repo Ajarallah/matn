@@ -3,6 +3,16 @@
 All notable changes to Matn are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com).
 
+## [1.2.5] — 2026-07-08
+
+### Changed
+- **Reading width now has a sensible maximum.** The 1.2.3–1.2.4 widening let
+  «واسع/Wide» stretch nearly edge to edge, which read as a wall of text. The
+  ceiling is back to a comfortable ~1008px column (about two thirds of a
+  1512px window), matching the intended reading measure. Presets are now
+  80 / 96 / 112 (default 112 = that ceiling). Any wider value saved from an
+  earlier build is clamped down automatically.
+
 ## [1.2.4] — 2026-07-08
 
 ### Changed
