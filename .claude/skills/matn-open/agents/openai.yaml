@@ -1,0 +1,4 @@
+interface:
+  display_name: "Open in Matn"
+  short_description: "Open Markdown files and folders in Matn"
+  default_prompt: "Use $matn-open to open the current Markdown file in Matn."

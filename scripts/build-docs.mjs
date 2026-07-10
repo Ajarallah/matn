@@ -13,6 +13,8 @@ let s = src;
 // 1) rewrite server routes -> relative vendored files
 s = s.replace(/url\("\/fonts\//g, 'url("./vendor/fonts/');
 s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marked.min.js"></script>');
+s = s.replace('<script src="/render-core.js"></script>', '<script src="./render-core.js"></script>');
+s = s.replace('<script src="/annotation-core.js"></script>', '<script src="./annotation-core.js"></script>');
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
 s = s.replace('DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js"', 'DOCX_SRC="./vendor/html-docx.min.js",ZIP_SRC="./vendor/jszip.min.js"');
@@ -20,7 +22,7 @@ s = s.replace('KATEX_JS="/katex.js",KATEX_CSS="/katex.css"', 'KATEX_JS="./vendor
 s = s.replace('<script src="/marked-footnote.js"></script>', '<script src="./vendor/marked-footnote.umd.js"></script>');
 
 // 2) header: swap the live-reload indicator for an open-file button + a GitHub link
-const live = '<span class="live" id="live" title="تحديث حيّ"><span class="dot"></span><span data-i18n="live">حيّ</span></span>';
+const live = '<span class="live" id="live" role="status" title="يتابع تغييرات الملف تلقائيًا" aria-label="الاتصال بالتحديث التلقائي غير متاح"><span class="dot"></span><span class="sr-only" id="livestatus">التحديث التلقائي غير متصل</span></span>';
 const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn on GitHub"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4 6.7 19l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">GitHub</span></a>';
 if (!s.includes(live)) { console.error("build-docs: live indicator markup not found — aborting"); process.exit(1); }
 s = s.replace(live, openctrl);
@@ -43,7 +45,7 @@ if (i < 0 || j < 0) { console.error("build-docs: boot block not found — aborti
 const boot = `applyS();
 var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
-render(SAMPLE);
+renderSafely(SAMPLE);
 `; // file-open is handled by the app's own #fileinput listener
 s = s.slice(0, i) + boot + "\n" + s.slice(j);
 
@@ -51,6 +53,8 @@ s = s.slice(0, i) + boot + "\n" + s.slice(j);
 const DOCS = join(ROOT, "docs");
 mkdirSync(join(DOCS, "vendor", "fonts"), { recursive: true });
 writeFileSync(join(DOCS, "index.html"), s, "utf8");
+copyFileSync(join(ROOT, "src", "render-core.cjs"), join(DOCS, "render-core.js"));
+copyFileSync(join(ROOT, "src", "annotation-core.cjs"), join(DOCS, "annotation-core.js"));
 copyFileSync(join(ROOT, "vendor", "marked.min.js"), join(DOCS, "vendor", "marked.min.js"));
 copyFileSync(join(ROOT, "vendor", "highlight.min.js"), join(DOCS, "vendor", "highlight.min.js"));
 copyFileSync(join(ROOT, "vendor", "mermaid.min.js"), join(DOCS, "vendor", "mermaid.min.js"));

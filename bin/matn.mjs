@@ -13,12 +13,14 @@ const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const VERSION = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).version;
 
 function parseArgs(argv) {
-  const o = { port: 4711, host: "127.0.0.1", open: true, target: null };
+  const o = { port: 4711, host: "127.0.0.1", open: true, target: null, editor: process.env.MATN_EDITOR || "", allowFileActions: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--port" || a === "-p") o.port = Number(argv[++i]) || o.port;
     else if (a === "--host") o.host = argv[++i] || o.host;
     else if (a === "--no-open") o.open = false;
+    else if (a === "--editor") o.editor = argv[++i] || "";
+    else if (a === "--allow-file-actions") o.allowFileActions = true;
     else if (a === "--help" || a === "-h") o.help = true;
     else if (a === "--version" || a === "-v") o.version = true;
     else if (!a.startsWith("-") && !o.target) o.target = a;
@@ -36,6 +38,8 @@ Options:
   -p, --port <n>           port (default 4711)
       --host <h>           bind host (default 127.0.0.1)
       --no-open            don't open the browser
+      --editor <executable> external editor executable (or MATN_EDITOR)
+      --allow-file-actions enable moving files to the OS trash
   -h, --help               show this help
   -v, --version            show version
 
@@ -120,7 +124,7 @@ if (await portInUse(o.host, port)) {
 
 const base = `http://${hostForUrl(o.host)}:${port}`;
 const url = targetUrl(base, o.target);
-await startServer({ port, host: o.host, defaultArg });
+await startServer({ port, host: o.host, defaultArg, editor: o.editor, allowFileActions: o.allowFileActions });
 console.log("متن — Matn  ·  " + base);
 if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
 console.log("[matn] Ctrl+C to stop");

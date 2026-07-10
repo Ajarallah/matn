@@ -8,7 +8,12 @@
   },
   "scripts": {
     "start": "node bin/matn.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "test:e2e": "node e2e/ui.playwright.mjs",
+    "check": "node --check bin/matn.mjs && node --check src/server.mjs && node --check src/state-store.mjs && node --check src/platform-actions.mjs && node --check src/render-core.cjs && node --check src/search-core.cjs && node --check src/link-core.cjs && node --check src/annotation-core.cjs && node --check scripts/build-docs.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
   },
   "engines": {
     "node": ">=18"
