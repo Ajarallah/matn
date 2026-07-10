@@ -33,3 +33,15 @@ test("unknown and external links are not resolved as workspace files", () => {
   assert.equal(LinkCore.resolve(records, "/vault/README.md", "https://example.com/x.md"), null);
   assert.equal(LinkCore.resolve(records, "/vault/README.md", "missing"), null);
 });
+
+test("extracts local images, external links, Unicode paths, and skips inline code", () => {
+  const record = SearchCore.createRecord({
+    path: "/vault/assets.md",
+    rel: "assets.md",
+    content: "![صورة](<صور/غلاف الكتاب.png>)\n[الموقع](https://example.com)\n`![مخفي](secret.png)`\n",
+  });
+  assert.deepEqual(LinkCore.references(record).map((item) => [item.kind, item.target]), [
+    ["image", "<صور/غلاف الكتاب.png>"],
+    ["markdown", "https://example.com"],
+  ]);
+});

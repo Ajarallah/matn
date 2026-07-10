@@ -42,6 +42,7 @@ experience built for long-form Arabic.
 - 📊 **Mermaid diagrams** — rendered inline and theme-aware; hover to magnify.
 - 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
 - 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
+- ◇ **Document health** — a local report for missing links, images, and headings, without network checks or leaving the reading root.
 - 📝 **Footnotes**, a **YAML frontmatter card**, task lists, tables, blockquotes.
 - 🖼️ **Hover zoom** — magnify diagrams and images at the cursor.
 

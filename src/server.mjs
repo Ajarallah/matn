@@ -277,6 +277,40 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const snapshot = await stateStore.snapshot(rootReal), current = fingerprint(abs);
     return { path: abs, rel, tracked, backlinks: context.backlinks.length, changed: fingerprintChanged(snapshot.workspace.fileMeta[rel], current), allowTrash: Boolean(allowFileActions), canOpenEditor: Boolean(editor), canReveal: true };
   }
+  function documentHealth(abs) {
+    refreshStaleRecords();
+    const records = Array.from(workspaceRecords.values());
+    const current = records.find((record) => record.path === abs);
+    if (!current) return { items: [], counts: {}, issueCount: 0 };
+    const items = LinkCore.references(current).map((reference, index) => {
+      const target = LinkCore.splitTarget(reference.target);
+      const base = { ...reference, id: `health-${index + 1}`, status: "ok", resolved: null };
+      if (LinkCore.isExternal(target.file) || /^data:/i.test(target.file)) return { ...base, status: "external-unchecked" };
+      const resolved = reference.kind !== "image" ? LinkCore.resolve(records, abs, reference.target) : null;
+      if (resolved) {
+        if (target.heading && !resolved.heading) return { ...base, status: "missing-heading", resolved };
+        return { ...base, resolved };
+      }
+      if (reference.kind === "wiki" || !target.file || isMd(target.file)) return { ...base, status: "missing" };
+      const fromReal = realpathSync(abs);
+      const candidate = target.file.startsWith("/")
+        ? resolve(rootReal, "." + target.file)
+        : resolve(dirname(fromReal), target.file);
+      if (candidate !== rootReal && !candidate.startsWith(rootReal + sep)) return { ...base, status: "outside-root" };
+      try {
+        const real = realpathSync(candidate);
+        if (real !== rootReal && !real.startsWith(rootReal + sep)) return { ...base, status: "outside-root" };
+        if (!statSync(real).isFile()) return { ...base, status: "uninspectable" };
+        return { ...base, resolved: { path: real, rel: relative(rootReal, real).split(sep).join("/") } };
+      } catch (error) {
+        return { ...base, status: error && (error.code === "EACCES" || error.code === "EPERM") ? "uninspectable" : "missing" };
+      }
+    });
+    const counts = {};
+    for (const item of items) counts[item.status] = (counts[item.status] || 0) + 1;
+    const issueCount = items.filter((item) => !["ok", "external-unchecked"].includes(item.status)).length;
+    return { items, counts, issueCount };
+  }
 
   const server = createServer(async (req, res) => {
     const u = new URL(req.url, "http://localhost");
@@ -435,6 +469,12 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       refreshStaleRecords();
       const context = LinkCore.context(Array.from(workspaceRecords.values()), path);
       return send(200, "application/json", JSON.stringify({ ...context, indexing }));
+    }
+    if (u.pathname === "/api/health") {
+      const path = safeMd(u.searchParams.get("path"));
+      if (!path) return send(400, "application/json", JSON.stringify({ error: "invalid markdown file" }));
+      try { return send(200, "application/json", JSON.stringify({ ...documentHealth(path), indexing })); }
+      catch { return send(500, "application/json", JSON.stringify({ error: "document health unavailable" })); }
     }
     if (u.pathname === "/api/changes") {
       try {
