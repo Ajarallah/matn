@@ -8,6 +8,7 @@ import { resolve, dirname, join, sep, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import SearchCore from "./search-core.cjs";
 import LinkCore from "./link-core.cjs";
+import BookCore from "./book-core.cjs";
 import { createStateStore } from "./state-store.mjs";
 import { createPlatformActions, runCommand } from "./platform-actions.mjs";
 
@@ -311,6 +312,19 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const issueCount = items.filter((item) => !["ok", "external-unchecked"].includes(item.status)).length;
     return { items, counts, issueCount };
   }
+  function workspaceBook() {
+    refreshStaleRecords();
+    const records = Array.from(workspaceRecords.values());
+    const summary = records.find((record) => record.rel.toLowerCase() === "summary.md");
+    if (!summary) return { summary: null, chapters: [] };
+    const chapters = [];
+    for (const chapter of BookCore.parseSummary(summary.content)) {
+      const resolved = LinkCore.resolve(records, summary.path, chapter.target);
+      if (!resolved) continue;
+      chapters.push({ ...chapter, path: resolved.path, rel: resolved.rel, anchor: resolved.heading ? resolved.heading.id : "" });
+    }
+    return { summary: summary.path, chapters };
+  }
 
   const server = createServer(async (req, res) => {
     const u = new URL(req.url, "http://localhost");
@@ -475,6 +489,10 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       if (!path) return send(400, "application/json", JSON.stringify({ error: "invalid markdown file" }));
       try { return send(200, "application/json", JSON.stringify({ ...documentHealth(path), indexing })); }
       catch { return send(500, "application/json", JSON.stringify({ error: "document health unavailable" })); }
+    }
+    if (u.pathname === "/api/book") {
+      try { return send(200, "application/json", JSON.stringify({ ...workspaceBook(), indexing })); }
+      catch { return send(500, "application/json", JSON.stringify({ error: "book unavailable" })); }
     }
     if (u.pathname === "/api/changes") {
       try {

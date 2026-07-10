@@ -11,7 +11,7 @@
     "test": "node --test",
     "test:e2e": "node e2e/ui.playwright.mjs",
     "test:performance": "node e2e/performance.playwright.mjs",
-    "check": "node --check bin/matn.mjs && node --check src/server.mjs && node --check src/state-store.mjs && node --check src/platform-actions.mjs && node --check src/render-core.cjs && node --check src/render-worker.js && node --check src/search-core.cjs && node --check src/link-core.cjs && node --check src/annotation-core.cjs && node --check scripts/build-docs.mjs && node --check scripts/performance-fixtures.mjs && node --check e2e/performance.playwright.mjs"
+    "check": "node --check bin/matn.mjs && node --check src/server.mjs && node --check src/state-store.mjs && node --check src/platform-actions.mjs && node --check src/render-core.cjs && node --check src/render-worker.js && node --check src/search-core.cjs && node --check src/link-core.cjs && node --check src/book-core.cjs && node --check src/annotation-core.cjs && node --check scripts/build-docs.mjs && node --check scripts/performance-fixtures.mjs && node --check e2e/performance.playwright.mjs"
   },
   "devDependencies": {
     "playwright": "^1.61.1"
