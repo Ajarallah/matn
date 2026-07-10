@@ -106,10 +106,11 @@ matn README.md
 matn <file.md>        # فتح ملف واحد
 matn ./docs           # تصفّح مجلد (شجرة ملفات جانبية)
 matn                  # فتح المجلد الحالي
+command | matn -      # قراءة Markdown من stdin في جلسة مؤقتة
 matn PLAN.md -p 5000  # منفذ مختار
 ```
 
-الخيارات: `-p, --port` · `--host` · `--no-open` · `--editor <executable>` · `--allow-file-actions` · `-h, --help` · `-v, --version`.
+الخيارات: `-p, --port` · `--host` · `--no-open` · `--editor <executable>` · `--allow-file-actions` · `--stdin-name <name>` · `-h, --help` · `-v, --version`.
 
 يفتح متن المتصفح تلقائيا ويعيد استخدام نسخة قائمة، فـ`matn a.md` ثم `matn b.md` يفتحان في النافذة نفسها.
 
