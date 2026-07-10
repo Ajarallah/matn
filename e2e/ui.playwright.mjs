@@ -12,7 +12,7 @@ const { chromium } = await import(moduleTarget);
 const root = await mkdtemp(join(tmpdir(), "matn-playwright-"));
 const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
-await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة واضحة.\n\n### خاتمة\nنهاية المستند.\n");
+await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -105,7 +105,37 @@ try {
 
   await selectText(page, "والنسخ");
   await page.locator('[data-selection-action="copy"]').click();
+  await page.waitForFunction(async () => (await navigator.clipboard.readText()).includes("والنسخ"));
   assert.match(await page.evaluate(() => navigator.clipboard.readText()), /والنسخ/);
+
+  await page.evaluate(() => {
+    const heading = Array.from(document.querySelectorAll("#doc h2")).find((node) => node.dataset.title === "قسم ثان");
+    const region = heading.nextElementSibling;
+    const range = document.createRange();
+    range.setStartBefore(heading);
+    range.setEndAfter(region);
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event("selectionchange", { bubbles: true }));
+  });
+  await page.waitForSelector("#selectiontools.open", { timeout: 1000 });
+  await page.locator('[data-selection-action="copy"]').click();
+  await page.waitForFunction(async () => (await navigator.clipboard.read())[0]?.types.includes("text/html"));
+  const clipboard = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    const html = item.types.includes("text/html") ? await (await item.getType("text/html")).text() : "";
+    const plain = await (await item.getType("text/plain")).text();
+    return { types: item.types, html, plain };
+  });
+  assert.ok(clipboard.types.includes("text/html"));
+  assert.ok(clipboard.types.includes("text/plain"));
+  assert.match(clipboard.html, /dir="rtl"/);
+  assert.match(clipboard.html, /<strong>واضحة<\/strong>/);
+  assert.match(clipboard.html, /<table>/);
+  assert.match(clipboard.html, /<pre><code>/);
+  assert.doesNotMatch(clipboard.html, /<button|onclick=|<script/i);
+  assert.match(clipboard.plain, /قسم ثان/);
 
   await selectText(page, "مقطع ثان");
   await page.locator('[data-selection-action="note"]').click();
