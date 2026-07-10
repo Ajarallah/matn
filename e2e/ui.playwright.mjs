@@ -59,6 +59,32 @@ try {
   await page.locator("#bookprev").click();
   await page.waitForFunction(() => document.title.startsWith("README.md"));
   await page.waitForFunction(() => document.querySelector("#chapterboundary")?.textContent.includes("1 / 2"));
+  const sourceLine = await page.locator('#doc h2[data-title="قسم ثان"]').getAttribute("data-source-line");
+  await page.locator("#viewbtn").click();
+  assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("view-source")), true);
+  assert.equal(await page.locator("#sourceview").getAttribute("dir"), null);
+  assert.equal(await page.locator("#sourceview").evaluate((el) => getComputedStyle(el).direction), "ltr");
+  assert.equal(await page.locator("#sourceview textarea,#sourceview [contenteditable]").count(), 0);
+  await page.evaluate(() => {
+    const line = document.querySelector("#source-line-1"), range = document.createRange();
+    range.selectNodeContents(line);
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+C" : "Control+C");
+  await page.waitForFunction(async () => (await navigator.clipboard.readText()).includes("# البداية"));
+  await page.keyboard.press("/");
+  await page.locator("#findinput").fill("const direction");
+  assert.match(await page.locator("#sourceview mark.find-cur").innerText(), /const direction/);
+  await page.locator("#findclose").click();
+  await page.locator("#viewbtn").click();
+  assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("view-split")), true);
+  await page.locator("#viewbtn").click();
+  assert.equal(await page.locator("body").evaluate((el) => !el.classList.contains("view-source") && !el.classList.contains("view-split")), true);
+  await page.locator('#doc h2[data-title="قسم ثان"] .source-link').click();
+  assert.equal(await page.locator(`#source-line-${sourceLine}`).evaluate((el) => el.classList.contains("source-target")), true);
+  await page.locator("#viewbtn").click();
   await page.waitForSelector("#health-sec .health-row");
   assert.equal(await page.locator("#health-count").innerText(), "1");
   await page.locator("#health .collection-item").click();
@@ -88,7 +114,7 @@ try {
   await page.waitForFunction(() => document.title.startsWith("guide.md"));
   await page.getByRole("button", { name: "رجوع" }).click();
   await page.waitForFunction(() => document.title.startsWith("README.md"));
-  await page.getByText("فقرة عربية قابلة للتحديد والتمييز والنسخ.", { exact: true }).waitFor();
+  await page.locator("#doc").getByText("فقرة عربية قابلة للتحديد والتمييز والنسخ.", { exact: true }).waitFor();
 
   const firstParagraph = page.locator("#doc p").first();
   await firstParagraph.scrollIntoViewIfNeeded();
