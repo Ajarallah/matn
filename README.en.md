@@ -51,6 +51,7 @@ experience built for long-form Arabic.
 - 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
 - 🔎 **In-document search** — press `/` to find and jump between matches.
 - ♻️ **Live reload** — edit in any editor; the view updates on save.
+- 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
 - 🖱️ **Drag & drop** any `.md` onto the window.
 
 **Output**

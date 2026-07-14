@@ -19,6 +19,7 @@ const INDEX = readFileSync(join(HERE, "index.html"), "utf8");
 const MARKED = readFileSync(join(VENDOR, "marked.min.js"), "utf8");
 const RENDER_CORE = readFileSync(join(HERE, "render-core.cjs"), "utf8");
 const ANNOTATION_CORE = readFileSync(join(HERE, "annotation-core.cjs"), "utf8");
+const RENDER_WORKER = readFileSync(join(HERE, "render-worker.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
 const MAX_INDEX_BYTES = 2 * 1024 * 1024;
 let MERMAID = null; // large (~3.5 MB) — loaded on first request only
@@ -40,6 +41,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   let indexGeneration = 0;
   let indexing = false;
   let workspaceDir = null;
+  const diagnostics = { fullIndexes: 0, fullRecords: 0, incrementalRecords: 0 };
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
   const sessionToken = randomBytes(32).toString("hex");
@@ -126,9 +128,11 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     })(dir);
     return out.sort();
   }
-  function makeSearchRecord(abs, rel) {
+  function makeSearchRecord(abs, rel, reason = "incremental") {
     const stat = statSync(abs);
     const content = stat.size <= MAX_INDEX_BYTES ? readFileSync(abs, "utf8") : "";
+    if (reason === "full") diagnostics.fullRecords++;
+    else diagnostics.incrementalRecords++;
     return SearchCore.createRecord({ path: abs, rel, mtimeMs: stat.mtimeMs, content });
   }
   function fingerprint(abs) {
@@ -166,6 +170,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     workspaceDir = dir;
     workspaceRecords.clear();
     indexing = true;
+    diagnostics.fullIndexes++;
     function chunk() {
       if (generation !== indexGeneration) return;
       const end = Math.min(cursor + 25, files.length);
@@ -173,7 +178,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         const file = files[cursor];
         const abs = safeMd(file.path);
         if (!abs) continue;
-        try { next.set(abs, makeSearchRecord(abs, file.rel)); } catch {}
+        try { next.set(abs, makeSearchRecord(abs, file.rel, "full")); } catch {}
       }
       if (cursor < files.length) return setImmediate(chunk);
       workspaceRecords.clear();
@@ -294,6 +299,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/marked.js") return send(200, "text/javascript; charset=utf-8", MARKED);
     if (u.pathname === "/render-core.js") return send(200, "text/javascript; charset=utf-8", RENDER_CORE);
     if (u.pathname === "/annotation-core.js") return send(200, "text/javascript; charset=utf-8", ANNOTATION_CORE);
+    if (u.pathname === "/render-worker.js") return send(200, "text/javascript; charset=utf-8", RENDER_WORKER);
     if (u.pathname === "/highlight.js") return send(200, "text/javascript; charset=utf-8", HLJS);
     if (u.pathname === "/mermaid.js") {
       try { if (!MERMAID) MERMAID = readFileSync(join(VENDOR, "mermaid.min.js")); }
@@ -469,7 +475,10 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       const abs = safeMd(u.searchParams.get("path"));
       if (!abs) return send(400, "text/plain", "bad file");
       ensureWatch(dirname(abs));
-      try { return send(200, "text/plain; charset=utf-8", readFileSync(abs, "utf8")); }
+      try {
+        const raw = readFileSync(abs, "utf8");
+        return send(200, "text/plain; charset=utf-8", raw, { "x-matn-file-size": String(Buffer.byteLength(raw)) });
+      }
       catch { return send(404, "text/plain", "not found"); }
     }
     if (u.pathname === "/api/events") {
@@ -494,6 +503,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     return close(callback);
   };
   server.on("close", cleanup);
+  server.matnDiagnostics = () => ({ ...diagnostics, indexedRecords: workspaceRecords.size, indexing });
 
   return new Promise((resolveServer, reject) => {
     const onError = (error) => {
