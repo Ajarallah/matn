@@ -104,10 +104,11 @@ matn README.md
 matn <file.md>        # open a single file
 matn ./docs           # browse a folder (file-tree sidebar)
 matn                  # open the current directory
+command | matn -      # read Markdown from stdin in a temporary session
 matn PLAN.md -p 5000  # custom port
 ```
 
-Options: `-p, --port` · `--host` · `--no-open` · `-h, --help` · `-v, --version`.
+Options: `-p, --port` · `--host` · `--no-open` · `--editor <executable>` · `--allow-file-actions` · `--stdin-name <name>` · `-h, --help` · `-v, --version`.
 
 Matn opens your browser automatically and reuses a running instance, so `matn a.md`
 then `matn b.md` both land in the same window.

@@ -3,11 +3,12 @@
 //   matn [file|dir] [--port N] [--host H] [--no-open]
 
 import { spawn } from "node:child_process";
-import { readFileSync, existsSync, statSync, realpathSync } from "node:fs";
+import { readFileSync, existsSync, statSync, realpathSync, rmSync } from "node:fs";
 import { resolve, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createConnection } from "node:net";
 import { startServer } from "../src/server.mjs";
+import { cleanupStdinSessions, createStdinSession, readStdin } from "../src/stdin-session.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const VERSION = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).version;
@@ -21,9 +22,10 @@ function parseArgs(argv) {
     else if (a === "--no-open") o.open = false;
     else if (a === "--editor") o.editor = argv[++i] || "";
     else if (a === "--allow-file-actions") o.allowFileActions = true;
+    else if (a === "--stdin-name") o.stdinName = argv[++i] || "stdin.md";
     else if (a === "--help" || a === "-h") o.help = true;
     else if (a === "--version" || a === "-v") o.version = true;
-    else if (!a.startsWith("-") && !o.target) o.target = a;
+    else if ((a === "-" || !a.startsWith("-")) && !o.target) o.target = a;
   }
   return o;
 }
@@ -32,6 +34,7 @@ const HELP = `متن — Matn  ·  a right-to-left Markdown reader for Arabic
 
 Usage:
   matn [file|dir]          open a .md file, or a folder to browse
+  command | matn -         read Markdown from stdin in a temporary session
   matn                     open the current directory
 
 Options:
@@ -40,6 +43,7 @@ Options:
       --no-open            don't open the browser
       --editor <executable> external editor executable (or MATN_EDITOR)
       --allow-file-actions enable moving files to the OS trash
+      --stdin-name <name>  display name for stdin content (default stdin.md)
   -h, --help               show this help
   -v, --version            show version
 
@@ -47,6 +51,7 @@ Examples:
   matn README.md
   matn ./docs
   matn PLAN.md --port 5000
+  printf '# Report' | matn - --stdin-name report.md
 
 In the browser: click the gear for theme, Arabic font, size, line-height & width.
 Drag any .md onto the window to open it. The view live-reloads on save.
@@ -101,6 +106,21 @@ const o = parseArgs(process.argv.slice(2));
 if (o.help) { console.log(HELP); process.exit(0); }
 if (o.version) { console.log("matn v" + VERSION); process.exit(0); }
 
+let stdinSession = null;
+if (o.target === "-") {
+  try {
+    await cleanupStdinSessions();
+    stdinSession = await createStdinSession(await readStdin(process.stdin), { name: o.stdinName });
+    o.target = stdinSession.file;
+    const cleanupSession = () => { try { rmSync(stdinSession.dir, { recursive: true, force: true }); } catch {} };
+    process.on("exit", cleanupSession);
+    process.once("SIGINT", () => { cleanupSession(); process.exit(130); });
+    process.once("SIGTERM", () => { cleanupSession(); process.exit(143); });
+  } catch (error) {
+    console.error("[matn] " + (error && error.message ? error.message : "could not read stdin"));
+    process.exit(2);
+  }
+}
 const defaultArg = resolve(o.target || ".");
 let port = o.port;
 
