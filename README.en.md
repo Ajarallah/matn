@@ -114,7 +114,7 @@ then `matn b.md` both land in the same window.
 ### In the browser
 
 - Click **⚙** for explained reading modes, language, theme, font, size, line-height, width, and alignment — all remembered.
-- **Select text once** to highlight it, add a note, save the excerpt to Favorites, or copy it with a source link.
+- **Select text once** to highlight it, add a note, save it, or copy rich HTML that preserves RTL and structure alongside plain text and a source link.
 - **Hover a document-map line** to preview its heading, click it to jump there, or open the list button for every heading.
 - **Drag** any `.md` onto the window to open it.
 - **Save ▾** exports PDF / HTML / Word / EPUB / Markdown; **🖨️** prints.
