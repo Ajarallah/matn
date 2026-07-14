@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Matn">
+  <rect width="64" height="64" rx="15" fill="#191714"/>
+  <path d="M13 14.5c7.2-2.1 13.5-.8 19 3.6v33.4c-5.5-4.4-11.8-5.7-19-3.6V14.5Z" fill="#f4eddf"/>
+  <path d="M51 14.5c-7.2-2.1-13.5-.8-19 3.6v33.4c5.5-4.4 11.8-5.7 19-3.6V14.5Z" fill="#e8ddca"/>
+  <path d="M32 18.1v33.4" stroke="#b78a5f" stroke-width="2"/>
+  <path d="M18 23h8M18 29h9M18 35h7M38 23h8M37 29h9M39 35h7" stroke="#7f6b55" stroke-width="2.3" stroke-linecap="round"/>
+  <circle cx="32" cy="11" r="3" fill="#c98b55"/>
+</svg>

@@ -125,14 +125,19 @@ then `matn b.md` both land in the same window.
 
 ## Open `.md` on double-click
 
-**macOS** — make Matn the default reader for Markdown, in one step:
+**macOS** — install the Matn app, add it to Codex's **Open in** menu, install
+the `/matn-open` Claude Code skill, and make it the default Markdown reader:
 
 ```bash
-bash scripts/install-macos.sh --default
+bash scripts/install-macos.sh --default --agents
 ```
 
-This builds a small Finder app and registers it for `.md`. To point an existing
-install manually: **Get Info → Open with → Change All**.
+This builds a small Finder app and registers it for `.md`. `--agents` adds a
+custom Matn file handler to Codex and installs a user-level Claude Code skill.
+Codex may need one restart to refresh the menu. Claude Desktop currently exposes
+only Anthropic's fixed editor list, so its supported Matn path is `/matn-open`
+or the system default Markdown app rather than a named menu item. To point an
+existing install manually: **Get Info → Open with → Change All**.
 
 **Linux** — `bash scripts/install-linux.sh --default` adds a `.desktop` entry and
 makes Matn the handler for `text/markdown`.

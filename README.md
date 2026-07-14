@@ -126,14 +126,19 @@ matn PLAN.md -p 5000  # منفذ مختار
 
 ## فتح `.md` بنقرة مزدوجة
 
-**macOS** — اجعل متن القارئ الافتراضي لماركداون بخطوة واحدة:
+**macOS** — ثبّت تطبيق متن، وأضفه إلى **Open in** داخل Codex، وثبّت أمر
+`/matn-open` في Claude Code، واجعله القارئ الافتراضي لماركداون:
 
 ```bash
-bash scripts/install-macos.sh --default
+bash scripts/install-macos.sh --default --agents
 ```
 
-يبني تطبيق Finder صغيرا ويسجّله لملفات `.md`. ولتوجيه تثبيت قائم يدويا:
-**Get Info ← Open with ← Change All**.
+يبني تطبيق Finder صغيرًا ويسجّله لملفات `.md`. الخيار `--agents` يضيف معالج
+Matn مخصصًا إلى إعداد Codex، وينسخ Skill عامة إلى Claude Code. قد يحتاج Codex
+إلى إعادة تشغيل واحدة لتحديث القائمة. قائمة المحررات في تطبيق Claude المكتبي
+مغلقة على مجموعة يحددها Anthropic حاليًا، لذلك يكون التكامل هناك عبر
+`/matn-open` أو تطبيق Markdown الافتراضي، وليس عنصرًا باسم Matn في قائمته.
+ولتوجيه تثبيت قائم يدويًا: **Get Info ← Open with ← Change All**.
 
 **Linux** — الأمر `bash scripts/install-linux.sh --default` يضيف مدخل `.desktop` ويجعل متن معالج `text/markdown`.
 **Windows** — الأمر `matn file.md` يعمل من أي طرفية؛ واربط `.md` من
