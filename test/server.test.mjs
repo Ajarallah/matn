@@ -371,9 +371,11 @@ test("reader state rejects oversized, invalid, and out-of-root updates", async (
 test("workspace links resolve by relative path and alias and expose backlinks", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-links-"));
   await mkdir(join(root, "docs"));
+  await mkdir(join(root, "assets"));
   const readme = join(root, "README.md"), guide = join(root, "docs", "guide.md");
-  await writeFile(readme, "# البداية\nراجع [[دليل]] و[التثبيت](docs/guide.md#التثبيت).\n", "utf8");
+  await writeFile(readme, "# البداية\nراجع [[دليل]] و[التثبيت](docs/guide.md#التثبيت).\n[عنوان مفقود](docs/guide.md#غير-موجود)\n[ملف مفقود](docs/no.md)\n![غلاف](assets/غلاف.png)\n[خارجي](https://example.com)\n[خارج الجذر](../secret.pdf)\n", "utf8");
   await writeFile(guide, "---\ntitle: الدليل\naliases: [دليل]\n---\n# مقدمة\n## التثبيت\nخطوات مفيدة.\n", "utf8");
+  await writeFile(join(root, "assets", "غلاف.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
@@ -396,9 +398,18 @@ test("workspace links resolve by relative path and alias and expose backlinks", 
   assert.match(resolved.snippet, /خطوات مفيدة/);
 
   const context = await (await fetch(`${base}/api/context?path=${encodeURIComponent(guide)}`)).json();
-  assert.equal(context.backlinks.length, 2);
+  assert.equal(context.backlinks.length, 3);
   assert.equal(context.backlinks[0].path, readme);
   assert.equal((await fetch(`${base}/api/context?path=${encodeURIComponent(join(tmpdir(), "outside.md"))}`)).status, 400);
+
+  const health = await (await fetch(`${base}/api/health?path=${encodeURIComponent(readme)}`)).json();
+  assert.equal(health.issueCount, 3);
+  assert.equal(health.counts.ok, 3);
+  assert.equal(health.counts["missing-heading"], 1);
+  assert.equal(health.counts.missing, 1);
+  assert.equal(health.counts["outside-root"], 1);
+  assert.equal(health.counts["external-unchecked"], 1);
+  assert.equal(health.items.find((item) => item.kind === "image").resolved.rel, "assets/غلاف.png");
 });
 
 test("file actions are session-protected and trash only through the injected OS adapter", async (t) => {

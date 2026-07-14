@@ -82,7 +82,7 @@ function maskFenced(lines) {
     return fence ? "" : line.replace(/`[^`\n]*`/g, "");
   });
 }
-function outgoing(record) {
+function references(record) {
   const original = String(record.content || "").split(/\r?\n/);
   const visible = maskFenced(original);
   const links = [];
@@ -91,13 +91,18 @@ function outgoing(record) {
     let match;
     const wiki = /\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/g;
     while ((match = wiki.exec(line))) links.push({ target: match[1].trim(), text: (match[2] || match[1]).trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "wiki" });
-    const markdown = /(^|[^!])\[([^\]\n]+)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g;
+    const image = /!\[([^\]\n]*)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g;
+    while ((match = image.exec(line))) links.push({ target: match[2].trim(), text: match[1].trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "image" });
+    const markdown = /(^|[^!])\[([^\]\n]+)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g;
     while ((match = markdown.exec(line))) {
       const target = match[3].trim();
-      if (!isExternal(target) && !/^data:/i.test(target)) links.push({ target, text: match[2].trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "markdown" });
+      links.push({ target, text: match[2].trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "markdown" });
     }
   }
   return links;
+}
+function outgoing(record) {
+  return references(record).filter((link) => link.kind !== "image" && !isExternal(link.target) && !/^data:/i.test(link.target));
 }
 function context(records, path) {
   const current = records.find((record) => record.path === path);
@@ -114,4 +119,4 @@ function context(records, path) {
   return { outgoing: out, backlinks };
 }
 
-module.exports = { splitTarget, headings, resolve, outgoing, context };
+module.exports = { splitTarget, isExternal, headings, resolve, references, outgoing, context };

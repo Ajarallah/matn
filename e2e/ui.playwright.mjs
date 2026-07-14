@@ -12,7 +12,7 @@ const { chromium } = await import(moduleTarget);
 const root = await mkdtemp(join(tmpdir(), "matn-playwright-"));
 const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
-await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة واضحة.\n\n### خاتمة\nنهاية المستند.\n");
+await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة واضحة.\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -47,6 +47,14 @@ try {
   const page = await context.newPage();
   await page.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "README.md"))}`);
   await page.waitForSelector("#documentmap .map-mark");
+  await page.waitForSelector("#health-sec .health-row");
+  assert.equal(await page.locator("#health-count").innerText(), "1");
+  await page.locator("#health .collection-item").click();
+  await page.waitForSelector("#findbar.open");
+  assert.match(await page.locator("#doc mark.find-cur").innerText(), /مفقود/);
+  await page.locator("#findclose").click();
+  await page.locator("#health .health-copy").click();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), "docs/missing.md");
   assert.equal(await page.locator("#toc-sec").evaluate((el) => el.style.display), "none");
 
   await page.locator("#gearbtn").click();
