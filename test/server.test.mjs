@@ -451,6 +451,33 @@ test("file actions are session-protected and trash only through the injected OS 
   assert.equal(state.workspace.missingFiles["remove.md"].reason, "trash");
 });
 
+test("book API resolves SUMMARY.md chapters without modifying the workspace", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-book-"));
+  await mkdir(join(root, "docs"));
+  const summary = join(root, "SUMMARY.md");
+  const source = "# Summary\n\n- [البداية](README.md)\n  - [التثبيت](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n- [مفقود](missing.md)\n";
+  await writeFile(summary, source, "utf8");
+  await writeFile(join(root, "README.md"), "# البداية\n", "utf8");
+  await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  await fetch(`${base}/api/list?dir=${encodeURIComponent(root)}`);
+  let book = { indexing: true };
+  for (let attempt = 0; attempt < 50 && book.indexing; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    book = await (await fetch(`${base}/api/book`)).json();
+  }
+  assert.deepEqual(book.chapters.map(({ title, rel, anchor, depth }) => ({ title, rel, anchor, depth })), [
+    { title: "البداية", rel: "README.md", anchor: "", depth: 0 },
+    { title: "التثبيت", rel: "docs/guide.md", anchor: "التثبيت-1", depth: 1 },
+  ]);
+  assert.equal(await readFile(summary, "utf8"), source);
+});
+
 test("trash is disabled by default and rejects symlink file actions", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-actions-disabled-"));
   const dataDir = await mkdtemp(join(tmpdir(), "matn-actions-disabled-data-"));

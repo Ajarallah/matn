@@ -50,6 +50,7 @@ experience built for long-form Arabic.
 
 - 🧭 **Table of contents** — auto-generated, with scroll-spy and heading anchors.
 - 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
+- 📖 **Book mode** — reads `SUMMARY.md` as ordered chapters with previous/next and overall progress, without building or modifying files.
 - 🔎 **In-document search** — press `/` to find and jump between matches.
 - ♻️ **Live reload** — edit in any editor; the view updates on save.
 - 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
