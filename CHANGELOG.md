@@ -19,7 +19,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com).
 - إجراءات آمنة لفتح المحرر وإظهار الملف ونقله إلى سلة النظام بعد تأكيد صريح.
 - Skill للمشروع تفتح الملفات في متن من Claude Code عبر `/matn-open`.
 - تكامل macOS اختياري يضيف **Matn** إلى قائمة **Open in** في Codex عبر
-  `custom_file_handlers`، ويثبّت `/matn-open` على مستوى المستخدم في Claude Code.
+  `desktop.custom_file_handlers`، ويثبّت `/matn-open` على مستوى المستخدم في Claude Code.
 
 ### Changed
 - أنماط القراءة تشرح بوضوح نوع المحتوى الذي يناسب كل نمط، بدل الاكتفاء بأسماء عامة.

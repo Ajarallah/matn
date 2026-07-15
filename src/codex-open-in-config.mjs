@@ -1,7 +1,8 @@
 import { chmod, lstat, mkdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
-export const MATN_CODEX_SECTION = "[custom_file_handlers.matn]";
+export const MATN_CODEX_SECTION = "[desktop.custom_file_handlers.matn]";
+export const MATN_CODEX_LEGACY_SECTION = "[custom_file_handlers.matn]";
 export const MATN_BUNDLE_ID = "com.ajarallah.matn";
 
 function tableHeader(line) {
@@ -43,13 +44,19 @@ export function buildMatnCodexSection({ iconPath }) {
 }
 
 export function upsertMatnCodexHandler(source, options) {
-  const prefix = withoutSection(source);
+  const prefix = withoutSection(
+    withoutSection(source, MATN_CODEX_LEGACY_SECTION),
+    MATN_CODEX_SECTION,
+  );
   const section = buildMatnCodexSection(options);
   return `${prefix}${prefix ? "\n\n" : ""}${section}\n`;
 }
 
 export function removeMatnCodexHandler(source) {
-  const next = withoutSection(source);
+  const next = withoutSection(
+    withoutSection(source, MATN_CODEX_LEGACY_SECTION),
+    MATN_CODEX_SECTION,
+  );
   return next ? `${next}\n` : "";
 }
 
