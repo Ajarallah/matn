@@ -1,18 +1,24 @@
 <div dir="rtl">
 
+<p align="center">
+  <img src="./src/brand/lockup-ar.svg" width="220" alt="شعار متن">
+</p>
+
 # متن · Matn
 
 **قارئ ماركداون للعربية، من اليمين إلى اليسار.**
 سمات للقراءة، خطوط عربية مدمجة، معادلات، مخططات، وتصدير — يعمل في متصفحك دون اتصال.
 
-**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)**
+**[اكتشف متن](https://ajarallah.github.io/matn/)** · **[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/demo/)**
 
 **[English →](./README.en.md)**
 
-[![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
-[![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
-![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
+[![الرخصة: MIT](https://img.shields.io/badge/license-MIT-495d52.svg)](./LICENSE)
+[![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=495d52&label=release)](https://github.com/Ajarallah/matn/releases)
+![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-495d52.svg)
+![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-495d52.svg)
+
+![صفحة هبوط متن](./assets/screenshot-landing.png)
 
 ![متن — السمة الفاتحة](./assets/screenshot-light.png)
 

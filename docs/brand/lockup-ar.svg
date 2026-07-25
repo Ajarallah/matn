@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 88" role="img" aria-labelledby="title">
+  <title id="title">متن</title>
+  <g transform="translate(8 8) scale(.5625)">
+    <rect width="128" height="128" rx="32" fill="#495d52"/>
+    <rect x="2" y="2" width="124" height="124" rx="30" fill="none" stroke="#f3f1e6" stroke-opacity=".4" stroke-width="3"/>
+    <g fill="#caf1bc">
+      <rect x="44" y="34" width="52" height="12" rx="6"/>
+      <rect x="28" y="58" width="68" height="12" rx="6"/>
+      <rect x="48" y="82" width="48" height="12" rx="6"/>
+      <circle cx="34" cy="88" r="6"/>
+    </g>
+  </g>
+  <!-- Wordmark converted to outlines from the locally installed Thmanyah Serif Display Black. -->
+  <g transform="translate(98 2) scale(.075)" fill="#495d52">
+    <path d="M486 413H466L399 573C453 639 506 701 546 773C490 794 369 820 263 820C98 820 51 757 51 663C51 612 65 560 71 520H55C34 589 8 666 8 742C8 890 77 1001 251 1001C343 1001 445 970 506 933L563 771C573 743 579 715 582 687C640 687 670 628 705 542L725 492L813 524V392H779C712 482 678 531 631 531C583 531 544 480 486 413ZM355 353C356 352 356 337 355 336L258 239L160 337V352L258 450Z"/>
+    <path d="M878 850C910 850 927 833 927 801V661C840 661 816 658 816 579V392H781L719 477V491L737 639C757 804 817 850 877 850ZM868 238C869 237 869 224 868 223L784 139L709 214L634 139L549 224V237L634 322L709 247L784 322Z"/>
+    <path d="M927 661C895 661 879 677 879 709V850C898 850 918 847 934 841L984 730L1039 762C1115 806 1185 832 1286 845C1319 796 1353 735 1372 680L1375 672C1421 537 1346 392 1237 392C1171 392 1097 445 1021 582L980 659C967 660 951 661 927 661ZM1127 533C1205 533 1295 606 1325 680C1259 666 1141 634 1035 588C1057 550 1090 533 1127 533Z"/>
+  </g>
+</svg>

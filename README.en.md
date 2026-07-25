@@ -1,16 +1,22 @@
+<p align="center">
+  <img src="./src/brand/lockup-en.svg" width="220" alt="Matn logo">
+</p>
+
 # متن · Matn
 
 **A right-to-left Markdown reader for Arabic.**
 Reading themes, embedded Arabic fonts, math, diagrams, and export — all in your browser, fully offline.
 
-**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+**[Explore Matn](https://ajarallah.github.io/matn/)** · **[▶ Try the live demo](https://ajarallah.github.io/matn/demo/)**
 
 **[العربية →](./README.md)**
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
-[![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
-![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
+[![license: MIT](https://img.shields.io/badge/license-MIT-495d52.svg)](./LICENSE)
+[![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=495d52&label=release)](https://github.com/Ajarallah/matn/releases)
+![node: >=18](https://img.shields.io/badge/node-%3E%3D18-495d52.svg)
+![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-495d52.svg)
+
+![Matn landing page](./assets/screenshot-landing.png)
 
 ![Matn — light theme](./assets/screenshot-light.png)
 

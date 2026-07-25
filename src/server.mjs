@@ -349,6 +349,20 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/annotation-core.js") return send(200, "text/javascript; charset=utf-8", ANNOTATION_CORE);
     if (u.pathname === "/render-worker.js") return send(200, "text/javascript; charset=utf-8", RENDER_WORKER);
     if (u.pathname === "/highlight.js") return send(200, "text/javascript; charset=utf-8", HLJS);
+    if (u.pathname === "/brand.css") {
+      try { return send(200, "text/css; charset=utf-8", readFileSync(join(HERE, "brand.css")), { "cache-control": "max-age=3600" }); }
+      catch { return send(404, "text/plain", "nf"); }
+    }
+    if (u.pathname === "/brand-glass.js") {
+      try { return send(200, "text/javascript; charset=utf-8", readFileSync(join(HERE, "brand-glass.js")), { "cache-control": "max-age=3600" }); }
+      catch { return send(404, "text/plain", "nf"); }
+    }
+    if (u.pathname.startsWith("/brand/")) {
+      const name = u.pathname.slice(7);
+      if (!/^(mark|lockup-ar|lockup-en)\.svg$/.test(name)) return send(404, "text/plain", "nf");
+      try { return send(200, "image/svg+xml; charset=utf-8", readFileSync(join(HERE, "brand", name)), { "cache-control": "max-age=86400" }); }
+      catch { return send(404, "text/plain", "nf"); }
+    }
     if (u.pathname === "/mermaid.js") {
       try { if (!MERMAID) MERMAID = readFileSync(join(VENDOR, "mermaid.min.js")); }
       catch { return send(404, "text/plain", "nf"); }

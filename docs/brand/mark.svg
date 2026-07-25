@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">متن</title>
+  <defs>
+    <linearGradient id="shell" x1="18" y1="12" x2="110" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5c7165"/>
+      <stop offset="1" stop-color="#3d5047"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="30" y1="34" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e9ffdf"/>
+      <stop offset="1" stop-color="#caf1bc"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="32" fill="url(#shell)"/>
+  <rect x="5" y="5" width="118" height="118" rx="31" fill="none" stroke="#f3f1e6" stroke-opacity=".38" stroke-width="2"/>
+  <g fill="url(#ink)">
+    <rect x="44" y="34" width="52" height="12" rx="6"/>
+    <rect x="28" y="58" width="68" height="12" rx="6"/>
+    <rect x="48" y="82" width="48" height="12" rx="6"/>
+    <circle cx="34" cy="88" r="6"/>
+  </g>
+  <path d="M22 35c7-14 20-22 38-25M106 91c-4 12-12 21-24 27" fill="none" stroke="#fff" stroke-opacity=".16" stroke-linecap="round" stroke-width="3"/>
+</svg>

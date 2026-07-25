@@ -94,12 +94,13 @@ test("serves KaTeX and footnote assets", async (t) => {
     await rm(root, { recursive: true, force: true });
   });
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const [path, type] of [["/katex.js", /javascript/], ["/katex.css", /css/], ["/marked-footnote.js", /javascript/], ["/render-core.js", /javascript/]]) {
+  for (const [path, type] of [["/katex.js", /javascript/], ["/katex.css", /css/], ["/marked-footnote.js", /javascript/], ["/render-core.js", /javascript/], ["/brand.css", /css/], ["/brand-glass.js", /javascript/], ["/brand/mark.svg", /svg/]]) {
     const res = await fetch(base + path);
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get("content-type"), type, path);
     if (path === "/render-core.js") assert.match(await res.text(), /MatnCore/);
   }
+  assert.equal((await fetch(base + "/brand/not-allowed.svg")).status, 404);
 });
 
 test("an unreadable image returns 404 without crashing the server", async (t) => {

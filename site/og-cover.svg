@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">متن · Matn</title>
+  <desc id="desc">ماركداون عربي، كما يجب أن يُقرأ.</desc>
+  <defs>
+    <radialGradient id="glow" cx="20%" cy="18%" r="80%">
+      <stop stop-color="#caf1bc"/>
+      <stop offset=".55" stop-color="#f3f1e6"/>
+      <stop offset="1" stop-color="#e4e5d6"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".24"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#26372e" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g opacity=".16" stroke="#495d52">
+    <path d="M0 90h1200M0 180h1200M0 270h1200M0 360h1200M0 450h1200M0 540h1200"/>
+    <path d="M120 0v630M240 0v630M360 0v630M480 0v630M600 0v630M720 0v630M840 0v630M960 0v630M1080 0v630"/>
+  </g>
+  <g transform="translate(86 92)" filter="url(#shadow)">
+    <rect width="456" height="446" rx="46" fill="url(#glass)" stroke="#fff" stroke-opacity=".76" stroke-width="2"/>
+    <rect x="34" y="34" width="102" height="102" rx="28" fill="#495d52"/>
+    <g fill="#caf1bc" transform="translate(34 34) scale(.8)">
+      <rect x="44" y="34" width="52" height="12" rx="6"/>
+      <rect x="28" y="58" width="68" height="12" rx="6"/>
+      <rect x="48" y="82" width="48" height="12" rx="6"/>
+      <circle cx="34" cy="88" r="6"/>
+    </g>
+    <rect x="34" y="172" width="310" height="19" rx="9.5" fill="#495d52"/>
+    <rect x="34" y="212" width="382" height="12" rx="6" fill="#7c8b4b" opacity=".5"/>
+    <rect x="110" y="240" width="306" height="12" rx="6" fill="#7c8b4b" opacity=".34"/>
+    <rect x="34" y="292" width="382" height="116" rx="24" fill="#495d52"/>
+    <rect x="62" y="325" width="290" height="13" rx="6.5" fill="#caf1bc" opacity=".82"/>
+    <rect x="62" y="357" width="222" height="13" rx="6.5" fill="#caf1bc" opacity=".5"/>
+  </g>
+  <g fill="#495d52" text-anchor="middle">
+    <text x="870" y="260" font-family="SF Arabic, Arial, sans-serif" font-size="100" font-weight="800">متن</text>
+    <text x="870" y="340" font-family="SF Arabic, Arial, sans-serif" font-size="41" font-weight="600">ماركداون عربي، كما يجب أن يُقرأ.</text>
+    <text x="870" y="398" font-family="SF Pro Text, Arial, sans-serif" font-size="24" letter-spacing="2">LOCAL · RTL · OPEN SOURCE</text>
+  </g>
+</svg>
