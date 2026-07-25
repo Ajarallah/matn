@@ -108,9 +108,10 @@ await shot(join(OUT, "screenshot-light.png"), { theme: "light" });
 await shot(join(OUT, "screenshot-sepia.png"), { theme: "sepia" });
 await shot(join(OUT, "screenshot-dark.png"), { theme: "dark" });
 await shot(join(OUT, "screenshot-settings.png"), { theme: "light", panel: true });
-// the landing page shows the light shot; keep one copy inside docs/ so Pages
-// serves it without reaching outside the published directory
+// the landing page shows real product shots rather than hand-built swatches, so
+// keep copies inside docs/ where Pages can serve them
 await shot(join(DOCS, "screenshot-light.png"), { theme: "light" });
+await shot(join(DOCS, "screenshot-dark.png"), { theme: "dark" });
 
 await browser.close();
 await server.close?.();

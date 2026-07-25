@@ -1,17 +1,26 @@
 <!doctype html>
 <!-- Source of the GitHub Pages landing page. Built to docs/index.html by
      scripts/build-docs.mjs, which injects the reader's own token block at
-     /* @tokens */ so the two can never drift apart. Edit this file, not docs/. -->
+     /* @tokens */ so the two can never drift apart. Edit this file, not docs/.
+
+     Design read: developer-tool landing for Arabic-reading developers, calm
+     editorial language, built on the reader's own token system with restrained
+     motion. Dials: DESIGN_VARIANCE 6, MOTION_INTENSITY 3, VISUAL_DENSITY 3.
+     Deliberate deviation: icons are inline SVG rather than an icon library.
+     matn has no runtime dependencies, no build step for this page, and a CSP
+     that blocks every external origin, so a package is not installable here.
+     The reader hand-rolls its icons the same way. -->
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>متن · قارئ Markdown عربي</title>
-<meta name="description" content="متن — قارئ Markdown محلي للعربية، من اليمين إلى اليسار. يفتح ملفاتك كما هي: لا تحرير، ولا رفع، ولا حساب.">
+<meta name="description" content="متن، قارئ Markdown محلي للعربية من اليمين إلى اليسار. يفتح ملفاتك كما هي: لا تحرير، ولا رفع، ولا حساب.">
 <meta property="og:title" content="متن · اقرأ الـMarkdown كما ينبغي أن يُقرأ">
 <meta property="og:description" content="قارئ Markdown محلي للعربية، من اليمين إلى اليسار. يعمل دون اتصال، ولا يلمس ملفاتك.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ajarallah.github.io/matn/">
+<meta property="og:image" content="https://ajarallah.github.io/matn/screenshot-light.png">
 <link rel="icon" href="@favicon@">
 <style>
 @font-face{font-family:"Amiri";font-weight:400;font-display:swap;src:url("./vendor/fonts/amiri-400.woff2") format("woff2")}
@@ -29,19 +38,20 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);
   letter-spacing:var(--dark-track);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
 ::selection{background:rgb(var(--sel)/.22)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:5px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
 img,svg{max-width:100%}
 h1,h2,h3,p{margin:0}
 
-/* the same grain the reader uses — the quiet soul, not decoration */
+/* the same grain the reader uses. Fixed and pointer-events:none, never on a
+   scrolling container, so it costs no repaint while scrolling. */
 #grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E")}
 html[data-theme="dark"] #grain{mix-blend-mode:screen;opacity:.6}
 
-.wrap{position:relative;z-index:1;width:min(1080px,100% - 40px);margin-inline:auto}
+.wrap{position:relative;z-index:1;width:min(1120px,100% - 40px);margin-inline:auto}
 
 /* ---- glass nav: the same material as the reader's chrome ---- */
-.nav{position:sticky;top:0;z-index:30;height:60px;display:flex;align-items:center;gap:14px;
+.nav{position:sticky;top:0;z-index:30;height:62px;display:flex;align-items:center;gap:14px;
   padding-inline:clamp(16px,4vw,34px);
   background:rgb(var(--glass-tint)/calc(var(--glass-alpha) + .1));
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
@@ -62,77 +72,61 @@ html[data-theme="dark"] .nav-links a:hover,html[data-theme="dark"] .nav-links bu
 .nav-cta{background:var(--accent)!important;color:var(--on-accent)!important}
 .nav-cta:hover{background:var(--accent-ink)!important}
 
-/* ---- hero ---- */
-.hero{padding:clamp(56px,11vw,116px) 0 clamp(40px,7vw,72px);text-align:start}
-.kicker{color:var(--accent-ink);font-size:var(--text-sm);font-weight:700;letter-spacing:.02em;margin-bottom:14px}
-h1{font-family:"Amiri",serif;font-size:clamp(2.3rem,7vw,4.4rem);line-height:1.16;
-  font-weight:700;text-wrap:balance;max-width:20ch;margin-bottom:22px}
-.lede{font-family:"Noto Naskh Arabic",serif;font-size:clamp(1.05rem,2.2vw,1.32rem);line-height:1.85;
-  color:var(--ink-soft);max-width:52ch;margin-bottom:34px}
-.lede b{color:var(--ink);font-weight:700}
-.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px}
-.btn{display:inline-flex;align-items:center;gap:9px;text-decoration:none;cursor:pointer;
-  font-family:inherit;font-size:var(--text-ui);font-weight:600;padding:13px 22px;
+/* ---- hero: four text elements, nothing more ---- */
+.hero{padding:clamp(48px,8vw,88px) 0 clamp(36px,6vw,60px)}
+.kicker{color:var(--accent-ink);font-size:var(--text-sm);font-weight:700;margin-bottom:14px}
+h1{font-family:"Amiri",serif;font-size:clamp(2.2rem,6vw,4rem);line-height:1.18;
+  font-weight:700;text-wrap:balance;max-width:19ch;margin-bottom:20px}
+.lede{font-family:"Noto Naskh Arabic",serif;font-size:clamp(1.05rem,2.1vw,1.28rem);line-height:1.8;
+  color:var(--ink-soft);max-width:46ch;margin-bottom:30px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;text-decoration:none;cursor:pointer;white-space:nowrap;
+  font-family:inherit;font-size:var(--text-ui);font-weight:600;padding:13px 24px;
   border-radius:var(--r);border:1px solid transparent;
   transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),transform var(--dur) var(--ease)}
-.btn:active{transform:scale(.98)}
+.btn:active{transform:translateY(1px)}
 .btn-primary{background:var(--accent);color:var(--on-accent)}
 .btn-primary:hover{background:var(--accent-ink)}
 .btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
 .btn-ghost:hover{border-color:var(--line-strong);background:var(--raised)}
-.btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-/* copyable command */
-.cmd{display:flex;align-items:center;gap:10px;direction:ltr;text-align:left;
-  background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r);
-  padding:11px 13px;font:var(--text-sm)/1.5 var(--f-mono);color:var(--code-ink);
-  max-width:max-content}
-.cmd code{white-space:nowrap;overflow-x:auto}
-.cmd button{flex:none;border:0;background:none;color:var(--muted);cursor:pointer;
-  padding:4px 6px;border-radius:5px;font:600 var(--text-xs)/1 var(--ui);
-  transition:color var(--dur) var(--ease),background var(--dur) var(--ease)}
-.cmd button:hover{color:var(--accent-ink);background:var(--surface)}
-.hint{color:var(--muted);font-size:var(--text-sm);line-height:1.7;margin-top:14px}
-.hint a{color:var(--accent-ink)}
-
-/* ---- shot ---- */
-.shot{position:relative;z-index:1;margin:0 0 clamp(48px,9vw,96px);
-  border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+/* ---- figures ---- */
+.shot{margin:0;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  background:var(--surface);
   box-shadow:0 1px 2px rgb(var(--shadow)/.08),0 30px 70px -30px rgb(var(--shadow)/.38)}
 .shot img{display:block;width:100%;height:auto}
-figcaption{color:var(--muted);font-size:var(--text-sm);padding:12px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.shot figcaption{color:var(--muted);font-size:var(--text-sm);padding:12px 16px;border-top:1px solid var(--line)}
 
-/* ---- outcomes: what you get, not a feature list ---- */
-.section{padding-block:clamp(40px,7vw,78px)}
+.section{padding-block:clamp(40px,7vw,74px)}
 .eyebrow{font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;
   color:var(--muted);font-weight:700;margin-bottom:12px}
-h2{font-family:"Amiri",serif;font-size:clamp(1.55rem,3.6vw,2.3rem);line-height:1.3;
-  font-weight:700;text-wrap:balance;margin-bottom:16px;max-width:26ch}
-.section-copy{color:var(--ink-soft);font-size:var(--text-md);line-height:1.85;max-width:56ch;margin-bottom:34px}
-.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(255px,1fr))}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
-.card h3{font-size:1.06rem;line-height:1.45;margin-bottom:9px;color:var(--ink)}
-.card p{color:var(--ink-soft);font-size:var(--text-ui);line-height:1.8}
-.card-fig{height:64px;margin-bottom:18px;display:flex;align-items:flex-end;gap:5px}
-/* three tiny diagrams instead of an icon set: each one shows the thing it claims */
-.bar{border-radius:2px;background:var(--line-strong)}
-.bar.on{background:var(--accent)}
-.dirline{height:7px;border-radius:3.5px;background:var(--line-strong);width:100%}
-.dirline.rtl{background:linear-gradient(to left,var(--accent) 0 42%,var(--line-strong) 42% 100%)}
-.dirline.ltr{background:linear-gradient(to right,var(--accent-ink) 0 30%,var(--line-strong) 30% 100%)}
-.dirstack{display:flex;flex-direction:column;gap:7px;width:100%;justify-content:flex-end;height:100%}
-.swatches{display:flex;gap:7px;align-items:flex-end;height:100%}
-.sw{width:34px;height:34px;border-radius:9px;border:1px solid rgb(var(--shadow)/.14)}
-.lockfig{display:flex;align-items:flex-end;gap:8px;height:100%;color:var(--accent)}
-.lockfig svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+h2{font-family:"Amiri",serif;font-size:clamp(1.55rem,3.6vw,2.25rem);line-height:1.3;
+  font-weight:700;text-wrap:balance;margin-bottom:14px;max-width:24ch}
+.section-copy{color:var(--ink-soft);font-size:var(--text-md);line-height:1.8;max-width:52ch;margin-bottom:32px}
 
-/* ---- theme strip: the identity proving itself ---- */
-.themes-strip{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
-.swatch{border-radius:var(--r-lg);border:1px solid rgb(var(--shadow)/.14);padding:20px;min-height:158px;
-  display:flex;flex-direction:column;justify-content:space-between}
-.swatch p{font-family:"Noto Naskh Arabic",serif;font-size:.97rem;line-height:1.8}
-.swatch .name{font-size:var(--text-xs);font-weight:700;letter-spacing:.06em;display:flex;align-items:center;gap:7px}
-.swatch .dot{width:9px;height:9px;border-radius:50%;flex:none}
+/* ---- outcomes: a lead cell plus two supporting ones, not three equal cards.
+       Direction is matn's actual differentiator, so it gets the weight. ---- */
+.outcomes{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:820px){.outcomes{grid-template-columns:1.35fr 1fr;grid-template-rows:auto auto}
+  .lead{grid-row:span 2}}
+.lead{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:28px;display:flex;flex-direction:column}
+.support{border-top:1px solid var(--line-strong);padding-top:20px}
+.outcomes h3{font-size:1.08rem;line-height:1.45;margin-bottom:9px}
+.outcomes p{color:var(--ink-soft);font-size:var(--text-ui);line-height:1.8;max-width:44ch}
+/* the direction demo shows the claim instead of asserting it: four stacked
+   lines, the third resolving the other way, exactly what per-block voting does */
+.dirdemo{margin-top:auto;padding-top:26px;display:flex;flex-direction:column;gap:9px}
+.dirline{height:9px;border-radius:4.5px;background:var(--line-strong)}
+.dirline.ar{background:linear-gradient(to left,var(--accent) 0 46%,var(--line-strong) 46%)}
+.dirline.ar.short{width:72%;margin-inline-start:auto}
+.dirline.en{background:linear-gradient(to right,var(--accent-ink) 0 34%,var(--line-strong) 34%)}
+.dirtag{display:flex;justify-content:space-between;color:var(--muted);font-size:var(--text-xs);
+  font-weight:700;margin-top:4px}
+
+/* ---- themes: two real product shots, not colour swatches ---- */
+.compare{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:820px){.compare{grid-template-columns:1fr 1fr}}
 
 /* ---- install ---- */
 .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
@@ -142,20 +136,28 @@ h2{font-family:"Amiri",serif;font-size:clamp(1.55rem,3.6vw,2.3rem);line-height:1
 .tab:hover{border-color:var(--line-strong)}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .pane{display:none}.pane[data-open="1"]{display:block}
-.pane .cmd{max-width:none;margin-bottom:10px}
-.pane p{color:var(--muted);font-size:var(--text-sm);line-height:1.75}
+.cmd{display:flex;align-items:center;gap:10px;direction:ltr;text-align:left;
+  background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px 14px;font:var(--text-sm)/1.5 var(--f-mono);color:var(--code-ink);margin-bottom:12px}
+.cmd code{overflow-x:auto;white-space:nowrap}
+.cmd button{flex:none;border:0;background:none;color:var(--muted);cursor:pointer;
+  padding:4px 7px;border-radius:var(--r-sm);font:600 var(--text-xs)/1 var(--ui);
+  transition:color var(--dur) var(--ease),background var(--dur) var(--ease)}
+.cmd button:hover{color:var(--accent-ink);background:var(--surface)}
+.pane p{color:var(--muted);font-size:var(--text-sm);line-height:1.75;max-width:56ch}
+.pane p code{font-family:var(--f-mono);font-size:.92em}
 
 /* ---- footer ---- */
-footer{border-top:1px solid var(--line);margin-top:clamp(40px,7vw,80px);padding-block:34px;
+footer{border-top:1px solid var(--line);margin-top:clamp(36px,6vw,68px);padding-block:32px;
   color:var(--muted);font-size:var(--text-sm);line-height:1.9}
 footer a{color:var(--accent-ink)}
-.foot-row{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center}
-.foot-row .sep{margin-inline-start:auto}
+.foot-row{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline}
+.foot-credit{flex:1 1 34ch;min-width:0}
 
-/* English mirror: one attribute flip, no second page to keep in sync */
+/* English mirror: one attribute flip, so there is no second page to keep in sync */
 html[lang="en"]{direction:ltr}
-html[lang="en"] h1,html[lang="en"] h2{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;letter-spacing:-.015em}
-html[lang="en"] .lede,html[lang="en"] .swatch p{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif}
+html[lang="en"] h1,html[lang="en"] h2{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;letter-spacing:-.02em}
+html[lang="en"] .lede{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif}
 [data-en]{display:none}
 html[lang="en"] [data-ar]{display:none}
 html[lang="en"] [data-en]{display:revert}
@@ -172,104 +174,75 @@ html[lang="en"] [data-en]{display:revert}
   <div class="nav-links">
     <button type="button" id="langbtn" aria-label="Switch to English">EN</button>
     <a href="https://github.com/Ajarallah/matn">GitHub</a>
-    <a class="nav-cta" href="./try/"><span data-ar>جرّب الآن</span><span data-en>Try it</span></a>
+    <a class="nav-cta" href="./try/"><span data-ar>جرّب متن</span><span data-en>Try Matn</span></a>
   </div>
 </nav>
 
 <main>
 <header class="wrap hero">
-  <div class="kicker"><span data-ar>قارئ محلي · بلا تحرير · بلا سحابة</span><span data-en>Local reader · never edits · no cloud</span></div>
+  <div class="kicker"><span data-ar>قارئ Markdown محلي للعربية</span><span data-en>A local Markdown reader for Arabic</span></div>
   <h1><span data-ar>اقرأ الـMarkdown كما ينبغي أن يُقرأ</span><span data-en>Read Markdown the way it should be read</span></h1>
   <p class="lede">
-    <span data-ar>متن يفتح ملف Markdown ويعرضه نصًا عربيًا حقيقيًا من اليمين إلى اليسار — يحسم اتجاه كل فقرة وحدها، فيبقى المستند عربيًا وإن بدأ سطرٌ بكلمة لاتينية، ويبقى الكود والإنجليزية على اتجاههما داخله. <b>لا يحرّر ملفاتك، ولا يرفعها، ولا يطلب حسابًا.</b></span>
-    <span data-en>Matn opens a Markdown file and renders it as genuine right-to-left Arabic — it settles the direction of each block on its own, so an Arabic document stays Arabic even when a line opens with a Latin word, while code and English keep their own direction inside it. <b>It never edits your files, never uploads them, and never asks for an account.</b></span>
+    <span data-ar>يفتح ملفاتك كما هي ويعرضها نصًا عربيًا من اليمين إلى اليسار. لا يحرّرها، ولا يرفعها، ولا يطلب حسابًا.</span>
+    <span data-en>Opens your files as they are, right to left. Never edits them, never uploads them, never asks for an account.</span>
   </p>
   <div class="actions">
-    <a class="btn btn-primary" href="./try/">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9l5 5v11H5z"/><path d="M14 4v5h5"/></svg>
-      <span data-ar>جرّب في المتصفح</span><span data-en>Try it in the browser</span>
-    </a>
-    <a class="btn btn-ghost" href="https://github.com/Ajarallah/matn">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4 6.7 19l1-5.8L3.5 9.2l5.9-.9z"/></svg>
-      <span data-ar>الشيفرة على GitHub</span><span data-en>Source on GitHub</span>
-    </a>
+    <a class="btn btn-primary" href="./try/"><span data-ar>جرّب متن</span><span data-en>Try Matn</span></a>
+    <a class="btn btn-ghost" href="#install"><span data-ar>ثبّته محليًا</span><span data-en>Install locally</span></a>
   </div>
-  <div class="cmd">
-    <code id="cmd-hero">npm install -g Ajarallah/matn</code>
-    <button type="button" data-copy="cmd-hero"><span data-ar>نسخ</span><span data-en>Copy</span></button>
-  </div>
-  <p class="hint">
-    <span data-ar>يحتاج Node.js 18 فأحدث، ولا شيء غيره — متن بلا تبعيات تشغيل. النسخة في المتصفح تعمل كذلك دون تثبيت، لكن نسخة سطر الأوامر هي التي تقرأ مجلداتك.</span>
-    <span data-en>Needs Node.js 18 or newer and nothing else — Matn has no runtime dependencies. The browser build works without installing anything, but the CLI is what reads your folders.</span>
-  </p>
 </header>
 
 <div class="wrap">
   <figure class="shot">
-    <img src="./screenshot-light.png" alt="متن يعرض مستندًا عربيًا في السمة الفاتحة" width="2560" height="1600" loading="lazy" decoding="async">
-    <figcaption><span data-ar>مستند عربي في السمة الفاتحة — عمود قراءة مضبوط، وشريط جانبي على اليمين كما ينبغي في RTL.</span><span data-en>An Arabic document in the light theme — a measured reading column, and the sidebar on the right where RTL puts it.</span></figcaption>
+    <img src="./screenshot-light.png" alt="متن يعرض مستندًا عربيًا فيه عنوان ولوحة تنبيه وكتلة شيفرة" width="2560" height="1600" loading="eager" decoding="async" fetchpriority="high">
+    <figcaption><span data-ar>عمود قراءة مضبوط، وشريط جانبي على اليمين كما ينبغي في RTL، وشيفرة تبقى لاتينية داخل نص عربي.</span><span data-en>A measured reading column, the sidebar on the right where RTL puts it, and code that stays Latin inside Arabic prose.</span></figcaption>
   </figure>
 </div>
 
 <section class="wrap section">
-  <div class="eyebrow"><span data-ar>ما تحصل عليه</span><span data-en>What you get</span></div>
   <h2><span data-ar>ثلاثة أشياء يصعب أن تجدها مجتمعة</span><span data-en>Three things that are hard to find together</span></h2>
-  <div class="grid">
-    <article class="card">
-      <div class="card-fig"><div class="dirstack">
-        <div class="dirline rtl"></div><div class="dirline rtl"></div>
-        <div class="dirline ltr"></div><div class="dirline rtl"></div>
-      </div></div>
+  <div class="outcomes">
+    <article class="lead">
       <h3><span data-ar>الاتجاه يصحّ من تلقاء نفسه</span><span data-en>Direction settles itself</span></h3>
-      <p><span data-ar>لا زرّ اتجاه ولا إعداد. متن يقيس كل كتلة ويصوّت على اتجاهها، فالفقرة العربية عربية، وكتلة الكود لاتينية، في المستند نفسه.</span><span data-en>No direction toggle, no setting. Matn measures each block and votes on its direction, so an Arabic paragraph is Arabic and a code block is Latin, in the same document.</span></p>
+      <p><span data-ar>لا زرّ اتجاه ولا إعداد. متن يقيس كل كتلة ويصوّت على اتجاهها، فالفقرة العربية تبقى عربية وإن بدأت بكلمة لاتينية، وكتلة الشيفرة تبقى لاتينية، في المستند نفسه. هذه أكثر شكوى مفتوحة في قرّاء Markdown الأخرى.</span><span data-en>No direction toggle, no setting. Matn measures each block and votes on its direction, so an Arabic paragraph stays Arabic even when it opens with a Latin word, and a code block stays Latin, in the same document. This is the longest-standing open complaint across other Markdown readers.</span></p>
+      <div class="dirdemo" aria-hidden="true">
+        <div class="dirline ar"></div>
+        <div class="dirline ar"></div>
+        <div class="dirline en"></div>
+        <div class="dirline ar short"></div>
+        <div class="dirtag"><span>LTR</span><span>RTL</span></div>
+      </div>
     </article>
-    <article class="card">
-      <div class="card-fig"><div class="swatches">
-        <div class="sw" style="background:#f3f1e6"></div>
-        <div class="sw" style="background:#f1e6ce"></div>
-        <div class="sw" style="background:#1c231e"></div>
-        <div class="sw" style="background:#000"></div>
-      </div></div>
+    <article class="support">
       <h3><span data-ar>أربع سمات وأربعة أنماط قراءة</span><span data-en>Four themes, four reading modes</span></h3>
-      <p><span data-ar>فاتح وسيبيا وداكن وليلي، وخطوط عربية مدمجة، وعرض العمود والتباعد والمحاذاة بين يديك — واختصارات جاهزة للمقالة والبحث والتوثيق والنص الطويل.</span><span data-en>Light, sepia, dark and night, embedded Arabic fonts, and column width, leading and alignment under your hand — with ready presets for articles, papers, docs and long reads.</span></p>
+      <p><span data-ar>خطوط عربية مدمجة، وعرض العمود والتباعد والمحاذاة بين يديك، واختصارات جاهزة للمقالة والبحث والتوثيق والنص الطويل.</span><span data-en>Embedded Arabic fonts, with column width, leading and alignment under your hand, plus ready presets for articles, papers, docs and long reads.</span></p>
     </article>
-    <article class="card">
-      <div class="card-fig"><div class="lockfig">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-      </div></div>
+    <article class="support">
       <h3><span data-ar>ملفاتك تبقى ملفاتك</span><span data-en>Your files stay yours</span></h3>
-      <p><span data-ar>متن قارئ لا محرّر: يفتح للقراءة فقط، ويعمل على 127.0.0.1 دون اتصال، ولا يخرج من المجلد الذي فتحته. لا حساب، ولا مزامنة، ولا تتبّع.</span><span data-en>Matn reads, it does not edit: read-only, served on 127.0.0.1 with no network, and confined to the folder you opened. No account, no sync, no telemetry.</span></p>
+      <p><span data-ar>قارئ لا محرّر: يفتح للقراءة فقط، ويعمل على 127.0.0.1 دون اتصال، ولا يخرج من المجلد الذي فتحته. لا حساب، ولا مزامنة، ولا تتبّع.</span><span data-en>A reader, not an editor: read-only, served on 127.0.0.1 with no network, confined to the folder you opened. No account, no sync, no telemetry.</span></p>
     </article>
   </div>
 </section>
 
 <section class="wrap section">
-  <div class="eyebrow"><span data-ar>السمات</span><span data-en>Themes</span></div>
-  <h2><span data-ar>ورق من الألباستر، وأرض زيتونية</span><span data-en>Alabaster paper, olive ground</span></h2>
-  <p class="section-copy"><span data-ar>عائلة لون واحدة عبر السمات الأربع. كل زوج نص/خلفية هنا يتجاوز معيار WCAG AA، مقيسًا لا مقدّرًا.</span><span data-en>One hue family across all four themes. Every text pair here clears WCAG AA — measured, not estimated.</span></p>
-  <div class="themes-strip">
-    <div class="swatch" style="background:#f3f1e6;color:#22261c;border-color:#d2cdb8">
-      <div class="name" style="color:#4c5a28"><span class="dot" style="background:#5f6e36"></span>فاتح · Light</div>
-      <p>يقرأ العربية كما تُقرأ في الورق.</p>
-    </div>
-    <div class="swatch" style="background:#f1e6ce;color:#40371e;border-color:#d0bd93">
-      <div class="name" style="color:#5e5019"><span class="dot" style="background:#736324"></span>سيبيا · Sepia</div>
-      <p>دفء للقراءة الطويلة دون إجهاد.</p>
-    </div>
-    <div class="swatch" style="background:#1c231e;color:#e4ebdc;border-color:#495d52">
-      <div class="name" style="color:#caf1bc"><span class="dot" style="background:#a8d49b"></span>داكن · Dark</div>
-      <p>أرض زيتونية وأكسنت نعناعي.</p>
-    </div>
-    <div class="swatch" style="background:#000;color:#dae2d2;border-color:#2a342c">
-      <div class="name" style="color:#caf1bc"><span class="dot" style="background:#a8d49b"></span>ليلي · Night</div>
-      <p>أسود صريح لشاشات OLED.</p>
-    </div>
+  <h2><span data-ar>ورقٌ فاتح، أو أرضٌ زيتونية</span><span data-en>Light paper, or olive ground</span></h2>
+  <p class="section-copy"><span data-ar>أربع سمات في عائلة لون واحدة. كل زوج نص وخلفية فيها يتجاوز معيار WCAG AA، مقيسًا في المتصفح لا مقدّرًا.</span><span data-en>Four themes in one hue family. Every text and background pair clears WCAG AA, measured in the browser rather than estimated.</span></p>
+  <div class="compare">
+    <figure class="shot">
+      <img src="./screenshot-light.png" alt="متن في السمة الفاتحة" width="2560" height="1600" loading="lazy" decoding="async">
+      <figcaption><span data-ar>فاتح</span><span data-en>Light</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="./screenshot-dark.png" alt="متن في السمة الداكنة" width="2560" height="1600" loading="lazy" decoding="async">
+      <figcaption><span data-ar>داكن</span><span data-en>Dark</span></figcaption>
+    </figure>
   </div>
 </section>
 
 <section class="wrap section" id="install">
   <div class="eyebrow"><span data-ar>التثبيت</span><span data-en>Install</span></div>
   <h2><span data-ar>أمر واحد، ثم <code style="font-family:var(--f-mono);font-size:.82em">matn ملف.md</code></span><span data-en>One command, then <code style="font-family:var(--f-mono);font-size:.82em">matn file.md</code></span></h2>
+  <p class="section-copy"><span data-ar>يحتاج Node.js 18 فأحدث، ولا شيء غيره. متن بلا تبعيات تشغيل.</span><span data-en>Needs Node.js 18 or newer and nothing else. Matn has no runtime dependencies.</span></p>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-tab="npm">npm</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="npx">npx</button>
@@ -278,7 +251,7 @@ html[lang="en"] [data-en]{display:revert}
   </div>
   <div class="pane" data-pane="npm" data-open="1">
     <div class="cmd"><code id="c-npm">npm install -g Ajarallah/matn</code><button type="button" data-copy="c-npm"><span data-ar>نسخ</span><span data-en>Copy</span></button></div>
-    <p><span data-ar>يُثبّت من GitHub مباشرة — متن ليس منشورًا على npm بعد، فلا تكتب <code>npm i -g matn</code>.</span><span data-en>Installs straight from GitHub — Matn is not published on npm yet, so <code>npm i -g matn</code> will not work.</span></p>
+    <p><span data-ar>يُثبّت من GitHub مباشرة. متن ليس منشورًا على npm بعد، فلا تكتب <code>npm i -g matn</code>.</span><span data-en>Installs straight from GitHub. Matn is not published on npm yet, so <code>npm i -g matn</code> will not work.</span></p>
   </div>
   <div class="pane" data-pane="npx">
     <div class="cmd"><code id="c-npx">npx github:Ajarallah/matn README.md</code><button type="button" data-copy="c-npx"><span data-ar>نسخ</span><span data-en>Copy</span></button></div>
@@ -290,23 +263,24 @@ html[lang="en"] [data-en]{display:revert}
   </div>
   <div class="pane" data-pane="mac">
     <div class="cmd"><code id="c-mac">bash scripts/install-macos.sh --default</code><button type="button" data-copy="c-mac"><span data-ar>نسخ</span><span data-en>Copy</span></button></div>
-    <p><span data-ar>يبني <code>Matn.app</code> في <code>~/Applications</code> ويسجّله لفتح ملفات Markdown بالنقر المزدوج. الخيار <code>--default</code> يحتاج <code>duti</code>.</span><span data-en>Builds <code>Matn.app</code> in <code>~/Applications</code> and registers it to open Markdown on double-click. <code>--default</code> needs <code>duti</code>.</span></p>
+    <p><span data-ar>يبني <code>Matn.app</code> في <code>~/Applications</code> ويسجّله لفتح ملفات Markdown بالنقر المزدوج. الخيار <code>--default</code> يحتاج <code>duti</code>.</span><span data-en>Builds <code>Matn.app</code> in <code>~/Applications</code> and registers it to open Markdown on double-click. The <code>--default</code> flag needs <code>duti</code>.</span></p>
   </div>
 </section>
 
 <footer class="wrap">
   <div class="foot-row">
-    <span data-ar>متن — رخصة MIT.</span><span data-en>Matn — MIT licensed.</span>
+    <span data-ar>متن، برخصة MIT.</span><span data-en>Matn, MIT licensed.</span>
     <a href="https://github.com/Ajarallah/matn">GitHub</a>
-    <a href="./try/"><span data-ar>النسخة الحيّة</span><span data-en>Live demo</span></a>
-    <span class="sep"><span data-ar>الخطوط العربية المدمجة برخصة OFL. كلمة «متن» في الشعار مرسومة بخط <a href="https://font.thmanyah.com">ثمانية</a>.</span><span data-en>Bundled Arabic fonts are OFL. The «متن» wordmark is drawn in <a href="https://font.thmanyah.com">Thmanyah</a>.</span></span>
+    <a href="./try/"><span data-ar>جرّب متن</span><span data-en>Try Matn</span></a>
+    <span class="foot-credit"><span data-ar>الخطوط العربية المدمجة برخصة OFL. كلمة «متن» في الشعار مرسومة بخط <a href="https://font.thmanyah.com">ثمانية</a>.</span><span data-en>Bundled Arabic fonts are OFL. The «متن» wordmark is drawn in <a href="https://font.thmanyah.com">Thmanyah</a>.</span></span>
   </div>
 </footer>
 </main>
 
 <script>
 "use strict";
-// Theme follows the OS, matching the reader's own default.
+// Theme follows the OS, matching the reader's own default. One theme for the
+// whole page: sections never invert.
 var mq = window.matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(){ document.documentElement.setAttribute("data-theme", mq.matches ? "dark" : "light"); }
 applyTheme();
@@ -322,7 +296,7 @@ langbtn.addEventListener("click", function(){
   langbtn.setAttribute("aria-label", toEn ? "التحويل إلى العربية" : "Switch to English");
 });
 
-// Copy buttons
+// Copy buttons: feedback on a real action, which is the only motion here.
 document.addEventListener("click", function(e){
   var btn = e.target.closest("[data-copy]");
   if (!btn) return;
@@ -333,7 +307,11 @@ document.addEventListener("click", function(e){
     var prev = btn.innerHTML;
     btn.textContent = en ? "Copied" : "نُسخ";
     setTimeout(function(){ btn.innerHTML = prev; }, 1400);
-  }).catch(function(){});
+  }).catch(function(){
+    btn.textContent = en ? "Press Cmd+C" : "انسخ يدويًا";
+    var r = document.createRange(); r.selectNodeContents(node);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  });
 });
 
 // Install tabs

@@ -20,6 +20,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run check
+      - run: npm run preflight
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: node scripts/build-docs.mjs && git diff --exit-code -- docs/
