@@ -16,10 +16,15 @@
 @font-face{font-family:"Tajawal";font-weight:400;font-display:swap;src:url("./vendor/fonts/tajawal-400.woff2") format("woff2")}
 @font-face{font-family:"Tajawal";font-weight:700;font-display:swap;src:url("./vendor/fonts/tajawal-700.woff2") format("woff2")}
 
+/* tokens:start — extracted verbatim by scripts/build-docs.mjs into the landing page.
+   Keep this block self-contained: no rule may depend on anything below tokens:end. */
 :root{
   /* type scale — 1.2 ratio, fixed rem for chrome */
   --text-xs:.6875rem; --text-sm:.8125rem; --text-ui:.875rem; --text-md:1rem;
   --f-mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+  /* interface stack — deliberately NOT --rfont: the reading font is the reader's
+     choice and must not leak into menus, dialogs and panels. */
+  --ui:-apple-system,BlinkMacSystemFont,"SF Arabic","Segoe UI","Noto Sans Arabic","Geeza Pro",system-ui,sans-serif;
   /* reading (user-adjustable) */
   --rsize:18px; --rlh:1.85; --rmeasure:64ch; --measure:576px;
   --rfont:-apple-system,"SF Arabic","Geeza Pro","Noto Sans Arabic",sans-serif;
@@ -70,11 +75,12 @@ html[data-theme="night"]{
   --shadow:0 0 0; --sel:95 185 169; --dark-track:.012em;
   --hl-kw:#c98fd6; --hl-str:#8fc98f; --hl-com:#6f6a5f; --hl-num:#d4a56a; --hl-fn:#6fb0e6; --hl-attr:#d4a56a; --hl-type:#e0c07b;
 }
+/* tokens:end */
 
 *{box-sizing:border-box}
 html,body{height:100%}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--rfont);
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);
   display:flex;letter-spacing:var(--dark-track);
   transition:background var(--dur) var(--ease),color var(--dur) var(--ease);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -221,7 +227,7 @@ article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:1
   padding:16px 18px;border-radius:var(--r);overflow-x:auto;direction:ltr;text-align:left;font-size:.84em;line-height:1.7;margin:1.1em 0}
 #doc pre code{background:none;padding:0;font-size:1em;color:inherit}
 .copybtn{position:absolute;top:9px;left:9px;border:1px solid var(--line);background:var(--raised);color:var(--muted);
-  border-radius:6px;font-size:var(--text-xs);padding:3px 9px;cursor:pointer;opacity:0;font-family:var(--rfont);
+  border-radius:6px;font-size:var(--text-xs);padding:3px 9px;cursor:pointer;opacity:0;font-family:var(--ui);
   transition:opacity var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
 #doc pre:hover .copybtn{opacity:1}.copybtn:hover{color:var(--accent);border-color:var(--accent)}
 #doc blockquote{margin:1.1em 0;padding:.4em 16px;border-inline-start:2px solid var(--line-strong);
