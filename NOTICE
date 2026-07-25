@@ -14,6 +14,15 @@ Fonts (SIL Open Font License 1.1 — vendor/licenses/OFL-1.1.txt)
 The bundled .woff2 files are unmodified subsets distributed by the Fontsource
 project (https://fontsource.org). Each font is licensed under the SIL OFL 1.1.
 
+Wordmark
+--------
+The «متن» wordmark in the logo is drawn in Thmanyah Serif Display
+(https://font.thmanyah.com) and stored as outlined SVG paths — no Thmanyah font
+file is bundled or redistributed. scripts/wordmark.py reproduces the outlines
+from a locally installed copy of the font. The «ثمانية» reading option likewise
+loads only from vendor/fonts-local/, which the user supplies themselves and
+which is gitignored (see vendor/fonts-local/README.md).
+
 Libraries
 ---------
 - marked — MIT License — https://github.com/markedjs/marked

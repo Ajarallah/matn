@@ -3,14 +3,14 @@
 **A right-to-left Markdown reader for Arabic.**
 Reading themes, embedded Arabic fonts, math, diagrams, and export — all in your browser, fully offline.
 
-**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+**[▶ Try the live demo](https://ajarallah.github.io/matn/try/)** · **[Project page](https://ajarallah.github.io/matn/)**
 
 **[العربية →](./README.md)**
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
-[![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
-![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
+[![license: MIT](https://img.shields.io/badge/license-MIT-5f6e36.svg)](./LICENSE)
+[![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=5f6e36&label=release)](https://github.com/Ajarallah/matn/releases)
+![node: >=18](https://img.shields.io/badge/node-%3E%3D18-5f6e36.svg)
+![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-5f6e36.svg)
 
 ![Matn — light theme](./assets/screenshot-light.png)
 

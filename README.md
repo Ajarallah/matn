@@ -5,14 +5,14 @@
 **قارئ ماركداون للعربية، من اليمين إلى اليسار.**
 سمات للقراءة، خطوط عربية مدمجة، معادلات، مخططات، وتصدير — يعمل في متصفحك دون اتصال.
 
-**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)**
+**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/try/)** · **[صفحة المشروع](https://ajarallah.github.io/matn/)**
 
 **[English →](./README.en.md)**
 
-[![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
-[![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
-![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
+[![الرخصة: MIT](https://img.shields.io/badge/license-MIT-5f6e36.svg)](./LICENSE)
+[![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=5f6e36&label=release)](https://github.com/Ajarallah/matn/releases)
+![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-5f6e36.svg)
+![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-5f6e36.svg)
 
 ![متن — السمة الفاتحة](./assets/screenshot-light.png)
 
