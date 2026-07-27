@@ -108,10 +108,13 @@ await shot(join(OUT, "screenshot-light.png"), { theme: "light" });
 await shot(join(OUT, "screenshot-sepia.png"), { theme: "sepia" });
 await shot(join(OUT, "screenshot-dark.png"), { theme: "dark" });
 await shot(join(OUT, "screenshot-settings.png"), { theme: "light", panel: true });
-// the landing page shows real product shots rather than hand-built swatches, so
-// keep copies inside docs/ where Pages can serve them
-await shot(join(DOCS, "screenshot-light.png"), { theme: "light" });
-await shot(join(DOCS, "screenshot-dark.png"), { theme: "dark" });
+// The landing page shots are captured at roughly the size they are DISPLAYED at,
+// not shrunk down from a desktop viewport. A 1280px screenshot rendered in a 550px
+// column makes every glyph 6px tall, so it proves nothing; matching the capture
+// width to the column keeps the reader's own text readable in the shot.
+await shot(join(DOCS, "hero-light.png"), { theme: "light", width: 1120, height: 700 });
+await shot(join(DOCS, "compare-light.png"), { theme: "light", width: 620, height: 470 });
+await shot(join(DOCS, "compare-dark.png"), { theme: "dark", width: 620, height: 470 });
 
 await browser.close();
 await server.close?.();
