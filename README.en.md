@@ -65,6 +65,8 @@ experience built for long-form Arabic.
 
 - 📦 **Zero runtime dependencies** — pure Node plus vendored assets, fully offline; never phones home.
 - 🔒 **Contained** — binds to `127.0.0.1`, serves only from the folder you opened, escapes raw HTML, and blocks unsafe URL schemes.
+- 📄 **Common Markdown formats** — opens `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd`,
+  `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, and `.qmd`.
 
 ## Screenshots
 

@@ -35,6 +35,10 @@
   function preprocess(body){
     var store=[];
     function prose(seg){
+      // HTML comments are authoring notes (editor remarks, prettier-ignore, TOC
+      // markers). Raw HTML is escaped for safety, which would otherwise print them
+      // to the reader verbatim — so drop them here, outside code blocks and spans.
+      seg=seg.replace(/<!--[\s\S]*?-->/g,"");
       seg=seg.replace(/^[ \t]*<\/?div\b[^>]*>[ \t]*$/gim,"");
       return extractMath(seg,store).src;
     }

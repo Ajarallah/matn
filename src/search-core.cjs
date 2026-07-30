@@ -54,7 +54,7 @@
   }
   function createRecord(input){
     var content=String(input.content||""),rel=String(input.rel||""),meta=parseMetadata(content);
-    var fileName=(rel.split("/").pop()||"مستند").replace(/\.(?:md|markdown|mdown|mkd)$/i,"");
+    var fileName=(rel.split("/").pop()||"مستند").replace(/\.(?:md|markdown|mdown|mkdn|mkd|mdwn|mdtxt|mdtext|rmd|qmd)$/i,"");
     var heading=/^[ \t]{0,3}#[ \t]+(.+?)\s*#*[ \t]*$/m.exec(meta.body);
     var title=meta.title||(heading&&heading[1].trim())||fileName;
     var mapped=normalizeMapped(content);

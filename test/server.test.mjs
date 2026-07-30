@@ -71,6 +71,24 @@ test("exposes its containment root and default target", async (t) => {
   assert.deepEqual(await def.json(), { dir: root });
 });
 
+test("indexes common Markdown extensions without treating every text file as Markdown", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-extensions-"));
+  const names = ["a.md", "b.markdown", "c.mdown", "d.mkdn", "e.mkd", "f.mdwn", "g.mdtxt", "h.mdtext", "analysis.Rmd", "chapter.qmd"];
+  await Promise.all(names.map((name) => writeFile(join(root, name), `# ${name}\n`, "utf8")));
+  await writeFile(join(root, "plain.txt"), "not indexed\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const files = await (await fetch(`${base}/api/list?dir=${encodeURIComponent(root)}`)).json();
+  assert.deepEqual(files.map((file) => file.rel).sort(), names.sort());
+  assert.equal((await fetch(`${base}/api/raw?path=${encodeURIComponent(join(root, "analysis.Rmd"))}`)).status, 200);
+  assert.equal((await fetch(`${base}/api/raw?path=${encodeURIComponent(join(root, "plain.txt"))}`)).status, 400);
+});
+
 test("serves the vendored Mermaid bundle", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-root3-"));
   const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
@@ -403,7 +421,9 @@ test("workspace links resolve by relative path and alias and expose backlinks", 
   assert.equal((await fetch(`${base}/api/context?path=${encodeURIComponent(join(tmpdir(), "outside.md"))}`)).status, 400);
 
   const health = await (await fetch(`${base}/api/health?path=${encodeURIComponent(readme)}`)).json();
-  assert.equal(health.issueCount, 3);
+  // outside-root is reported but not counted: a link to a sibling folder is a valid
+  // reference, it is only unreachable from the folder that happens to be open.
+  assert.equal(health.issueCount, 2);
   assert.equal(health.counts.ok, 3);
   assert.equal(health.counts["missing-heading"], 1);
   assert.equal(health.counts.missing, 1);

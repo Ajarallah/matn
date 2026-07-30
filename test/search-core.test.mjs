@@ -23,6 +23,9 @@ test("createRecord extracts frontmatter title and aliases", () => {
     content: "---\ntitle: قائمة\naliases:\n  - الاسم الأول\n  - Second name\n---\nالمحتوى"
   });
   assert.deepEqual(listAliases.aliases, ["الاسم الأول", "Second name"]);
+
+  const quarto = searchCore.createRecord({ path: "/notes/report.qmd", rel: "notes/report.qmd", content: "نص بلا عنوان" });
+  assert.equal(quarto.title, "report");
 });
 
 test("searchRecords ranks title and alias matches and returns content snippets", () => {

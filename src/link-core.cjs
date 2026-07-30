@@ -4,9 +4,9 @@
 
 const SearchCore = require("./search-core.cjs");
 const RenderCore = require("./render-core.cjs");
-const MD_EXT = /\.(md|markdown|mdown|mkd)$/i;
+const { withoutMarkdownExtension } = require("./markdown-files.cjs");
 
-function withoutExtension(value) { return String(value || "").replace(MD_EXT, ""); }
+function withoutExtension(value) { return withoutMarkdownExtension(value); }
 function normalizePath(value) {
   const parts = String(value || "").replace(/\\/g, "/").split("/");
   const out = [];

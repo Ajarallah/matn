@@ -1,6 +1,9 @@
 import { mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { basename, extname, join } from "node:path";
+import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
+import MarkdownFiles from "./markdown-files.cjs";
+
+const { isMarkdownPath } = MarkdownFiles;
 
 export const MAX_STDIN_BYTES = 16 * 1024 * 1024;
 export const SESSION_PREFIX = "matn-stdin-";
@@ -21,7 +24,7 @@ export async function readStdin(stream, maxBytes = MAX_STDIN_BYTES) {
 export function safeSessionName(input) {
   let name = basename(String(input || "stdin.md")).replace(/[^\p{L}\p{N}._ -]+/gu, "-").replace(/^\.+/, "").trim();
   if (!name) name = "stdin.md";
-  if (!/\.(md|markdown|mdown|mkd)$/i.test(extname(name))) name = name.replace(/\.[^.]*$/, "") + ".md";
+  if (!isMarkdownPath(name)) name = name.replace(/\.[^.]*$/, "") + ".md";
   return name.slice(0, 120);
 }
 

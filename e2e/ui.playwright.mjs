@@ -107,7 +107,12 @@ try {
   assert.equal(await page.locator("#doc .foldbtn").first().getAttribute("aria-label"), "Collapse section");
   await page.locator('[data-lang-val="ar"]').click();
   assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
-  await page.locator("#doc").click({ position: { x: 20, y: 20 } });
+  // the panel must open under the toolbar button that owns it, not across the screen
+  const gearBox = await page.locator("#gearbtn").boundingBox();
+  const panelBox = await page.locator("#panel").boundingBox();
+  assert.ok(Math.abs((gearBox.x + gearBox.width / 2) - (panelBox.x + panelBox.width / 2)) < 260,
+    `settings panel is ${Math.round(Math.abs((gearBox.x + gearBox.width / 2) - (panelBox.x + panelBox.width / 2)))}px from its button`);
+  await page.locator("#doc").click({ position: { x: 700, y: 20 } });
   assert.equal(await page.locator("#panel").getAttribute("class"), "panel");
 
   await page.getByRole("link", { name: "الدليل" }).click();
@@ -130,9 +135,12 @@ try {
   await page.mouse.move(dragRect.left + 2, dragRect.y, { steps: 8 });
   await page.mouse.up();
   await page.waitForSelector("#selectiontools.open", { timeout: 1000 });
-  await page.locator('[data-selection-action="highlight"]').click();
+  await page.locator('[data-selection-color="green"]').click();
   await page.waitForSelector("mark.annotation-mark");
   assert.match(await page.locator("mark.annotation-mark").first().innerText(), /فقرة|عربية/);
+  // the colour is chosen at highlight time — no second trip through the note dialog
+  assert.match(await page.locator("mark.annotation-mark").first().getAttribute("class"), /annotation-green/);
+  assert.equal(await page.locator(".toast-undo").isVisible(), true);
 
   await selectText(page, "والتمييز");
   await page.locator('[data-selection-action="favorite"]').click();
@@ -185,6 +193,18 @@ try {
   assert.equal(savedAnnotations.length, 2);
   assert.equal(await page.locator("#annotations-count").innerText(), "2");
 
+  // a highlight used to be permanent: the delete path existed on the server but no
+  // control in the reader ever called it, and nothing offered a way back.
+  await page.locator("mark.annotation-mark").first().click();
+  await page.waitForSelector("#notedialog[open]");
+  assert.equal(await page.locator("#notedelete").isVisible(), true);
+  await page.locator("#notedelete").click();
+  await page.waitForFunction(() => document.querySelectorAll("mark.annotation-mark").length === 1);
+  await page.locator(".toast-undo").click();
+  await page.waitForFunction(() => document.querySelectorAll("mark.annotation-mark").length === 2);
+  const restored = await page.evaluate(() => fetch("/api/state").then((response) => response.json()).then((state) => state.workspace.annotations));
+  assert.equal(restored.length, 2);
+
   const secondFold = page.locator("#doc h2 .foldbtn").first();
   const foldRegionId = await secondFold.getAttribute("aria-controls");
   await secondFold.click();
@@ -210,8 +230,14 @@ try {
   assert.equal(await page.locator(":focus").getAttribute("id"), "trashcancel");
   await page.locator("#trashcancel").click();
   await page.setViewportSize({ width: 390, height: 844 });
+  // the sidebar must collapse to a drawer: it used to stay at its fixed 264px because
+  // syncSide() wrote an inline display, which outranks the responsive rule.
+  assert.equal(await page.locator("aside#side").isVisible(), false);
+  const mobileParagraph = await page.locator("#doc p").first().boundingBox();
+  assert.ok(mobileParagraph.width > 280, `reading column collapsed to ${Math.round(mobileParagraph.width)}px on mobile`);
   await page.locator("#sidebtn").click();
   assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("side-open")), true);
+  assert.equal(await page.locator("aside#side").isVisible(), true);
   await page.locator("#sidebackdrop").click({ position: { x: 10, y: 100 } });
   assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("side-open")), false);
   await context.close();

@@ -25,6 +25,8 @@ test("stdin sessions reject empty and oversized input and sanitize display names
   assert.equal(safeSessionName("../تقرير نهائي.md"), "تقرير نهائي.md");
   assert.equal(safeSessionName("../../"), "stdin.md");
   assert.equal(safeSessionName("report.html"), "report.md");
+  assert.equal(safeSessionName("analysis.Rmd"), "analysis.Rmd");
+  assert.equal(safeSessionName("chapter.qmd"), "chapter.qmd");
 });
 
 test("old stdin sessions are removed without touching unrelated temporary folders", async (t) => {

@@ -40,7 +40,7 @@ $PB -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string Markdown" "$PL"
 $PB -c "Add :CFBundleDocumentTypes:0:CFBundleTypeRole string Viewer" "$PL"
 $PB -c "Add :CFBundleDocumentTypes:0:LSHandlerRank string Alternate" "$PL"
 $PB -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions array" "$PL"
-for i in 0:md 1:markdown 2:mdown 3:mkd; do
+for i in 0:md 1:markdown 2:mdown 3:mkdn 4:mkd 5:mdwn 6:mdtxt 7:mdtext 8:rmd 9:qmd; do
   $PB -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:${i%%:*} string ${i##*:}" "$PL"
 done
 $PB -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes array" "$PL"

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import SearchCore from "./search-core.cjs";
 import LinkCore from "./link-core.cjs";
 import BookCore from "./book-core.cjs";
+import MarkdownFiles from "./markdown-files.cjs";
 import { createStateStore } from "./state-store.mjs";
 import { createPlatformActions, runCommand } from "./platform-actions.mjs";
 
@@ -25,7 +26,7 @@ const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
 const MAX_INDEX_BYTES = 2 * 1024 * 1024;
 let MERMAID = null; // large (~3.5 MB) — loaded on first request only
 
-const isMd = (f) => /\.(md|markdown|mdown|mkd)$/i.test(f);
+const { isMarkdownPath: isMd } = MarkdownFiles;
 const imageTypes = new Map([
   [".avif", "image/avif"],
   [".gif", "image/gif"],
@@ -309,7 +310,9 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     });
     const counts = {};
     for (const item of items) counts[item.status] = (counts[item.status] || 0) + 1;
-    const issueCount = items.filter((item) => !["ok", "external-unchecked"].includes(item.status)).length;
+    // `outside-root` is a scope limit of the folder you opened, not a defect in the
+    // document — a link to a sibling folder is valid, just not reachable from here.
+    const issueCount = items.filter((item) => !["ok", "external-unchecked", "outside-root"].includes(item.status)).length;
     return { items, counts, issueCount };
   }
   function workspaceBook() {

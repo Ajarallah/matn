@@ -143,3 +143,23 @@ test("preprocess strips standalone GitHub layout wrappers only from prose", () =
   assert.doesNotMatch(result.src, /<\/?div/);
   assert.match(result.src, /# عنوان/);
 });
+
+test("preprocess drops HTML comments from prose but never from code", () => {
+  const prose = core.preprocess("قبل\n\n<!-- ملاحظة للمحرر -->\n\nبعد");
+  assert.doesNotMatch(prose.src, /ملاحظة للمحرر/);
+  assert.doesNotMatch(prose.src, /<!--/);
+  assert.match(prose.src, /قبل/);
+  assert.match(prose.src, /بعد/);
+
+  const multiline = core.preprocess("نص\n<!-- سطر\nثانٍ -->\nتال");
+  assert.doesNotMatch(multiline.src, /سطر|ثانٍ/);
+
+  const fenced = core.preprocess("```html\n<!-- keep me -->\n```\n");
+  assert.match(fenced.src, /<!-- keep me -->/);
+
+  const inline = core.preprocess("استعمل `<!-- keep -->` هنا");
+  assert.match(inline.src, /<!-- keep -->/);
+
+  const indented = core.preprocess("    <!-- keep indented -->\n");
+  assert.match(indented.src, /<!-- keep indented -->/);
+});
