@@ -81,15 +81,16 @@ experience built for long-form Arabic.
 ## Install
 
 ```bash
-npm install -g https://github.com/Ajarallah/matn/archive/refs/heads/main.tar.gz
+npm install -g @ajarallah/matn
 matn README.md
 ```
 
-> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step.
+> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step, so
+> installing takes about a second.
 
 **Run without installing:**
 ```bash
-npx github:Ajarallah/matn README.md
+npx @ajarallah/matn README.md
 ```
 
 **From source (for development):**
@@ -98,14 +99,8 @@ git clone https://github.com/Ajarallah/matn.git
 cd matn && npm link
 ```
 
-<details>
-<summary>Why the archive URL instead of <code>npm i -g Ajarallah/matn</code>?</summary>
-
-The GitHub shorthand makes npm clone the whole repository with its history
-(~35 MB) and then prune it down to 5 MB. The archive URL fetches only the
-snapshot. The shorthand still works — it is just four times slower.
-
-</details>
+> The bare `matn` name on npm belongs to an unrelated package, so this ships as
+> `@ajarallah/matn`. The command is still `matn`.
 
 **Uninstall:**
 ```bash

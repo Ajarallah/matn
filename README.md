@@ -83,15 +83,15 @@
 ## التثبيت
 
 ```bash
-npm install -g https://github.com/Ajarallah/matn/archive/refs/heads/main.tar.gz
+npm install -g @ajarallah/matn
 matn README.md
 ```
 
-> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء.
+> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء، فالتثبيت ثانية واحدة.
 
 **تشغيل بلا تثبيت:**
 ```bash
-npx github:Ajarallah/matn README.md
+npx @ajarallah/matn README.md
 ```
 
 **من المصدر (للتطوير):**
@@ -100,13 +100,8 @@ git clone https://github.com/Ajarallah/matn.git
 cd matn && npm link
 ```
 
-<details>
-<summary>لماذا رابط الأرشيف بدل <code>npm i -g Ajarallah/matn</code>؟</summary>
-
-اختصار GitHub يجعل npm يستنسخ المستودع بتاريخه كاملا (~35 ميغابايت) ثم يقلّمه إلى
-٥ ميغابايت. رابط الأرشيف ينزّل اللقطة وحدها. الاختصار يعمل، لكنه أبطأ بأربعة أضعاف.
-
-</details>
+> الاسم العام `matn` على npm تحجزه حزمة أخرى لا علاقة لها بالمشروع؛ لذلك الحزمة باسم
+> `@ajarallah/matn`، والأمر التنفيذي يبقى `matn`.
 
 **إزالة التثبيت:**
 ```bash
