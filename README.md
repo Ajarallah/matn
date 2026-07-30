@@ -82,25 +82,37 @@
 
 ## التثبيت
 
-**تثبيت عام (من GitHub):**
 ```bash
-npm install -g Ajarallah/matn
+npm install -g https://github.com/Ajarallah/matn/archive/refs/heads/main.tar.gz
 matn README.md
 ```
+
+> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء.
 
 **تشغيل بلا تثبيت:**
 ```bash
 npx github:Ajarallah/matn README.md
 ```
 
-**من المصدر:**
+**من المصدر (للتطوير):**
 ```bash
 git clone https://github.com/Ajarallah/matn.git
 cd matn && npm link
-matn README.md
 ```
 
-> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره.
+<details>
+<summary>لماذا رابط الأرشيف بدل <code>npm i -g Ajarallah/matn</code>؟</summary>
+
+اختصار GitHub يجعل npm يستنسخ المستودع بتاريخه كاملا (~35 ميغابايت) ثم يقلّمه إلى
+٥ ميغابايت. رابط الأرشيف ينزّل اللقطة وحدها. الاختصار يعمل، لكنه أبطأ بأربعة أضعاف.
+
+</details>
+
+**إزالة التثبيت:**
+```bash
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # على macOS
+npm rm -g @ajarallah/matn
+```
 
 ## الاستعمال
 
@@ -131,11 +143,15 @@ matn PLAN.md -p 5000  # منفذ مختار
 **macOS** — اجعل متن القارئ الافتراضي لماركداون بخطوة واحدة:
 
 ```bash
-bash scripts/install-macos.sh --default
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --default
 ```
 
-يبني تطبيق Finder صغيرا ويسجّله لملفات `.md`. ولتوجيه تثبيت قائم يدويا:
-**Get Info ← Open with ← Change All**.
+ومن مستودع مستنسخ: `bash scripts/install-macos.sh --default`.
+
+يبني تطبيق Finder صغيرا، ويسجّل الصيغ العشر كلها، ويطالب بنوع Markdown عبر
+LaunchServices — بلا حاجة إلى Homebrew أو `duti`. وإن تعذّر ذلك أرشدك إلى
+**Get Info ← Open with ← Change All**. وللتراجع: `--uninstall` ينقل التطبيق إلى سلة
+النظام ويعيد `.md` إلى تطبيقك السابق.
 
 **Linux** — الأمر `bash scripts/install-linux.sh --default` يضيف مدخل `.desktop` ويجعل متن معالج `text/markdown`.
 **Windows** — الأمر `matn file.md` يعمل من أي طرفية؛ واربط `.md` من

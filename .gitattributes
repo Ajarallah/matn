@@ -1,0 +1,18 @@
+# `npm install -g <github-user>/matn` and GitHub's source tarballs ship whatever is
+# in the tree — `files` in package.json only applies to registry publishes. Without
+# this, installing pulled ~8 MB of demo build output, screenshots and test fixtures
+# that never run at runtime. Keep the install payload to what the reader needs.
+docs/            export-ignore
+assets/          export-ignore
+plans/           export-ignore
+test/            export-ignore
+e2e/             export-ignore
+.github/         export-ignore
+*.png            export-ignore
+.gitattributes   export-ignore
+.gitignore       export-ignore
+
+# Vendored libraries are minified builds — keep diffs and language stats honest.
+vendor/*.js      linguist-vendored
+vendor/*.css     linguist-vendored
+docs/vendor/*    linguist-vendored

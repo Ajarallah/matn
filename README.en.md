@@ -80,25 +80,38 @@ experience built for long-form Arabic.
 
 ## Install
 
-**Global (from GitHub):**
 ```bash
-npm install -g Ajarallah/matn
+npm install -g https://github.com/Ajarallah/matn/archive/refs/heads/main.tar.gz
 matn README.md
 ```
+
+> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step.
 
 **Run without installing:**
 ```bash
 npx github:Ajarallah/matn README.md
 ```
 
-**From source:**
+**From source (for development):**
 ```bash
 git clone https://github.com/Ajarallah/matn.git
 cd matn && npm link
-matn README.md
 ```
 
-> Requires Node.js ≥ 18. No other dependencies.
+<details>
+<summary>Why the archive URL instead of <code>npm i -g Ajarallah/matn</code>?</summary>
+
+The GitHub shorthand makes npm clone the whole repository with its history
+(~35 MB) and then prune it down to 5 MB. The archive URL fetches only the
+snapshot. The shorthand still works — it is just four times slower.
+
+</details>
+
+**Uninstall:**
+```bash
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # macOS
+npm rm -g @ajarallah/matn
+```
 
 ## Usage
 
@@ -130,11 +143,15 @@ then `matn b.md` both land in the same window.
 **macOS** — make Matn the default reader for Markdown, in one step:
 
 ```bash
-bash scripts/install-macos.sh --default
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --default
 ```
 
-This builds a small Finder app and registers it for `.md`. To point an existing
-install manually: **Get Info → Open with → Change All**.
+From a cloned repo: `bash scripts/install-macos.sh --default`.
+
+This builds a small Finder app, declares all ten Markdown extensions, and claims
+the Markdown type through LaunchServices — no Homebrew or `duti` needed. If that
+fails it walks you through **Get Info → Open with → Change All** instead. To undo,
+`--uninstall` moves the app to the Trash and hands `.md` back to your previous app.
 
 **Linux** — `bash scripts/install-linux.sh --default` adds a `.desktop` entry and
 makes Matn the handler for `text/markdown`.
