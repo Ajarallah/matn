@@ -1,7 +1,7 @@
 # متن · Matn
 
-**A right-to-left Markdown reader for Arabic.**
-Reading themes, embedded Arabic fonts, math, diagrams, and export — all in your browser, fully offline.
+**Arabic Markdown, rendered the way it should be.**
+Matn gives your documents true RTL layout and beautiful Arabic typography, while code and English stay perfectly readable — local, private, and fully offline.
 
 **[▶ Try the live demo](https://ajarallah.github.io/matn/)**
 
