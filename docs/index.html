@@ -822,7 +822,7 @@ $("lhplus").onclick=step("lh",0.05,1.4,2.4,false);$("lhminus").onclick=step("lh"
 $("reset").onclick=function(){S=Object.assign({},DEF);saveS();applyS();};
 var panel=$("panel"),gearbtn=$("gearbtn");
 function positionPanel(){var rect=gearbtn.getBoundingClientRect(),width=Math.min(356,window.innerWidth-20),left=Math.max(10,Math.min(window.innerWidth-width-10,rect.left+rect.width/2-width/2));panel.style.left=left+"px";panel.style.right="auto";panel.style.setProperty("--popover-origin-x",Math.max(20,Math.min(width-20,rect.left+rect.width/2-left))+"px");}
-gearbtn.onclick=function(e){e.stopPropagation();var open=panel.classList.toggle("open");if(open)positionPanel();gearbtn.setAttribute("aria-expanded",open?"true":"false");};
+gearbtn.onclick=function(e){e.stopPropagation();var open=panel.classList.toggle("open");if(open){panel.scrollTop=0;positionPanel();}gearbtn.setAttribute("aria-expanded",open?"true":"false");};
 document.addEventListener("click",function(e){if(!panel.contains(e.target)&&e.target!==gearbtn){panel.classList.remove("open");gearbtn.setAttribute("aria-expanded","false");}});
 $("printbtn").onclick=function(){window.print();};
 
