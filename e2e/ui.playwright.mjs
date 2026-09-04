@@ -49,6 +49,17 @@ try {
   await page.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "README.md"))}`);
   await page.waitForSelector("#toc a");
   await page.waitForSelector("#book-sec .book-chapter");
+  const viewportOverflow = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    body: document.body.scrollWidth - document.body.clientWidth,
+    main: document.querySelector("main").scrollWidth - document.querySelector("main").clientWidth,
+  }));
+  assert.deepEqual(viewportOverflow, { document: 0, body: 0, main: 0 });
+  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
+  assert.equal(await page.locator("aside#side").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
+  assert.equal(await page.locator("#fname").getAttribute("dir"), "auto");
+  assert.match(await page.locator("#rtime").innerText(), /^\d+ \S+ · \d+ \S+$/);
+  assert.equal(await page.locator("#live").evaluate((el) => getComputedStyle(el).position), "static");
   assert.equal(await page.locator("#inspector").isVisible(), true);
   await page.locator("#inspectorbtn").click();
   assert.equal(await page.locator("#inspector").isVisible(), false);

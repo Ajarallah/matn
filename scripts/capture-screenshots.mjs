@@ -27,6 +27,7 @@ async function setTheme(page, theme) {
     const diagram = document.querySelector(".mermaid");
     return !diagram || diagram.dataset.mermaidTheme === (value === "dark" || value === "night" ? "dark" : "default");
   }, theme);
+  await page.waitForTimeout(300);
 }
 
 async function capture(page, name) {
