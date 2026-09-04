@@ -38,11 +38,12 @@ const sampleBlock = '<script type="text/markdown" id="sample">' + SAMPLE + '</sc
 s = s.replace('<script src="./vendor/marked.min.js"></script>', () => sampleBlock + '<script src="./vendor/marked.min.js"></script>');
 
 // 5) replace the server-dependent boot block with a static boot
-const anchor = "applyS();\nvar params=new URLSearchParams";
+const anchor = "applyS();\nrequestAnimationFrame";
 const i = s.indexOf(anchor);
 const j = s.indexOf("</script>", i);
 if (i < 0 || j < 0) { console.error("build-docs: boot block not found — aborting"); process.exit(1); }
 const boot = `applyS();
+document.body.classList.add("ui-ready");
 var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
 renderSafely(SAMPLE);

@@ -27,7 +27,7 @@ async function setTheme(page, theme) {
     const diagram = document.querySelector(".mermaid");
     return !diagram || diagram.dataset.mermaidTheme === (value === "dark" || value === "night" ? "dark" : "default");
   }, theme);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(650);
 }
 
 async function capture(page, name) {
@@ -62,6 +62,7 @@ try {
   await setTheme(page, "light");
   await page.locator("#gearbtn").click();
   await page.waitForSelector("#panel.open");
+  await page.waitForTimeout(400);
   await capture(page, "screenshot-settings.png");
 
   await context.close();
