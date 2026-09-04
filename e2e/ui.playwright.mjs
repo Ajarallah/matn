@@ -203,8 +203,13 @@ try {
 
   await selectText(page, "والنسخ");
   await page.locator('[data-selection-action="copy"]').click();
-  await page.waitForFunction(async () => (await navigator.clipboard.readText()).includes("والنسخ"));
-  assert.match(await page.evaluate(() => navigator.clipboard.readText()), /والنسخ/);
+  let copiedText = "";
+  for (let attempt = 0; attempt < 20; attempt++) {
+    copiedText = await page.evaluate(() => navigator.clipboard.readText());
+    if (copiedText.includes("والنسخ")) break;
+    await page.waitForTimeout(50);
+  }
+  assert.match(copiedText, /والنسخ/);
 
   await page.evaluate(() => {
     const heading = Array.from(document.querySelectorAll("#doc h2")).find((node) => node.dataset.title === "قسم ثان");
