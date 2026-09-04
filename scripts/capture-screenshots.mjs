@@ -12,7 +12,7 @@ const source = join(root, "scripts", "demo-sample.md");
 const server = await startServer({
   port: 0,
   host: "127.0.0.1",
-  defaultArg: source,
+  defaultArg: root,
   dataDir
 });
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -23,6 +23,10 @@ async function setTheme(page, theme) {
   await page.locator(`[data-theme-val="${theme}"]`).click();
   await page.keyboard.press("Escape");
   await page.waitForFunction((value) => document.documentElement.dataset.theme === value, theme);
+  await page.waitForFunction((value) => {
+    const diagram = document.querySelector(".mermaid");
+    return !diagram || diagram.dataset.mermaidTheme === (value === "dark" || value === "night" ? "dark" : "default");
+  }, theme);
 }
 
 async function capture(page, name) {
@@ -40,7 +44,7 @@ try {
   const page = await context.newPage();
   // The reader keeps an SSE connection open for live reload, so networkidle
   // never occurs. The rendered document is the reliable readiness signal.
-  await page.goto(base, { waitUntil: "domcontentloaded" });
+  await page.goto(`${base}/?path=${encodeURIComponent(source)}`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#documentmap .map-mark");
   await page.waitForFunction(() => document.fonts.status === "loaded");
   await page.waitForSelector("#doc .mermaid svg");

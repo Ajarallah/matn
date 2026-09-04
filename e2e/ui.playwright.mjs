@@ -12,7 +12,7 @@ const { chromium } = await import(moduleTarget);
 const root = await mkdtemp(join(tmpdir(), "matn-playwright-"));
 const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
-await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n### خاتمة\nنهاية المستند.\n");
+await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n```mermaid\ngraph TD; A-->B\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
@@ -97,6 +97,11 @@ try {
 
   await page.locator("#gearbtn").click();
   await page.waitForSelector("#panel.open");
+  await page.waitForSelector('.mermaid[data-mermaid-theme="default"]');
+  await page.locator('[data-theme-val="dark"]').click();
+  await page.waitForSelector('.mermaid[data-mermaid-theme="dark"]');
+  await page.locator('[data-theme-val="light"]').click();
+  await page.waitForSelector('.mermaid[data-mermaid-theme="default"]');
   assert.match(await page.locator('[data-preset="article"] .preset-copy').innerText(), /للمقالات/);
   assert.match(await page.locator('[data-preset="academic"] .preset-copy').innerText(), /للأوراق/);
   await page.locator('[data-preset="article"]').click();
