@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="متن · Matn — a calm right-to-left Markdown reader for Arabic.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='0' y2='1'%3E%3Cstop stop-color='%2363aaff'/%3E%3Cstop offset='1' stop-color='%230062c8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='1' y='1' width='30' height='30' rx='7' fill='url(%23g)'/%3E%3Cg fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M9 8h15M12 13h12M9 18h15M13 23h11M6.5 6v20'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23087ff5'/%3E%3Cg fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M11 10h14M11 16h14M16 22h9M7 9v14'/%3E%3C/g%3E%3C/svg%3E">
 <title>متن · Matn</title>
 <style>
 @font-face{font-family:"Amiri";font-weight:400;font-display:swap;src:url("/fonts/amiri-400.woff2") format("woff2")}
@@ -27,19 +27,20 @@
   /* geometry */
   --r:10px; --r-sm:7px; --r-lg:15px;
   /* motion */
-  --ease:cubic-bezier(.22,.61,.36,1); --dur:.16s;
+  --ease:cubic-bezier(.2,.8,.2,1); --dur:.22s;
+  --glass-blur:28px; --glass-sat:185%;
   /* light-on-dark compensation (0 in light themes) */
   --dark-track:0em;
 }
 /* ---- warm paper (light) ---- */
 html[data-theme="light"]{
-  --bg:#f5f5f7; --surface:#ececef; --raised:#ffffff;
+  --bg:#eef0f5; --surface:#f2f2f7; --raised:#ffffff;
   --ink:#1d1d1f; --ink-soft:#3a3a3c; --muted:#6e6e73; --faint:#aeaeb2;
-  --line:rgb(60 60 67/.18); --line-soft:rgb(60 60 67/.10); --line-strong:rgb(60 60 67/.30);
-  --accent:#007aff; --accent-ink:#0057b8; --accent-soft:#e8f2ff;
+  --line:rgb(60 60 67/.18); --line-soft:rgb(60 60 67/.10); --line-strong:rgb(60 60 67/.28);
+  --accent:#007aff; --accent-ink:#005bbf; --accent-soft:#e6f1ff;
   --code-bg:#f2f2f7; --code-ink:#1d1d1f; --inline:#f2f2f7;
-  --shadow:0 0 0; --sel:0 122 255;
-  --chrome:rgb(246 246 248/.82); --sidebar:rgb(235 235 239/.88); --popover:rgb(255 255 255/.96); --canvas:#fff;
+  --shadow:18 28 48; --sel:0 122 255;
+  --content-layer:rgb(255 255 255/.82); --glass-tint:255 255 255; --glass-alpha:.54; --glass-edge:255 255 255; --glass-edge-a:.76; --glass-stroke:rgb(255 255 255/.58);
   --hl-kw:#9a5aa0; --hl-str:#3f8f52; --hl-com:#a49c8c; --hl-num:#b06a1f; --hl-fn:#3f74c8; --hl-attr:#b06a1f; --hl-type:#a8791e;
 }
 /* ---- sepia ---- */
@@ -50,18 +51,18 @@ html[data-theme="sepia"]{
   --accent:#986220; --accent-ink:#754a15; --accent-soft:#e6d6b2;
   --code-bg:#e7d8b5; --code-ink:#3c2f1c; --inline:#e6d7b4;
   --shadow:74 56 24; --sel:152 98 32;
-  --chrome:rgb(242 237 226/.86); --sidebar:rgb(232 224 208/.9); --popover:rgb(250 245 234/.96); --canvas:#f8f0de;
+  --content-layer:rgb(250 241 220/.84); --glass-tint:255 248 232; --glass-alpha:.58; --glass-edge:255 255 255; --glass-edge-a:.62; --glass-stroke:rgb(255 255 255/.46);
   --hl-kw:#9a4f22; --hl-str:#5f6a24; --hl-com:#a39270; --hl-num:#8a5a18; --hl-fn:#5a5a86; --hl-attr:#8a5a18; --hl-type:#7a5a26;
 }
 /* ---- dark (warm charcoal) ---- */
 html[data-theme="dark"]{
-  --bg:#1c1c1e; --surface:#2c2c2e; --raised:#3a3a3c;
+  --bg:#111216; --surface:#242529; --raised:#323337;
   --ink:#f5f5f7; --ink-soft:#d1d1d6; --muted:#98989d; --faint:#636366;
-  --line:rgb(255 255 255/.14); --line-soft:rgb(255 255 255/.08); --line-strong:rgb(255 255 255/.24);
-  --accent:#0a84ff; --accent-ink:#64b5ff; --accent-soft:#122d46;
-  --code-bg:#171719; --code-ink:#f2f2f7; --inline:#2c2c2e;
+  --line:rgb(255 255 255/.15); --line-soft:rgb(255 255 255/.08); --line-strong:rgb(255 255 255/.25);
+  --accent:#0a84ff; --accent-ink:#64b5ff; --accent-soft:#102b45;
+  --code-bg:#17181b; --code-ink:#f2f2f7; --inline:#292a2e;
   --shadow:0 0 0; --sel:10 132 255; --dark-track:.012em;
-  --chrome:rgb(39 39 42/.84); --sidebar:rgb(31 31 34/.9); --popover:rgb(50 50 53/.96); --canvas:#1c1c1e;
+  --content-layer:rgb(28 29 33/.84); --glass-tint:48 49 54; --glass-alpha:.52; --glass-edge:255 255 255; --glass-edge-a:.20; --glass-stroke:rgb(255 255 255/.12);
   --hl-kw:#c98fd6; --hl-str:#8fc98f; --hl-com:#7c766a; --hl-num:#d4a56a; --hl-fn:#6fb0e6; --hl-attr:#d4a56a; --hl-type:#e0c07b;
 }
 /* ---- night (true black) ---- */
@@ -72,7 +73,7 @@ html[data-theme="night"]{
   --accent:#5fb9a9; --accent-ink:#8fd3c6; --accent-soft:#141a18;
   --code-bg:#080706; --code-ink:#ddd8cf; --inline:#161310;
   --shadow:0 0 0; --sel:95 185 169; --dark-track:.012em;
-  --chrome:rgb(15 15 17/.88); --sidebar:rgb(8 8 10/.92); --popover:rgb(28 28 30/.98); --canvas:#000;
+  --content-layer:rgb(0 0 0/.88); --glass-tint:28 29 32; --glass-alpha:.58; --glass-edge:255 255 255; --glass-edge-a:.16; --glass-stroke:rgb(255 255 255/.1);
   --hl-kw:#c98fd6; --hl-str:#8fc98f; --hl-com:#6f6a5f; --hl-num:#d4a56a; --hl-fn:#6fb0e6; --hl-attr:#d4a56a; --hl-type:#e0c07b;
 }
 
@@ -86,10 +87,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);
 ::selection{background:rgb(var(--sel)/.22)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 
-/* grain — the quiet soul */
-#grain{display:none;position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E")}
-html[data-theme="dark"] #grain,html[data-theme="night"] #grain{mix-blend-mode:screen;opacity:.6}
+/* Ambient content color gives the translucent navigation layer something to refract. */
+#grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:1;mix-blend-mode:normal;
+  background:radial-gradient(circle at 12% 8%,rgb(127 193 255/.28),transparent 34%),radial-gradient(circle at 88% 90%,rgb(175 130 255/.18),transparent 38%),linear-gradient(135deg,var(--bg),color-mix(in srgb,var(--bg) 84%,#bfdfff));
+  background-image:radial-gradient(circle at 12% 8%,rgb(127 193 255/.28),transparent 34%),radial-gradient(circle at 88% 90%,rgb(175 130 255/.18),transparent 38%),linear-gradient(135deg,var(--bg),color-mix(in srgb,var(--bg) 84%,#bfdfff))}
+html[data-theme="dark"] #grain,html[data-theme="night"] #grain{background:radial-gradient(circle at 10% 4%,rgb(34 104 190/.26),transparent 35%),radial-gradient(circle at 92% 88%,rgb(94 52 158/.18),transparent 40%),linear-gradient(145deg,var(--bg),#090a0d)}
 
 #progress{position:fixed;top:0;inset-inline-start:0;height:2px;width:100%;background:var(--accent);z-index:50;
   transform:scaleX(0);transform-origin:right center;transition:transform .12s linear;will-change:transform}
@@ -124,6 +126,7 @@ header{position:sticky;top:0;z-index:20;padding:0 22px;height:52px;display:flex;
   border-bottom:1px solid var(--line);
   background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(160%) blur(10px)}
 body.focus-mode header{transform:translateY(-100%);opacity:0;pointer-events:none}body.focus-mode.focus-peek header{transform:translateY(0);opacity:1;pointer-events:auto}.focus-sensor{position:fixed;inset:0 0 auto;height:12px;z-index:21;display:none}body.focus-mode .focus-sensor{display:block}body.focus-mode aside#side{display:none!important}
+body.focus-mode aside#inspector{display:none!important}
 /* file names are Latin inside an RTL shell: `010-market-research.md` renders as
    `market-research.md-010` under plain bidi. `plaintext` takes direction from the
    first strong character, so Latin names stay LTR and Arabic titles stay RTL. */
@@ -380,97 +383,72 @@ html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 #doc blockquote.callout-warning{--cl:#b0791f;border-inline-start-color:#b0791f}
 #doc blockquote.callout-caution,#doc blockquote.callout-danger{--cl:#c0552f;border-inline-start-color:#c0552f}
 
-/* macOS application shell -------------------------------------------------- */
-body{background:var(--sidebar)}
-main{background:var(--canvas);box-shadow:0 0 0 1px var(--line-soft),-18px 0 50px -42px rgb(0 0 0/.7)}
-.reading-pane{min-height:calc(100dvh - 52px);background:var(--canvas)}
-article#doc{font-family:var(--rfont);padding:54px clamp(32px,7vw,96px) 40vh}
-#doc h1{font-weight:750;letter-spacing:-.022em}
-#doc h2,#doc h3{font-weight:700;letter-spacing:-.014em}
-#doc a{color:var(--accent)}
-#doc hr{border-color:var(--line)}
+/* Liquid Glass 2026: floating functional layer over an opaque content layer. */
+#matn-glass-defs{position:absolute;pointer-events:none}
+body{gap:10px;padding:12px;overflow:hidden}
+main{order:0;height:calc(100dvh - 24px);border-radius:30px;background:var(--content-layer);overflow-y:auto;isolation:isolate;
+  box-shadow:inset 0 0 0 1px rgb(var(--glass-edge)/.16),0 24px 80px -44px rgb(0 0 0/.5)}
+html[dir="rtl"] aside#side{order:-1}html[dir="rtl"] aside#inspector{order:1}
+html[dir="ltr"] aside#side{order:-1}html[dir="ltr"] aside#inspector{order:1}
 
-header{flex:none;padding-inline:14px 92px;background:var(--chrome);border-bottom:1px solid var(--line);
-  backdrop-filter:saturate(180%) blur(28px);-webkit-backdrop-filter:saturate(180%) blur(28px);
-  box-shadow:0 1px 0 rgb(255 255 255/.18);font-family:var(--ui)}
-.window-controls{position:absolute;left:18px;top:0;height:52px;display:flex;align-items:center;gap:8px;direction:ltr}
-.window-control{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 .5px rgb(0 0 0/.18)}
-.window-control.close{background:#ff5f57}.window-control.minimize{background:#febc2e}.window-control.zoom{background:#28c840}
-.appmark{width:26px;height:26px;flex:none;border-radius:6px;display:grid;place-items:center;color:white;
-  background:linear-gradient(145deg,#63aaff 0%,#087cf0 48%,#0062c8 100%);box-shadow:inset 0 1px 0 rgb(255 255 255/.38),0 1px 3px rgb(0 0 0/.18)}
-.appmark svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.45;stroke-linecap:round}
-.empty-app-icon{display:grid!important;width:72px;height:72px;margin:0 auto 18px;border-radius:17px;box-shadow:inset 0 1px 0 rgb(255 255 255/.42),0 18px 38px -20px rgb(0 88 190/.75)}
-.empty-app-icon svg{width:43px;height:43px}
-.window-title{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:38vw;direction:rtl}
-header .fname{font:600 .8125rem/1.2 var(--ui);color:var(--ink);max-width:24vw}
-header .meta{font:500 .6875rem/1.2 var(--ui);color:var(--muted)}
-.native-nav{display:inline-flex;padding:2px;border:1px solid var(--line);border-radius:8px;background:rgb(120 120 128/.08);box-shadow:inset 0 1px 0 rgb(255 255 255/.15)}
-.native-nav .iconbtn{height:27px;min-width:29px;padding:0;border-radius:6px}
-.native-nav .iconbtn+.iconbtn{margin-inline-start:1px}
-.cluster{gap:3px}
-.cluster .lbl{display:none}
-.iconbtn{height:30px;min-width:30px;padding:0 7px;border-radius:7px;color:var(--ink-soft);font-family:var(--ui);font-weight:500}
-.iconbtn:hover{background:rgb(120 120 128/.14);color:var(--ink)}
-.iconbtn:active{transform:scale(.96);background:rgb(120 120 128/.22);transition-duration:80ms}
-.iconbtn svg{width:15px;height:15px;stroke-width:1.65}
-.live{width:20px;height:20px}.live .dot{width:6px;height:6px}.live.on .dot{background:#30d158;box-shadow:0 0 0 3px rgb(48 209 88/.14)}
+.liquid-glass,.toolbar-group,.sidebar-search,.panel,.menu,.quick,.map-card,.selection-tools,.note-dialog,.trash-dialog,.findbar,.link-preview{
+  isolation:isolate;background:rgb(var(--glass-tint)/var(--glass-alpha));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border:1px solid var(--glass-stroke);
+  box-shadow:inset 0 1px 0 rgb(var(--glass-edge)/var(--glass-edge-a)),inset 0 0 0 1px rgb(var(--glass-edge)/.12),0 16px 38px -24px rgb(0 0 0/.46)}
+.toolbar-group,.sidebar-search,.quick{position:relative}
+.toolbar-group::before,.sidebar-search::before,.panel::before,.menu::before,.quick::before,.map-card::before,.selection-tools::before,.note-dialog::before,.trash-dialog::before,.findbar::before,.link-preview::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;-webkit-backdrop-filter:url(#matn-glass);backdrop-filter:url(#matn-glass)}
+.liquid-glass{box-shadow:inset 0 1px 0 rgb(var(--glass-edge)/var(--glass-edge-a)),0 22px 60px -40px rgb(0 0 0/.46)}
 
-aside#side{width:276px;flex-basis:276px;padding:0 12px 24px;background:var(--sidebar);border-inline-start:1px solid var(--line);
-  backdrop-filter:saturate(160%) blur(30px);-webkit-backdrop-filter:saturate(160%) blur(30px);font-family:var(--ui)}
-.sidebar-brand{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:34px 1fr;grid-template-rows:20px 16px;align-items:center;
-  gap:0 10px;margin:0 -12px 12px;padding:12px 16px 10px;background:linear-gradient(var(--sidebar),color-mix(in srgb,var(--sidebar) 88%,transparent));
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--line-soft)}
-.sidebar-brand .appmark{grid-row:1/3;width:34px;height:34px;border-radius:8px}.sidebar-brand .appmark svg{width:21px;height:21px}
-.sidebar-brand strong{font:650 .875rem/1.1 var(--ui);align-self:end}.sidebar-brand small{font:500 .6875rem/1.1 var(--ui);color:var(--muted);align-self:start}
-#side .sec{margin-bottom:20px}
-#side h2{padding:0 8px;margin-bottom:5px;font:650 .6875rem/1.2 var(--ui);letter-spacing:0;color:var(--muted)}
-#side nav a{padding:5px 9px;border-radius:6px;font:500 .8125rem/1.45 var(--ui);color:var(--ink-soft)}
-#side nav a:hover{background:rgb(120 120 128/.12)}
-#files a.active,#toc a.active{background:var(--accent);color:white;font-weight:600}
-#toc a.active::before{background:white}
-.sec-icon{width:14px;height:14px;stroke-width:1.7}
+aside#side,aside#inspector{display:none;height:calc(100dvh - 24px);overflow:auto;z-index:3;border-radius:26px;padding:14px 12px 22px;font-family:var(--ui)}
+aside#side{width:282px;flex:0 0 282px;margin-inline-start:0}body.has-side aside#side{display:block}body.library-hidden aside#side{display:none}
+aside#inspector{width:300px;flex:0 0 300px;margin-inline-end:0}body.has-inspector aside#inspector{display:block}body.inspector-hidden aside#inspector{display:none}
+.sidebar-head{height:54px;display:flex;align-items:center;gap:11px;padding:2px 8px 10px}.sidebar-head>span:last-child{display:grid;gap:1px}.sidebar-head strong{font:700 .98rem/1.1 var(--ui)}.sidebar-head small{font:500 .7rem/1.2 var(--ui);color:var(--muted)}
+.brand-mark{width:38px;height:38px;flex:none;filter:drop-shadow(0 8px 12px rgb(0 72 160/.24))}.brand-mark svg{width:100%;height:100%;overflow:visible}.brand-mark rect{fill:#087ff5}.brand-mark path{fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round}
+.sidebar-search{width:100%;height:36px;margin:3px 0 16px;border-radius:12px;padding:0 10px;align-items:center;gap:8px;color:var(--muted);font:500 .78rem/1 var(--ui);cursor:pointer;text-align:start}.sidebar-search svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7}.sidebar-search kbd{margin-inline-start:auto;border:0;background:transparent;color:var(--faint);font:600 .66rem/1 var(--ui)}
+#side .sec,#inspector .sec{margin-bottom:20px}
+#side h2,#inspector h2{margin:0 7px 6px;font:650 .69rem/1.2 var(--ui);letter-spacing:0;color:var(--muted)}
+#side nav a,#inspector nav a{display:block;padding:6px 9px;border-radius:10px;font:500 .81rem/1.45 var(--ui);color:var(--ink-soft);margin-bottom:2px;text-decoration:none;word-break:break-word}
+#side nav a:hover,#inspector nav a:hover{background:rgb(120 120 128/.12);color:var(--ink)}
+#files a.active,#toc a.active{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);font-weight:650;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent)}
+.sec-icon{width:14px;height:14px;stroke-width:1.75}.sec-count{color:var(--faint)}
 
-.menu,.panel,.selection-tools,.link-preview,.map-card,.quick,.note-dialog,.trash-dialog{background:var(--popover);border-color:var(--line-strong);
-  backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);
-  box-shadow:0 18px 50px -18px rgb(0 0 0/.42),0 2px 10px rgb(0 0 0/.12),inset 0 1px 0 rgb(255 255 255/.22)}
-.menu{border-radius:10px;padding:5px;min-width:188px;transform-origin:top right}
-.menu.open{animation:mac-pop 150ms cubic-bezier(.2,.8,.2,1)}
-.menu button{min-height:28px;padding:5px 8px;border-radius:6px;font:500 .8125rem/1.35 var(--ui)}
-.menu button:hover{background:var(--accent);color:white}.menu button:hover .menu-action-icon{color:white}
-.panel{top:58px;width:310px;border-radius:14px;padding:16px;transform-origin:top right}
-.panel.open{animation:mac-pop 170ms cubic-bezier(.2,.8,.2,1)}
-.panel .lbl{font:650 .6875rem/1.2 var(--ui);letter-spacing:0;text-transform:none;color:var(--muted)}
-.seg{gap:0;padding:2px;border:1px solid var(--line);border-radius:8px;background:rgb(120 120 128/.10)}
-.seg button{border:0;border-radius:6px;background:transparent;min-height:25px;padding:3px 8px;font:500 .75rem/1.2 var(--ui)}
-.seg button[data-active="1"]{background:var(--raised);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.18),inset 0 1px 0 rgb(255 255 255/.22)}
-.themes{gap:6px}.themes button{height:38px;border-radius:8px;font-family:var(--ui)}
-.sel,.row,.preset-list button{font-family:var(--ui)}
-.rowbtn,.primary,.secondary,.danger-btn,.reset{font-family:var(--ui);border-radius:7px;min-height:28px}
-.primary{background:var(--accent);border-color:color-mix(in srgb,var(--accent) 86%,black);box-shadow:inset 0 1px 0 rgb(255 255 255/.28),0 1px 2px rgb(0 0 0/.15)}
-.secondary{background:var(--raised);box-shadow:0 1px 2px rgb(0 0 0/.08)}
-.quick-overlay{background:rgb(0 0 0/.18);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.quick{border-radius:16px}.quick-head{min-height:52px}.quick-input{font-family:var(--ui)}
-.findbar{background:var(--popover);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 8px 30px -14px rgb(0 0 0/.4)}
-.dropzone{background:color-mix(in srgb,var(--accent) 10%,var(--canvas));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.dropzone::after{border-color:var(--accent);border-radius:18px}
-.map-toggle{background:var(--popover);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 8px 24px -12px rgb(0 0 0/.4)}
-.toast{background:var(--popover);color:var(--ink);border:1px solid var(--line-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 14px 40px -18px rgb(0 0 0/.55)}
+.inspector-head{height:42px;display:flex;align-items:center;padding:0 7px 8px}.inspector-head strong{font:700 .9rem/1 var(--ui)}.inspector-head button{margin-inline-start:auto;width:28px;height:28px;border:0;border-radius:50%;background:rgb(120 120 128/.12);color:var(--muted);font:500 18px/1 var(--ui);cursor:pointer}
+.inspector-tabs{display:flex;padding:3px;margin:2px 0 18px;border-radius:13px;background:rgb(120 120 128/.12);box-shadow:inset 0 0 0 1px var(--line-soft)}.inspector-tabs button{flex:1;height:29px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:600 .72rem/1 var(--ui);cursor:pointer}.inspector-tabs button[aria-selected="true"]{background:rgb(var(--glass-edge)/.72);color:var(--ink);box-shadow:0 4px 12px -8px rgb(0 0 0/.5),inset 0 0 0 1px var(--line-soft)}
+#inspector[data-tab="outline"] .inspector-notes,#inspector[data-tab="outline"] .inspector-info,#inspector[data-tab="notes"] .inspector-outline,#inspector[data-tab="notes"] .inspector-info,#inspector[data-tab="info"] .inspector-outline,#inspector[data-tab="info"] .inspector-notes{display:none!important}
 
-*{scrollbar-width:thin;scrollbar-color:rgb(120 120 128/.34) transparent}
-::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgb(120 120 128/.28);border:3px solid transparent;border-radius:999px;background-clip:padding-box}
-::-webkit-scrollbar-thumb:hover{background:rgb(120 120 128/.46);border:3px solid transparent;background-clip:padding-box}
-@keyframes mac-pop{from{opacity:0;transform:translateY(-5px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+header{position:sticky;top:0;height:76px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;border:0;background:linear-gradient(to bottom,var(--content-layer) 0%,color-mix(in srgb,var(--content-layer) 78%,transparent) 66%,transparent 100%);backdrop-filter:none;z-index:30;pointer-events:none}
+.toolbar-group{height:44px;display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:17px;pointer-events:auto}
+.toolbar-nav{flex:none}.toolbar-actions{margin-inline-start:auto;display:flex;gap:10px;pointer-events:none}.toolbar-actions>.toolbar-group{pointer-events:auto}
+.toolbar-divider{width:1px;height:21px;margin:0 2px;background:var(--line)}
+.iconbtn{width:34px;min-width:34px;height:34px;padding:0;border-radius:12px;color:var(--ink-soft);font-family:var(--ui);transition:transform 120ms var(--ease),background 120ms linear,color 120ms linear}
+.iconbtn:hover{background:rgb(120 120 128/.15);color:var(--ink)}.iconbtn:active{transform:scale(.9);background:rgb(120 120 128/.24)}.iconbtn svg{width:17px;height:17px;stroke-width:1.7}.cluster .lbl,.toolbar-group .lbl{display:none}
+.window-title{position:absolute;left:50%;top:15px;transform:translateX(-50%);height:38px;max-width:36vw;display:grid;grid-template-columns:auto auto;grid-template-rows:20px 15px;column-gap:7px;text-align:center;pointer-events:none}.window-title .fname{grid-column:1/3;max-width:34vw;font:650 .83rem/1.1 var(--ui);color:var(--ink)}.window-title .meta{grid-column:1/3;font:500 .67rem/1 var(--ui);color:var(--muted)}.window-title .live{position:absolute;right:-15px;top:5px}.live .dot{width:6px;height:6px}.live.on .dot{background:#30d158;box-shadow:0 0 0 3px rgb(48 209 88/.14)}
+.reading-pane{min-height:calc(100dvh - 24px);margin-top:-76px;padding-top:76px;background:transparent}
+article#doc{font-family:var(--rfont);padding:64px clamp(42px,7vw,112px) 40vh}
+#doc h1{font-weight:760;letter-spacing:-.025em}#doc h2,#doc h3{font-weight:710;letter-spacing:-.014em}#doc a{color:var(--accent)}
+.document-map{display:none!important}
 
-@media (prefers-reduced-transparency:reduce){header,aside#side,.menu,.panel,.selection-tools,.link-preview,.map-card,.quick,.note-dialog,.trash-dialog,.toast{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--raised)}}
+.panel{top:68px;inset-inline-end:16px;width:356px;border-radius:24px;padding:18px;max-height:calc(100dvh - 92px);transform-origin:top right}.panel.open{animation:glass-arrive 320ms var(--ease)}
+.panel .lbl{font:650 .7rem/1.2 var(--ui);letter-spacing:0;text-transform:none}.preset-list{grid-template-columns:1fr 1fr;display:grid;gap:8px}.preset-list button{min-height:76px;border-radius:16px;background:rgb(120 120 128/.08);border-color:var(--line-soft);padding:11px}.preset-list button:hover{background:rgb(120 120 128/.14)}
+.seg{gap:3px;padding:3px;border-radius:13px;background:rgb(120 120 128/.12)}.seg button{border:0;border-radius:10px;background:transparent;min-height:29px}.seg button[data-active="1"]{background:rgb(var(--glass-edge)/.72);box-shadow:0 4px 12px -9px rgb(0 0 0/.55),inset 0 0 0 1px var(--line-soft);color:var(--ink)}
+.themes button{height:42px;border-radius:14px}.sel{border-radius:12px;background:rgb(120 120 128/.10);min-height:38px}.rowbtn,.primary,.secondary,.danger-btn,.reset{border-radius:12px;min-height:34px;font-family:var(--ui)}
+.menu{border-radius:18px;padding:7px;min-width:208px}.menu.open{animation:glass-arrive 240ms var(--ease)}.menu button{min-height:34px;border-radius:11px;font:500 .8rem/1.35 var(--ui)}.menu button:hover{background:var(--accent);color:white}.menu button:hover .menu-action-icon{color:white}
+.quick{border-radius:28px}.quick-overlay{background:rgb(0 0 0/.12);backdrop-filter:blur(8px)}.quick-head{min-height:58px}.quick-input{font-family:var(--ui)}
+.selection-tools{border-radius:18px;padding:6px}.note-dialog,.trash-dialog{border-radius:26px}.findbar{border-radius:18px}.toast{border-radius:16px}
+@keyframes glass-arrive{from{opacity:0;transform:translateY(-7px) scale(.94);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.liquid-glass,.toolbar-group,.sidebar-search,.panel,.menu,.quick,.map-card,.selection-tools,.note-dialog,.trash-dialog,.findbar,.link-preview{background:var(--raised)}}
+@media (prefers-reduced-transparency:reduce){.liquid-glass,.toolbar-group,.sidebar-search,.panel,.menu,.quick,.map-card,.selection-tools,.note-dialog,.trash-dialog,.findbar,.link-preview{background:var(--raised);backdrop-filter:none;-webkit-backdrop-filter:none}.liquid-glass::before,.toolbar-group::before,.sidebar-search::before,.panel::before,.menu::before,.quick::before,.map-card::before,.selection-tools::before,.note-dialog::before,.trash-dialog::before,.findbar::before,.link-preview::before{display:none}}
 
-@media (min-width:821px){#sidebtn{display:none}}
+@media (min-width:821px){#sidebtn{display:inline-flex}}
 @media (max-width:820px){body.has-side aside#side{display:none}body.has-side.side-open aside#side{display:block;position:fixed;inset:52px 0 0 auto;width:min(86vw,340px);height:auto;z-index:51;box-shadow:-12px 0 32px -18px rgb(var(--shadow)/.5)}body.has-side .document-map{inset-inline-start:12px}.side-backdrop{position:fixed;inset:52px 0 0;z-index:50;background:rgb(0 0 0/.28);display:none}body.side-open .side-backdrop{display:block}header{padding-inline:10px;gap:4px}header .fname{max-width:34vw}.cluster .lbl{display:none}.document-map{top:auto;bottom:max(14px,env(safe-area-inset-bottom));transform:none}.map-rail{display:none}.map-toggle{width:40px;height:40px;border-radius:50%}.map-peek{display:none}.map-card{position:fixed;inset:64px 12px max(66px,calc(env(safe-area-inset-bottom) + 58px));transform:translateY(6px);width:auto;max-height:none}.document-map.open .map-card{transform:none}}
-@media (max-width:820px){header{padding-inline:8px}.window-controls,.window-title>.appmark{display:none}.window-title{position:static;transform:none;min-width:0;max-width:34vw;margin-inline:4px auto}.window-title .meta{display:none}.window-title .fname{max-width:100%}.native-nav{border:0;background:transparent;padding:0}.native-nav .iconbtn{height:30px}.empty-app-icon{display:grid!important}article#doc{padding-inline:clamp(20px,6vw,36px)}.sidebar-brand{padding-top:10px}}
+@media (max-width:1240px){body.has-inspector aside#inspector{display:none}.inspector-toggle{display:none}}
+@media (max-width:820px){body{padding:0;gap:0}main{height:100dvh;border-radius:0}.toolbar-actions>.toolbar-group:first-child{display:none}header{height:64px;padding:10px;background:linear-gradient(to bottom,var(--content-layer),transparent)}.toolbar-group{height:42px;border-radius:16px}.window-title{top:13px;max-width:36vw}.window-title .fname{max-width:36vw}.window-title .meta,.window-title .live{display:none}.reading-pane{margin-top:-64px;padding-top:64px}article#doc{padding:40px clamp(20px,6vw,36px) 40vh}body.has-side.side-open aside#side{inset:8px auto 8px 8px;width:min(88vw,350px);height:auto;border-radius:26px;box-shadow:0 30px 90px -30px rgb(0 0 0/.7)}html[dir="rtl"] body.has-side.side-open aside#side{inset:8px 8px 8px auto}.side-backdrop{inset:0!important;background:rgb(0 0 0/.24)!important;backdrop-filter:blur(5px)}.document-map{display:flex!important}.panel{top:62px;inset-inline:10px;width:auto;max-height:calc(100dvh - 74px)}}
 @media (max-width:899px){body.view-split .reading-pane{display:block}body.view-split #doc{display:none;border:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 @media print{
-  #side,header,#progress,.panel,.copybtn,.dropzone,.anchor,#grain,.document-map,.selection-tools,.source-view,.chapter-boundary{display:none!important}
+  #side,#inspector,header,#progress,.panel,.copybtn,.dropzone,.anchor,#grain,.document-map,.selection-tools,.source-view,.chapter-boundary{display:none!important}
   html,body{background:#fff;color:#000;height:auto;display:block}
   main{height:auto;overflow:visible;display:block}
   #doc{max-width:none;margin:0;padding:0;font-size:11.5pt;line-height:1.75;color:#000}
@@ -481,22 +459,35 @@ aside#side{width:276px;flex-basis:276px;padding:0 12px 24px;background:var(--sid
 </style>
 </head>
 <body>
+<svg id="matn-glass-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="matn-glass" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feImage href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x2%3D%221%22%3E%3Cstop%20stop-color%3D%22rgb(0%2C0%2C128)%22%2F%3E%3Cstop%20offset%3D%22.15%22%20stop-color%3D%22rgb(128%2C0%2C128)%22%2F%3E%3Cstop%20offset%3D%22.85%22%20stop-color%3D%22rgb(128%2C0%2C128)%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22rgb(255%2C0%2C128)%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22url(%23g)%22%2F%3E%3C%2Fsvg%3E" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="lensx"/>
+    <feImage href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22rgb(0%2C0%2C128)%22%2F%3E%3Cstop%20offset%3D%22.15%22%20stop-color%3D%22rgb(0%2C128%2C128)%22%2F%3E%3Cstop%20offset%3D%22.85%22%20stop-color%3D%22rgb(0%2C128%2C128)%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22rgb(0%2C255%2C128)%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22url(%23g)%22%2F%3E%3C%2Fsvg%3E" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="lensy"/>
+    <feDisplacementMap in="SourceGraphic" in2="lensx" xChannelSelector="R" yChannelSelector="B" scale=".055" result="bentx"/>
+    <feDisplacementMap in="bentx" in2="lensy" xChannelSelector="B" yChannelSelector="G" scale=".055"/>
+  </filter>
+</svg>
 <div class="focus-sensor" id="focussensor" aria-hidden="true"></div>
 <div id="grain" aria-hidden="true"></div>
 <div id="progress" aria-hidden="true"></div>
 <main id="scroller">
   <header>
-    <span class="window-controls" aria-hidden="true"><span class="window-control close"></span><span class="window-control minimize"></span><span class="window-control zoom"></span></span>
-    <span class="native-nav">
-      <button class="iconbtn" id="backbtn" aria-label="رجوع" title="رجوع" disabled><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-      <button class="iconbtn" id="forwardbtn" aria-label="تقدّم" title="تقدّم" disabled><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-      <button class="iconbtn" id="sidebtn" aria-label="فتح الشريط الجانبي" aria-expanded="false"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+    <span class="toolbar-group toolbar-nav liquid-glass">
+      <button class="iconbtn" id="sidebtn" aria-label="فتح الشريط الجانبي" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
+      <span class="toolbar-divider"></span>
+      <button class="iconbtn" id="backbtn" aria-label="رجوع" title="رجوع" disabled><svg viewBox="0 0 24 24"><path d="m14.5 17-5-5 5-5"/></svg></button>
+      <button class="iconbtn" id="forwardbtn" aria-label="تقدّم" title="تقدّم" disabled><svg viewBox="0 0 24 24"><path d="m9.5 17 5-5-5-5"/></svg></button>
     </span>
-    <span class="window-title"><span class="appmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4.5h12M8 9h10M6 13.5h12M9 18h9"/><path d="M4 3v18"/></svg></span><span class="fname" id="fname">متن · Matn</span><span class="meta" id="rtime"></span></span>
-    <span class="cluster">
+    <span class="window-title"><span class="fname" id="fname">متن · Matn</span><span class="meta" id="rtime"></span><span class="live" id="live" role="status" title="يتابع تغييرات الملف تلقائيًا" aria-label="الاتصال بالتحديث التلقائي غير متاح"><span class="dot"></span><span class="sr-only" id="livestatus">التحديث التلقائي غير متصل</span></span></span>
+    <span class="toolbar-actions">
+    <span class="toolbar-group liquid-glass">
       <label class="iconbtn" id="openbtn"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H5.6a2 2 0 0 0-1.9 1.4L3 15.5V7z"/><path d="M3 18l2.2-6.2A1 1 0 0 1 6.2 11H22l-2.3 6.6a2 2 0 0 1-1.9 1.4H4a1 1 0 0 1-1-1z"/></svg><span class="lbl" data-i18n="open">فتح</span><input id="fileinput" type="file" accept=".md,.markdown,.mdown,.mkdn,.mkd,.mdwn,.mdtxt,.mdtext,.rmd,.qmd" hidden></label>
-      <button class="iconbtn" id="quickbtn" style="display:none"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg><span class="lbl" data-i18n="navigate">تنقّل</span></button>
-      <span class="menuwrap"><button class="iconbtn" id="exportbtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg><span class="lbl" data-i18n="export">حفظ</span></button>
+      <button class="iconbtn" id="viewbtn" aria-label="عرض المصدر" title="عرض المصدر" data-view="rendered"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></button>
+      <button class="iconbtn" id="focusbtn" aria-label="وضع التركيز" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M4 16v4h4"/></svg></button>
+      <button class="iconbtn" id="gearbtn" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2"/><circle cx="10" cy="16" r="2"/></svg><span class="lbl" data-i18n="settings">الإعدادات</span></button>
+    </span>
+    <span class="toolbar-group liquid-glass">
+      <span class="menuwrap"><button class="iconbtn" id="exportbtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 11v8h14v-8"/></svg><span class="lbl" data-i18n="export">حفظ</span></button>
         <div class="menu" id="exportmenu" role="menu">
           <button role="menuitem" data-export="pdf">PDF</button>
           <button role="menuitem" data-export="html">HTML</button>
@@ -506,29 +497,35 @@ aside#side{width:276px;flex-basis:276px;padding:0 12px 24px;background:var(--sid
           <button role="menuitem" data-export="notes">المفضلة والتعليقات (.md)</button>
         </div></span>
       <button class="iconbtn" id="printbtn"><svg viewBox="0 0 24 24"><path d="M7 8V3h10v5"/><rect x="4" y="8" width="16" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/></svg><span class="lbl" data-i18n="print">طباعة</span></button>
-      <button class="iconbtn" id="gearbtn" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2"/><circle cx="10" cy="16" r="2"/></svg><span class="lbl" data-i18n="settings">الإعدادات</span></button>
-      <button class="iconbtn" id="focusbtn" aria-label="وضع التركيز" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M4 16v4h4"/></svg></button>
-	      <button class="iconbtn" id="viewbtn" aria-label="عرض المصدر" title="عرض المصدر" data-view="rendered"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></button>
 	      <span class="menuwrap"><button class="iconbtn" id="actionsbtn" aria-label="إجراءات الملف" title="إجراءات الملف" aria-haspopup="true" aria-expanded="false" disabled><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
 	        <div class="menu" id="filemenu" role="menu">
 	          <button role="menuitem" data-file-action="favorite"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4.1 5.8-.9z"/></svg><span data-action-label>حفظ في المفضلة</span></button><button role="menuitem" data-file-action="later"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-action-label>إضافة إلى «أكمل لاحقًا»</span></button><button role="menuitem" data-file-action="editor"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><span data-action-label>فتح في المحرر</span></button><button role="menuitem" data-file-action="reveal"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span data-action-label>إظهار في المجلد</span></button><button role="menuitem" data-file-action="copy"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span data-action-label>نسخ المسار</span></button><button class="danger" role="menuitem" data-file-action="trash"><svg class="menu-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14"/><path d="M9 6V4h6v2"/><path d="M7 6l1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg><span data-action-label>نقل إلى سلة المهملات</span></button><div class="file-action-error" id="filemenuerror"></div>
 	        </div></span>
-	      <span class="live" id="live" role="status" title="يتابع تغييرات الملف تلقائيًا" aria-label="الاتصال بالتحديث التلقائي غير متاح"><span class="dot"></span><span class="sr-only" id="livestatus">التحديث التلقائي غير متصل</span></span>
-    </span>
+	      <button class="iconbtn inspector-toggle" id="inspectorbtn" aria-label="إظهار التفاصيل" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="3"/><path d="M15 4v16"/></svg></button>
+    </span></span>
   </header>
   <div class="chapter-boundary" id="chapterboundary" aria-live="polite"></div>
-  <div class="reading-pane" id="readingpane"><article id="doc"><div class="empty"><span class="empty-app-icon appmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4.5h12M8 9h10M6 13.5h12M9 18h9"/><path d="M4 3v18"/></svg></span><div class="big">قارئ ماركداون عربي</div>اسحب ملف <code dir="ltr">.md</code> إلى هنا، أو مرّره عبر <code dir="ltr">?path=/abs/file.md</code></div></article><section class="source-view" id="sourceview" aria-label="مصدر Markdown"><ol id="sourcelines"></ol></section></div>
+  <div class="reading-pane" id="readingpane"><article id="doc"><div class="empty"><div class="big">قارئ ماركداون عربي</div>اسحب ملف <code dir="ltr">.md</code> إلى هنا، أو مرّره عبر <code dir="ltr">?path=/abs/file.md</code></div></article><section class="source-view" id="sourceview" aria-label="مصدر Markdown"><ol id="sourcelines"></ol></section></div>
 </main>
-<aside id="side">
-	  <div class="sidebar-brand"><span class="appmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4.5h12M8 9h10M6 13.5h12M9 18h9"/><path d="M4 3v18"/></svg></span><strong>متن</strong><small>قارئ Markdown</small></div>
+<aside id="side" class="liquid-glass" aria-label="المكتبة المحلية">
+	  <div class="sidebar-head"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9"/><path d="M11 10h14M11 16h14M16 22h9M7 9v14"/></svg></span><span><strong>متن</strong><small>المكتبة المحلية</small></span></div>
+	  <button class="sidebar-search liquid-control" id="quickbtn" style="display:none"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg><span data-i18n="librarySearch">ابحث في المكتبة</span><kbd>⌘K</kbd></button>
 	  <div class="sec" id="files-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h7l4 4v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h4"/></svg><span data-i18n="files">الملفات</span><span class="sec-count" id="files-count"></span></h2><nav id="files"></nav></div>
 	  <div class="sec" id="book-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 2-2h12v18H7a2 2 0 0 1-2-2z"/><path d="M9 3v18"/></svg><span data-i18n="book">الكتاب</span><span class="sec-count" id="book-count"></span></h2><div class="book-controls"><button id="bookprev" type="button" aria-label="الفصل السابق">←</button><span class="book-progress" id="bookprogress"></span><button id="booknext" type="button" aria-label="الفصل التالي">→</button></div><nav id="book" aria-label="فصول الكتاب"></nav></div>
-	  <div class="sec" id="health-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.2-2.9 7.9-7 9-4.1-1.1-7-4.8-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="documentHealth">سلامة المستند</span><span class="sec-count" id="health-count"></span></h2><div id="health" aria-live="polite"></div></div>
-	  <div class="sec" id="toc-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i18n="contents">المحتويات</span><span class="sec-count" id="toc-count"></span></h2><nav id="toc"></nav></div>
-	  <div class="sec" id="backlinks-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8.5 12h7"/></svg><span data-i18n="backlinks">روابط واردة</span><span class="sec-count" id="backlinks-count"></span></h2><nav id="backlinks"></nav></div>
 	  <div class="sec" id="favorites-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4.1 5.8-.9z"/></svg><span data-i18n="favorites">المفضلة</span><span class="sec-count" id="favorites-count"></span></h2><nav id="favorites"></nav></div>
 	  <div class="sec" id="later-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="later">أكمل لاحقًا</span><span class="sec-count" id="later-count"></span></h2><nav id="later"></nav></div>
-	  <div class="sec" id="annotations-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span data-i18n="annotations">الملاحظات والتظليل</span><span class="sec-count" id="annotations-count"></span></h2><nav id="annotations"></nav></div>
+</aside>
+<aside id="inspector" class="liquid-glass" data-tab="outline" aria-labelledby="inspectortitle">
+  <div class="inspector-head"><strong id="inspectortitle" data-i18n="details">التفاصيل</strong><button id="inspectorclose" aria-label="إخفاء التفاصيل">×</button></div>
+  <div class="inspector-tabs" role="tablist" aria-label="أقسام التفاصيل">
+    <button role="tab" data-inspector-tab="outline" aria-selected="true" data-i18n="outline">الفهرس</button>
+    <button role="tab" data-inspector-tab="notes" aria-selected="false" data-i18n="notes">الملاحظات</button>
+    <button role="tab" data-inspector-tab="info" aria-selected="false" data-i18n="info">المعلومات</button>
+  </div>
+	  <div class="sec inspector-outline" id="toc-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i18n="contents">المحتويات</span><span class="sec-count" id="toc-count"></span></h2><nav id="toc"></nav></div>
+	  <div class="sec inspector-notes" id="annotations-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span data-i18n="annotations">الملاحظات والتظليل</span><span class="sec-count" id="annotations-count"></span></h2><nav id="annotations"></nav></div>
+	  <div class="sec inspector-info" id="backlinks-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8.5 12h7"/></svg><span data-i18n="backlinks">روابط واردة</span><span class="sec-count" id="backlinks-count"></span></h2><nav id="backlinks"></nav></div>
+	  <div class="sec inspector-info" id="health-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.2-2.9 7.9-7 9-4.1-1.1-7-4.8-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="documentHealth">سلامة المستند</span><span class="sec-count" id="health-count"></span></h2><div id="health" aria-live="polite"></div></div>
 </aside>
 <div class="side-backdrop" id="sidebackdrop"></div>
 
@@ -552,9 +549,9 @@ aside#side{width:276px;flex-basis:276px;padding:0 12px 24px;background:var(--sid
     </div></div>
   <div class="grp"><div class="lbl" data-i18n="theme">السمة</div>
     <div class="themes" id="themes">
-      <button data-theme-val="light" style="background:#f5f5f7;color:#1d1d1f">فاتح</button>
+      <button data-theme-val="light" style="background:#eef0f5;color:#1d1d1f">فاتح</button>
       <button data-theme-val="sepia" style="background:#f1e6ce;color:#453620">سيبيا</button>
-      <button data-theme-val="dark" style="background:#2c2c2e;color:#f5f5f7">داكن</button>
+      <button data-theme-val="dark" style="background:#242529;color:#f5f5f7">داكن</button>
       <button data-theme-val="night" style="background:#000;color:#ddd8cf">ليلي</button>
     </div>
   </div>
@@ -635,6 +632,8 @@ Object.assign(I18N.ar,{viewSource:"عرض المصدر",viewSplit:"عرض الم
 Object.assign(I18N.en,{viewSource:"Show source",viewSplit:"Show source and rendered views",viewRendered:"Return to rendered view",sourceLine:"Show source line"});
 Object.assign(I18N.ar,{undo:"تراجع",delete:"حذف",annotationRemoved:"حُذف التمييز",highlightWith:"تمييز",colorYellow:"أصفر",colorGreen:"أخضر",colorBlue:"أزرق",colorRose:"وردي"});
 Object.assign(I18N.en,{undo:"Undo",delete:"Delete",annotationRemoved:"Highlight removed",highlightWith:"Highlight",colorYellow:"yellow",colorGreen:"green",colorBlue:"blue",colorRose:"rose"});
+Object.assign(I18N.ar,{details:"التفاصيل",outline:"الفهرس",notes:"الملاحظات",info:"المعلومات",inspector:"إظهار التفاصيل",hideInspector:"إخفاء التفاصيل",library:"المكتبة المحلية",librarySearch:"ابحث في المكتبة"});
+Object.assign(I18N.en,{details:"Inspector",outline:"Outline",notes:"Notes",info:"Info",inspector:"Show inspector",hideInspector:"Hide inspector",library:"Local library",librarySearch:"Search library"});
 function T(k){return (I18N[S.lang]||I18N.ar)[k]||I18N.ar[k]||k;}
 var S=loadS(),cur=null,loadSeq=0;
 var MARKDOWN_SUFFIX="(?:md|markdown|mdown|mkdn|mkd|mdwn|mdtxt|mdtext|rmd|qmd)";
@@ -675,8 +674,9 @@ function applyLang(){
 	  var bb=$("backbtn"),fb=$("forwardbtn");if(bb){bb.setAttribute("aria-label",T("back"));bb.title=T("back");}if(fb){fb.setAttribute("aria-label",T("forward"));fb.title=T("forward");}
 	  var ab=$("actionsbtn");if(ab){ab.setAttribute("aria-label",T("fileActions"));ab.title=T("fileActions");}
 	  // toolbar labels are hidden on narrow screens, so name every control explicitly
-	  var toolbarNames={openbtn:"open",quickbtn:"navigate",exportbtn:"export",printbtn:"print",gearbtn:"settings"};
+	  var toolbarNames={openbtn:"open",quickbtn:"librarySearch",exportbtn:"export",printbtn:"print",gearbtn:"settings",inspectorbtn:"inspector"};
 	  Object.keys(toolbarNames).forEach(function(id){var el=$(id);if(!el)return;el.setAttribute("aria-label",T(toolbarNames[id]));el.title=T(toolbarNames[id]);});
+	  $("side").setAttribute("aria-label",T("library"));$("inspectorclose").setAttribute("aria-label",T("hideInspector"));
 	  document.querySelectorAll("header svg,.iconbtn svg").forEach(function(svg){svg.setAttribute("aria-hidden","true");});
 	  if($("maptoggle"))$("maptoggle").setAttribute("aria-label",$("documentmap").classList.contains("open")?T("mapClose"):T("mapOpen"));if($("maplist"))$("maplist").setAttribute("aria-label",T("contents"));if($("mapmarks"))$("mapmarks").setAttribute("aria-label",T("mapLabel"));if($("mapclose"))$("mapclose").setAttribute("aria-label",T("mapClose"));
 	  var actionLabels={favorite:"actionFavorite",later:"actionLater",editor:"openEditor",reveal:"reveal",copy:"copyPath",trash:"moveTrash"};document.querySelectorAll("[data-file-action]").forEach(function(button){var label=button.querySelector("[data-action-label]");if(label)label.textContent=T(actionLabels[button.getAttribute("data-file-action")]);});
@@ -696,13 +696,20 @@ function bindG(id,attr,key,cast){$(id).addEventListener("click",function(e){var 
 bindG("themes","theme-val","theme",String);$("fontsel").addEventListener("change",function(){S.font=this.value;saveS();applyS();});bindG("measure","measure-val","measure",Number);bindG("align","align-val","align",String);bindG("uilang","lang-val","lang",String);
 $("presets").onclick=function(e){var button=e.target.closest("[data-preset]");if(!button)return;S=Object.assign(S,PRESETS[button.dataset.preset],{preset:button.dataset.preset});saveS();applyS();};
 $("focusbtn").onclick=function(){S.focus=!S.focus;saveS();applyS();};$("focussensor").onmouseenter=function(){document.body.classList.add("focus-peek");};$("focussensor").onmouseleave=function(){setTimeout(function(){if(!document.querySelector("header:hover"))document.body.classList.remove("focus-peek");},160);};
-$("sidebtn").onclick=function(){var open=document.body.classList.toggle("side-open");this.setAttribute("aria-expanded",open?"true":"false");};$("sidebackdrop").onclick=function(){document.body.classList.remove("side-open");$("sidebtn").setAttribute("aria-expanded","false");};
+function syncSidebarButton(){var mobile=window.matchMedia("(max-width:820px)").matches,open=mobile?document.body.classList.contains("side-open"):!document.body.classList.contains("library-hidden");$("sidebtn").setAttribute("aria-expanded",open?"true":"false");}
+$("sidebtn").onclick=function(){var mobile=window.matchMedia("(max-width:820px)").matches;if(mobile)document.body.classList.toggle("side-open");else document.body.classList.toggle("library-hidden");syncSidebarButton();};$("sidebackdrop").onclick=function(){document.body.classList.remove("side-open");syncSidebarButton();};window.addEventListener("resize",syncSidebarButton);syncSidebarButton();
+var inspector=$("inspector"),inspectorbtn=$("inspectorbtn");
+function setInspector(open){document.body.classList.toggle("inspector-hidden",!open);inspectorbtn.setAttribute("aria-expanded",open?"true":"false");}
+inspectorbtn.onclick=function(){setInspector(document.body.classList.contains("inspector-hidden"));};
+$("inspectorclose").onclick=function(){setInspector(false);};
+inspector.querySelector(".inspector-tabs").onclick=function(e){var button=e.target.closest("[data-inspector-tab]");if(!button)return;inspector.dataset.tab=button.dataset.inspectorTab;inspector.querySelectorAll("[data-inspector-tab]").forEach(function(item){item.setAttribute("aria-selected",item===button?"true":"false");});};
 function step(key,d,min,max,round){return function(){var v=S[key]+d;v=Math.min(max,Math.max(min,v));S[key]=round?Math.round(v):Math.round(v*100)/100;saveS();applyS();};}
 $("szplus").onclick=step("size",1,15,28,true);$("szminus").onclick=step("size",-1,15,28,true);
 $("lhplus").onclick=step("lh",0.05,1.4,2.4,false);$("lhminus").onclick=step("lh",-0.05,1.4,2.4,false);
 $("reset").onclick=function(){S=Object.assign({},DEF);saveS();applyS();};
 var panel=$("panel"),gearbtn=$("gearbtn");
-gearbtn.onclick=function(e){e.stopPropagation();var open=panel.classList.toggle("open");gearbtn.setAttribute("aria-expanded",open?"true":"false");};
+function positionPanel(){var rect=gearbtn.getBoundingClientRect(),width=Math.min(356,window.innerWidth-20);panel.style.left=Math.max(10,Math.min(window.innerWidth-width-10,rect.left+rect.width/2-width/2))+"px";panel.style.right="auto";}
+gearbtn.onclick=function(e){e.stopPropagation();var open=panel.classList.toggle("open");if(open)positionPanel();gearbtn.setAttribute("aria-expanded",open?"true":"false");};
 document.addEventListener("click",function(e){if(!panel.contains(e.target)&&e.target!==gearbtn){panel.classList.remove("open");gearbtn.setAttribute("aria-expanded","false");}});
 $("printbtn").onclick=function(){window.print();};
 
@@ -768,9 +775,10 @@ function buildToc(doc){
 	  if(hs.length<2){$("documentmap").style.display="none";syncSide();return [];}
 	  $("documentmap").style.display="flex";var step=Math.max(1,Math.ceil(hs.length/44));
 	  function jump(id){var el=document.getElementById(id);if(el){rememberNavPosition();recordNavigation(cur,id);el.scrollIntoView({behavior:"smooth",block:"start"});try{history.replaceState(null,"","/?path="+encodeURIComponent(cur)+"#"+encodeURIComponent(id));}catch(e){}}closeDocumentMap(false);}
-	  for(var i=0;i<hs.length;i++){var h=hs[i],level=h.tagName.charAt(1),text=h.dataset.title||h.textContent.trim(),button=document.createElement("button");button.type="button";button.textContent=text;button.className="level-"+level;button.dataset.id=h.id;button.onclick=function(){jump(this.dataset.id);};list.appendChild(button);mapHeadingControls[h.id]=[button];}
+	  for(var i=0;i<hs.length;i++){var h=hs[i],level=h.tagName.charAt(1),text=h.dataset.title||h.textContent.trim(),button=document.createElement("button"),tocLink=document.createElement("a");button.type="button";button.textContent=text;button.className="level-"+level;button.dataset.id=h.id;button.onclick=function(){jump(this.dataset.id);};list.appendChild(button);tocLink.href="#"+h.id;tocLink.textContent=text;tocLink.className="lvl"+level;tocLink.dataset.id=h.id;tocLink.onclick=function(e){e.preventDefault();jump(this.dataset.id);};$("toc").appendChild(tocLink);mapHeadingControls[h.id]=[button,tocLink];}
 	  for(var j=0;j<hs.length;j+=step){var group=hs.slice(j,j+step),mark=document.createElement("button"),level=group[0].tagName.charAt(1),label=group.map(function(h){return h.dataset.title||h.textContent.trim();}).join(" — ");mark.type="button";mark.className="map-mark level-"+level;mark.dataset.id=group[0].id;mark.dataset.label=label;mark.setAttribute("aria-label",label);mark.onmouseenter=function(){showMapPeek(this);};mark.onmouseleave=hideMapPeek;mark.onfocus=function(){showMapPeek(this);};mark.onblur=hideMapPeek;mark.onclick=function(){jump(this.dataset.id);};for(var k=0;k<group.length;k++)mapHeadingControls[group[k].id].push(mark);marks.appendChild(mark);}
 	  if($("toc-count"))$("toc-count").textContent=String(hs.length);
+	  $("toc-sec").style.display="block";
 	  syncSide();return hs;
 }
 function readingTimeWords(w){var m=Math.max(1,Math.round(w/200));$("rtime").textContent="~ "+m+" "+T("min")+" · "+w+" "+T("words");}
@@ -897,7 +905,7 @@ scroller.addEventListener("touchstart",function(){userMovedDuringRestore=restore
 window.addEventListener("pagehide",function(){if(cur)writeReaderState(cur,capturePosition());});
 
 function base(p){return (p||"").split("/").pop();}
-function syncSide(){var ids=["files-sec","book-sec","health-sec","toc-sec","backlinks-sec","favorites-sec","later-sec","annotations-sec"],any=ids.some(function(id){return $(id).style.display!=="none";});document.body.classList.toggle("has-side",any);if(!any)document.body.classList.remove("side-open");}
+function syncSide(){var library=["files-sec","book-sec","favorites-sec","later-sec"].some(function(id){return $(id).style.display!=="none";}),details=["health-sec","toc-sec","backlinks-sec","annotations-sec"].some(function(id){return $(id).style.display!=="none";});document.body.classList.toggle("has-side",library);document.body.classList.toggle("has-inspector",details);if(!library)document.body.classList.remove("side-open");}
 var navEntries=[],navAt=-1;
 function updateNavButtons(){$("backbtn").disabled=navAt<=0;$("forwardbtn").disabled=navAt<0||navAt>=navEntries.length-1;}
 function rememberNavPosition(){if(navAt>=0&&navEntries[navAt]&&navEntries[navAt].path===cur)navEntries[navAt].position=capturePosition();}

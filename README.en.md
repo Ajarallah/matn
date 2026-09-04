@@ -1,7 +1,7 @@
 # متن · Matn
 
-**A right-to-left Markdown reader for Arabic.**
-A macOS-native interface with reading themes, Arabic fonts, math, diagrams, and export — local and fully offline.
+**An Arabic Markdown reader with a Mac-first Liquid Glass interface.**
+A library, outline, notes, and inspector around a local reading surface, fully offline.
 
 **[▶ Try the live demo](https://ajarallah.github.io/matn/)**
 
@@ -29,7 +29,7 @@ experience built for long-form Arabic.
 
 **Reading**
 
-- 🖥️ **At home on the Mac** — a native-looking window toolbar, Finder-like sidebar, system colors, translucent popovers, and light/dark materials.
+- 🫧 **Real Liquid Glass structure** — a floating library sidebar, separate inspector, and refractive toolbar groups above an opaque content layer, with reduced-transparency and reduced-motion fallbacks.
 - 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
 - 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
 - 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.

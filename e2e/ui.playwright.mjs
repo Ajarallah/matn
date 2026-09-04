@@ -47,8 +47,17 @@ try {
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
   const page = await context.newPage();
   await page.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "README.md"))}`);
-  await page.waitForSelector("#documentmap .map-mark");
+  await page.waitForSelector("#toc a");
   await page.waitForSelector("#book-sec .book-chapter");
+  assert.equal(await page.locator("#inspector").isVisible(), true);
+  await page.locator("#inspectorbtn").click();
+  assert.equal(await page.locator("#inspector").isVisible(), false);
+  await page.locator("#inspectorbtn").click();
+  assert.equal(await page.locator("#inspector").isVisible(), true);
+  await page.locator("#sidebtn").click();
+  assert.equal(await page.locator("aside#side").isVisible(), false);
+  await page.locator("#sidebtn").click();
+  assert.equal(await page.locator("aside#side").isVisible(), true);
   assert.equal(await page.locator("#book-count").innerText(), "2");
   assert.match(await page.locator("#chapterboundary").innerText(), /1 \/ 2.*البداية/);
   await page.locator("#booknext").click();
@@ -85,6 +94,9 @@ try {
   await page.locator('#doc h2[data-title="قسم ثان"] .source-link').click();
   assert.equal(await page.locator(`#source-line-${sourceLine}`).evaluate((el) => el.classList.contains("source-target")), true);
   await page.locator("#viewbtn").click();
+  assert.equal(await page.locator("#inspector").isVisible(), true);
+  await page.locator('[data-inspector-tab="info"]').click();
+  assert.equal(await page.locator("#inspector").getAttribute("data-tab"), "info");
   await page.waitForSelector("#health-sec .health-row");
   assert.equal(await page.locator("#health-count").innerText(), "1");
   await page.locator("#health .collection-item").click();
@@ -93,7 +105,8 @@ try {
   await page.locator("#findclose").click();
   await page.locator("#health .health-copy").click();
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), "docs/missing.md");
-  assert.equal(await page.locator("#toc-sec").evaluate((el) => el.style.display), "none");
+  await page.locator('[data-inspector-tab="outline"]').click();
+  assert.equal(await page.locator("#toc-sec").evaluate((el) => el.style.display), "block");
 
   await page.locator("#gearbtn").click();
   await page.waitForSelector("#panel.open");
@@ -117,7 +130,7 @@ try {
   const panelBox = await page.locator("#panel").boundingBox();
   assert.ok(Math.abs((gearBox.x + gearBox.width / 2) - (panelBox.x + panelBox.width / 2)) < 260,
     `settings panel is ${Math.round(Math.abs((gearBox.x + gearBox.width / 2) - (panelBox.x + panelBox.width / 2)))}px from its button`);
-  await page.locator("#doc").click({ position: { x: 700, y: 20 } });
+  await page.keyboard.press("Escape");
   assert.equal(await page.locator("#panel").getAttribute("class"), "panel");
 
   await page.getByRole("link", { name: "الدليل" }).click();
@@ -151,8 +164,9 @@ try {
   await page.locator('[data-selection-action="favorite"]').click();
   await page.waitForSelector("#favorites-sec .collection-item");
   assert.equal(await page.locator("#favorites-count").innerText(), "1");
-  const mainBox = await page.locator("main").boundingBox(), sideBox = await page.locator("aside#side").boundingBox();
+  const mainBox = await page.locator("main").boundingBox(), sideBox = await page.locator("aside#side").boundingBox(), inspectorBox = await page.locator("aside#inspector").boundingBox();
   assert.ok(sideBox.x > mainBox.x, "the Arabic sidebar should be on the right");
+  assert.ok(inspectorBox.x < mainBox.x, "the inspector should flank the opposite side of the reading surface");
 
   await selectText(page, "والنسخ");
   await page.locator('[data-selection-action="copy"]').click();
@@ -193,6 +207,7 @@ try {
   await page.waitForSelector("#notedialog[open]");
   await page.locator("#notetext").fill("ملاحظة اختبار");
   await page.locator("#notesave").click();
+  await page.locator('[data-inspector-tab="notes"]').click();
   await page.waitForSelector("#annotations-sec .collection-item");
   const savedAnnotations = await page.evaluate(() => fetch("/api/state").then((response) => response.json()).then((state) => state.workspace.annotations));
   assert.equal(savedAnnotations.length, 2);
@@ -217,24 +232,18 @@ try {
   await page.waitForTimeout(260);
   assert.equal(await page.locator(`#${foldRegionId}`).evaluate((el) => Math.round(el.getBoundingClientRect().height)), 0);
 
-  const interactiveMapMark = page.locator("#documentmap .map-mark").nth(1);
-  const mapTargetId = await interactiveMapMark.getAttribute("data-id");
-  await interactiveMapMark.hover();
-  await page.waitForSelector("#mappeek.show");
-  assert.ok((await page.locator("#mappeek").innerText()).length > 0);
-  await interactiveMapMark.click();
-  await page.waitForFunction((id) => decodeURIComponent(location.hash.slice(1)) === id, mapTargetId);
-  await page.locator("#maptoggle").click();
-  assert.equal(await page.locator("#documentmap").getAttribute("class"), "document-map open");
-  await page.locator("#doc").click({ position: { x: 30, y: 30 } });
-  assert.equal(await page.locator("#documentmap").getAttribute("class"), "document-map");
-
   await page.locator("#actionsbtn").click();
   await page.locator('#filemenu [data-file-action="trash"]').click();
   await page.waitForSelector("#trashdialog[open]");
   assert.equal(await page.locator(":focus").getAttribute("id"), "trashcancel");
   await page.locator("#trashcancel").click();
   await page.setViewportSize({ width: 390, height: 844 });
+  const interactiveMapMark = page.locator("#documentmap .map-mark").nth(1);
+  const mapTargetId = await interactiveMapMark.getAttribute("data-id");
+  await page.locator("#maptoggle").click();
+  assert.equal(await page.locator("#documentmap").getAttribute("class"), "document-map open");
+  await page.locator("#mapcard [data-id]").nth(1).click();
+  await page.waitForFunction((id) => decodeURIComponent(location.hash.slice(1)) === id, mapTargetId);
   // the sidebar must collapse to a drawer: it used to stay at its fixed 264px because
   // syncSide() wrote an inline display, which outranks the responsive rule.
   assert.equal(await page.locator("aside#side").isVisible(), false);

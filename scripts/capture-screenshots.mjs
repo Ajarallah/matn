@@ -45,7 +45,7 @@ try {
   // The reader keeps an SSE connection open for live reload, so networkidle
   // never occurs. The rendered document is the reliable readiness signal.
   await page.goto(`${base}/?path=${encodeURIComponent(source)}`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#documentmap .map-mark");
+  await page.waitForSelector("#toc a");
   await page.waitForFunction(() => document.fonts.status === "loaded");
   await page.waitForSelector("#doc .mermaid svg");
 
