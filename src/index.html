@@ -472,6 +472,33 @@ main::-webkit-scrollbar-corner,aside::-webkit-scrollbar-corner,#sourceview::-web
 @media (prefers-reduced-transparency:reduce){.liquid-glass,.toolbar-group,.sidebar-search,.panel,.menu,.quick,.map-card,.selection-tools,.note-dialog,.trash-dialog,.findbar,.link-preview,aside#side,aside#inspector{background:var(--raised);backdrop-filter:none;-webkit-backdrop-filter:none}.liquid-glass::after,.toolbar-group::before,.toolbar-group::after,.sidebar-search::after,.panel::after,.menu::after,.quick::after,.map-card::after,.selection-tools::after,.note-dialog::after,.trash-dialog::after,.findbar::after,.link-preview::after{display:none}}
 @media (prefers-contrast:more){.liquid-glass,.toolbar-group,.sidebar-search,.panel,.menu,.quick,.map-card,.selection-tools,.note-dialog,.trash-dialog,.findbar,.link-preview,aside#side,aside#inspector{background:var(--raised);border-color:var(--ink-soft);backdrop-filter:none;-webkit-backdrop-filter:none}.iconbtn{color:var(--ink)}}
 
+/* macOS window anatomy: one continuous window, not three floating web cards. */
+#grain{display:none}
+body{padding:0;gap:0;background:var(--content-layer)}
+main{height:100dvh;border-radius:0;background:var(--raised);box-shadow:none}
+aside#side,aside#inspector{height:100dvh;margin:0;border:0;border-radius:0;box-shadow:none;padding:0 12px 24px;background:rgb(246 247 249/.78);-webkit-backdrop-filter:blur(36px) saturate(165%);backdrop-filter:blur(36px) saturate(165%)}
+html[data-theme="dark"] aside#side,html[data-theme="dark"] aside#inspector{background:rgb(30 30 32/.82);-webkit-backdrop-filter:blur(36px) saturate(145%);backdrop-filter:blur(36px) saturate(145%)}
+html[data-theme="night"] aside#side,html[data-theme="night"] aside#inspector{background:rgb(10 10 11/.88);-webkit-backdrop-filter:blur(30px) saturate(125%);backdrop-filter:blur(30px) saturate(125%)}
+aside#side{width:266px;flex-basis:266px;border-inline-end:1px solid var(--line-soft)}
+aside#inspector{width:286px;flex-basis:286px;border-inline-start:1px solid var(--line-soft)}
+html[dir="rtl"] aside#inspector,html[dir="ltr"] aside#inspector{margin:0;border-radius:0}
+.sidebar-head,.inspector-head{height:52px;padding:0 8px;align-items:center}
+.brand-mark{display:none}.sidebar-head>span:last-child{display:block}.sidebar-head strong{font:650 .82rem/1 var(--ui)}.sidebar-head small{display:none}
+.inspector-head strong{font:650 .82rem/1 var(--ui)}.inspector-head button{width:26px;height:26px;background:transparent;transition:background-color 120ms ease,color 120ms ease,transform 100ms var(--ease-press)}.inspector-head button:hover{background:var(--fill-hover);color:var(--ink)}.inspector-head button:active{transform:scale(.92)}
+.sidebar-search{height:30px;margin:3px 0 14px;border-radius:8px;padding:0 8px;background:var(--fill);border-color:transparent;box-shadow:inset 0 0 0 1px var(--line-soft);-webkit-backdrop-filter:none;backdrop-filter:none}
+#side h2,#inspector h2{margin-inline:7px;font-size:.68rem}#side nav a,#inspector nav a{padding:5px 8px;border-radius:7px;font-size:.78rem;line-height:1.42}
+.inspector-tabs{margin-top:3px;margin-bottom:16px;border-radius:9px}.inspector-tabs button{height:25px;border-radius:7px}
+header{height:52px;padding:8px 12px;align-items:flex-start;background:transparent}
+header::after{inset:26px 0 -18px}
+.toolbar-group{height:36px;padding:3px;border-radius:12px;gap:1px;box-shadow:inset 0 .5px 0 rgb(255 255 255/.30),inset 0 0 0 .5px var(--line-soft),0 7px 20px -15px rgb(0 0 0/.55)}
+.toolbar-actions{gap:7px}.toolbar-divider{height:17px;margin:0 1px}
+.iconbtn{width:28px;min-width:28px;height:28px;border-radius:8px}.iconbtn svg{width:15px;height:15px;stroke-width:1.65}
+.window-title{top:6px;height:40px;gap:2px}.window-title .fname{font-size:.78rem}.window-title .meta{font-size:.63rem}
+.reading-pane{min-height:100dvh;margin-top:-52px;padding-top:52px}
+article#doc{padding-top:48px}
+.panel{top:48px;width:340px;max-height:calc(100dvh - 56px);border-radius:16px;padding:15px}.panel .grp{margin-bottom:15px}.panel .lbl{font-size:.66rem}.preset-list button{min-height:66px;border-radius:10px}.themes button{height:36px;border-radius:9px}.sel,.rowbtn,.seg,.seg button{border-radius:8px}
+.menu{border-radius:12px;min-width:196px;padding:5px}.menu button{min-height:30px;border-radius:7px}
+
 @media (min-width:821px){#sidebtn{display:inline-flex}}
 @container (max-width:760px){#openbtn,#focusbtn{display:none}.window-title{max-width:28cqw}.window-title .fname,.window-title-meta{max-width:28cqw}}
 @container (max-width:520px){#gearbtn{display:none}.window-title-meta{display:none}.window-title{max-width:34cqw}.window-title .fname{max-width:34cqw}}
