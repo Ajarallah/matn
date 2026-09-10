@@ -15,6 +15,7 @@ await mkdir(join(root, "docs"));
 await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n```mermaid\ngraph TD; A-->B\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
+await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -369,8 +370,51 @@ try {
   const after = await reading.evaluate(() => ({ folds: document.querySelectorAll(".fold-region.collapsed").length, scroll: Math.round(document.querySelector("main").scrollTop) }));
   assert.equal(after.folds, before.folds, "a live reload dropped the collapsed section");
   assert.ok(Math.abs(after.scroll - before.scroll) < 24, `a live reload moved the reader ${Math.abs(after.scroll - before.scroll)}px`);
+
+  // The outline is a wall on a long document. Filtering it uses the same Arabic
+  // normalisation the library search uses, so an unhamzated query still lands.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "outline.md"))}`);
+  await reading.waitForSelector("#toc a");
+  assert.equal(await reading.locator("#tocfilter").isVisible(), true);
+  assert.equal(await reading.locator("#toc-count").innerText(), "13");
+  await reading.locator("#tocfilter").fill("الاعدادات");
+  await reading.waitForFunction(() => document.querySelector("#toc-count").textContent === "1/13");
+  assert.deepEqual(await reading.locator("#toc a:visible").allInnerTexts(), ["الإعدادات"]);
+  await reading.locator("#tocfilter").fill("zzz");
+  await reading.waitForSelector("#tocempty:visible");
+  assert.equal(await reading.locator("#tocempty").innerText(), "لا عنوان مطابق");
+  // Escape clears the field rather than closing the inspector out from under it
+  await reading.locator("#tocfilter").press("Escape");
+  await reading.waitForFunction(() => document.querySelectorAll("#toc a:not([style*='none'])").length === 13);
+  assert.equal(await reading.locator("#inspector").isVisible(), true);
+  // a short outline is not worth a filter box
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#toc a");
+  assert.equal(await reading.locator("#tocfilter").isVisible(), false);
+
+  // The shortcuts all worked already; none of them were written down anywhere.
+  await reading.keyboard.press("?");
+  await reading.waitForSelector("#shortcutdialog[open]");
+  assert.equal(await reading.locator("#shortcutlist dt").count(), 10);
+  assert.equal(await reading.locator("#shortcutlist dd").last().innerText(), "هذه القائمة");
+  // key pairs read left to right even in the Arabic interface, as macOS does
+  assert.equal(await reading.locator("#shortcutlist dt").first().evaluate((el) => getComputedStyle(el).direction), "ltr");
+  await reading.locator("#shortcutclose").click();
+  await reading.waitForFunction(() => !document.querySelector("#shortcutdialog").open);
+  // and a "?" typed into a field is just a question mark
+  await reading.locator("#tocfilter").evaluate((el) => { el.style.display = "block"; el.focus(); });
+  await reading.keyboard.press("?");
+  assert.equal(await reading.locator("#shortcutdialog").evaluate((el) => el.open), false);
+  // the keystroke is undiscoverable on its own, so the settings panel opens it too
+  await reading.keyboard.press("Escape");
+  await reading.locator("#gearbtn").click();
+  await reading.waitForSelector("#panel.open");
+  await reading.locator("#shortcutbtn").click();
+  await reading.waitForSelector("#shortcutdialog[open]");
+  assert.equal(await reading.locator("#panel").evaluate((el) => el.classList.contains("open")), false);
+  await reading.locator("#shortcutclose").click();
   await readingContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, and live-reload state passed");
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, and shortcut sheet passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

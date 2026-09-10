@@ -20,6 +20,7 @@ const VENDOR = join(PKG, "vendor");
 const INDEX = readFileSync(join(HERE, "index.html"), "utf8");
 const MARKED = readFileSync(join(VENDOR, "marked.min.js"), "utf8");
 const RENDER_CORE = readFileSync(join(HERE, "render-core.cjs"), "utf8");
+const SEARCH_CORE = readFileSync(join(HERE, "search-core.cjs"), "utf8");
 const ANNOTATION_CORE = readFileSync(join(HERE, "annotation-core.cjs"), "utf8");
 const RENDER_WORKER = readFileSync(join(HERE, "render-worker.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
@@ -362,6 +363,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/") return send(200, "text/html; charset=utf-8", serverIndex, { "cache-control": "no-store" });
     if (u.pathname === "/marked.js") return send(200, "text/javascript; charset=utf-8", MARKED);
     if (u.pathname === "/render-core.js") return send(200, "text/javascript; charset=utf-8", RENDER_CORE);
+    if (u.pathname === "/search-core.js") return send(200, "text/javascript; charset=utf-8", SEARCH_CORE);
     if (u.pathname === "/annotation-core.js") return send(200, "text/javascript; charset=utf-8", ANNOTATION_CORE);
     if (u.pathname === "/render-worker.js") return send(200, "text/javascript; charset=utf-8", RENDER_WORKER);
     if (u.pathname === "/highlight.js") return send(200, "text/javascript; charset=utf-8", HLJS);

@@ -111,6 +111,22 @@ body.has-side .document-map{inset-inline-start:288px}
 #side .sec{margin-bottom:26px}
 #side h2,#inspector h2{font-size:var(--text-xs);letter-spacing:.04em;color:var(--muted);margin:0 0 10px;font-weight:700;display:flex;align-items:center;gap:7px}
 .sec-icon{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--ink-soft)}.sec-count{margin-inline-start:auto;color:var(--faint);font:500 var(--text-xs)/1 var(--f-mono)}
+.sec-filter{width:calc(100% - 14px);margin:0 7px 8px;padding:5px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:var(--text-xs);outline:none;transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease)}
+.sec-filter:focus{border-color:var(--accent);background:var(--raised)}
+.sec-filter::-webkit-search-cancel-button{cursor:pointer}
+.sec-empty{margin:0 7px 8px;color:var(--faint);font-size:var(--text-xs)}
+.shortcut-dialog{border:0;padding:0;border-radius:16px;background:var(--raised);color:var(--ink);box-shadow:0 30px 90px -30px rgb(0 0 0/.45);max-width:min(440px,92vw);width:100%}
+.shortcut-dialog::backdrop{background:rgb(0 0 0/.28);backdrop-filter:blur(2px)}
+.shortcut-head{display:flex;align-items:center;gap:10px;padding:16px 18px 8px}
+.shortcut-head h2{margin:0;font-size:var(--text-sm);font-weight:650}
+.shortcut-close{margin-inline-start:auto;min-width:28px;min-height:28px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.shortcut-close:hover{background:var(--surface);color:var(--ink)}
+.shortcut-list{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;padding:4px 18px 20px;font-size:var(--text-sm);align-items:baseline}
+.shortcut-list dt{justify-self:start;display:flex;gap:4px;direction:ltr}
+.shortcut-list dd{margin:0;color:var(--muted)}
+#shortcutbtn{display:flex;align-items:center;justify-content:center;gap:6px}
+#shortcutbtn kbd{min-width:18px;padding:1px 5px;border:1px solid var(--line);border-radius:5px;background:var(--surface);font:600 .8em/1.3 var(--f-mono);direction:ltr}
+.shortcut-list kbd{display:inline-block;min-width:20px;padding:2px 6px;border:1px solid var(--line);border-block-end-width:2px;border-radius:6px;background:var(--surface);color:var(--ink);font:600 .78em/1.35 var(--f-mono);text-align:center;direction:ltr}
 #side nav a{display:block;padding:6px 10px;border-radius:var(--r-sm);color:var(--ink-soft);text-decoration:none;
   margin-bottom:1px;word-break:break-word;font-size:var(--text-sm);line-height:1.55;
   transition:background var(--dur) var(--ease),color var(--dur) var(--ease)}
@@ -576,7 +592,7 @@ article#doc{padding-top:48px}
     <button role="tab" data-inspector-tab="notes" aria-selected="false" data-i18n="notes">الملاحظات</button>
     <button role="tab" data-inspector-tab="info" aria-selected="false" data-i18n="info">المعلومات</button>
   </div>
-	  <div class="sec inspector-outline" id="toc-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i18n="contents">المحتويات</span><span class="sec-count" id="toc-count"></span></h2><nav id="toc"></nav></div>
+	  <div class="sec inspector-outline" id="toc-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-i18n="contents">المحتويات</span><span class="sec-count" id="toc-count"></span></h2><input class="sec-filter" id="tocfilter" type="search" autocomplete="off" spellcheck="false" placeholder="رشّح العناوين…" aria-label="رشّح العناوين" aria-controls="toc" style="display:none"><p class="sec-empty" id="tocempty" role="status" style="display:none"></p><nav id="toc"></nav></div>
 	  <div class="sec inspector-notes" id="annotations-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span data-i18n="annotations">الملاحظات والتظليل</span><span class="sec-count" id="annotations-count"></span></h2><nav id="annotations"></nav></div>
 	  <div class="sec inspector-info" id="backlinks-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8.5 12h7"/></svg><span data-i18n="backlinks">روابط واردة</span><span class="sec-count" id="backlinks-count"></span></h2><nav id="backlinks"></nav></div>
 	  <div class="sec inspector-info" id="health-sec" style="display:none"><h2><svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.2-2.9 7.9-7 9-4.1-1.1-7-4.8-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="documentHealth">سلامة المستند</span><span class="sec-count" id="health-count"></span></h2><div id="health" aria-live="polite"></div></div>
@@ -590,6 +606,10 @@ article#doc{padding-top:48px}
 <dialog class="trash-dialog" id="trashdialog" role="alertdialog" aria-labelledby="trashtitle" aria-describedby="trashwarning">
   <div class="trash-body"><h2 id="trashtitle">نقل الملف إلى سلة المهملات؟</h2><div class="trash-path" id="trashpath"></div><p class="trash-warning" id="trashwarning"></p><div class="trash-error" id="trasherror" role="alert"></div></div>
   <div class="trash-actions"><button class="secondary" id="trashcancel" autofocus>إلغاء</button><button class="danger-btn" id="trashconfirm">نقل إلى السلة</button></div>
+</dialog>
+<dialog class="shortcut-dialog" id="shortcutdialog" aria-labelledby="shortcuttitle">
+  <div class="shortcut-head"><h2 id="shortcuttitle" data-i18n="shortcuts">اختصارات لوحة المفاتيح</h2><button class="shortcut-close" id="shortcutclose" type="button" aria-label="إغلاق">&times;</button></div>
+  <dl class="shortcut-list" id="shortcutlist"></dl>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="selection-tools" id="selectiontools" role="toolbar" aria-label="إجراءات التحديد"><span class="selection-colors" id="selectioncolors" role="group"><button type="button" data-selection-color="yellow"></button><button type="button" data-selection-color="green"></button><button type="button" data-selection-color="blue"></button><button type="button" data-selection-color="rose"></button></span><span class="selection-sep" aria-hidden="true"></span><button type="button" data-selection-action="note"><svg class="selection-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span data-selection-label>إضافة ملاحظة</span></button><button type="button" data-selection-action="favorite"><svg class="selection-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4.1 5.8-.9z"/></svg><span data-selection-label>مفضلة</span></button><button type="button" data-selection-action="copy"><svg class="selection-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span data-selection-label>نسخ مقتطف</span></button></div>
@@ -632,6 +652,7 @@ article#doc{padding-top:48px}
     <div class="seg" id="align">
       <button data-align-val="start" data-i18n="alignStart">من اليمين</button><button data-align-val="justify" data-i18n="alignJustify">ضبط الأسطر</button>
     </div></div>
+  <button class="reset" id="shortcutbtn" type="button"><span data-i18n="shortcuts">اختصارات لوحة المفاتيح</span> <kbd>?</kbd></button>
   <button class="reset" id="reset">إعادة الضبط الافتراضي</button>
 </div>
 
@@ -661,6 +682,7 @@ article#doc{padding-top:48px}
 <script src="/marked-footnote.js"></script>
 <script src="/highlight.js"></script>
 <script src="/render-core.js"></script>
+<script src="/search-core.js"></script>
 <script src="/annotation-core.js"></script>
 <script>
 "use strict";
@@ -672,8 +694,8 @@ var FONTS={system:"-apple-system,'SF Arabic','Geeza Pro','Noto Sans Arabic',sans
 var DEF={theme:"system",font:"system",size:18,lh:1.85,measure:112,align:"start",lang:"ar",focus:false,preset:"custom"};
 var PRESETS={article:{font:"naskh",size:19,lh:1.9,measure:96,align:"start"},academic:{font:"amiri",size:17,lh:1.75,measure:96,align:"justify"},docs:{font:"plex",size:16,lh:1.7,measure:112,align:"start"},long:{font:"naskh",size:20,lh:2,measure:80,align:"start"}};
 var I18N={
- ar:{footnotes:"الحواشي",open:"فتح",navigate:"تنقّل",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",align:"محاذاة النص",alignStart:"من اليمين",alignJustify:"ضبط الأسطر",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",backlinks:"روابط واردة",favorites:"المفضلة",later:"أكمل لاحقًا",annotations:"التعليقات",highlight:"تمييز",addNote:"إضافة ملاحظة",save:"حفظ",back:"رجوع",forward:"تقدّم",fileActions:"إجراءات الملف",openEditor:"فتح في المحرر",reveal:"إظهار في المجلد",copyPath:"نسخ المسار",moveTrash:"نقل إلى سلة المهملات",cancel:"إلغاء",confirmTrash:"نقل إلى السلة",trashTitle:"نقل الملف إلى سلة المهملات؟",trashSafe:"يمكن استعادة الملف من سلة النظام.",trashTracked:"هذا الملف متعقب في Git؛ سيظهر حذفه ضمن تغييرات المستودع.",trashLinked:"تشير إليه ملفات أخرى: ",trashDone:"نُقل الملف إلى سلة المهملات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية",quickFiles:"انتقال إلى ملف",quickSearch:"بحث في المجلد",quickFilesPh:"اكتب اسم ملف أو اسمًا بديلًا…",quickSearchPh:"ابحث في جميع المستندات…",indexing:"جارٍ فهرسة المجلد…",noResults:"لا توجد نتائج",homeKicker:"مساحة القراءة المحلية",homeTitle:"عد إلى ملفاتك من حيث توقفت",homeCopy:"اقرأ ملفات Markdown وتنقّل بينها دون استيراد أو حساب أو تعديل محتواها.",continueReading:"متابعة القراءة",openWorkspace:"فتح المجلد الحالي",recentFiles:"ملفات قرأتها مؤخرًا",recentFolders:"المجلدات الأخيرة",currentFolder:"المجلد الحالي"},
- en:{footnotes:"Footnotes",open:"Open",navigate:"Navigate",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",align:"Alignment",alignStart:"Start",alignJustify:"Justify",reset:"Reset to defaults",contents:"Contents",files:"Files",backlinks:"Backlinks",favorites:"Favorites",later:"Read later",annotations:"Annotations",highlight:"Highlight",addNote:"Add note",save:"Save",back:"Back",forward:"Forward",fileActions:"File actions",openEditor:"Open in editor",reveal:"Reveal in folder",copyPath:"Copy path",moveTrash:"Move to Trash",cancel:"Cancel",confirmTrash:"Move to Trash",trashTitle:"Move file to Trash?",trashSafe:"You can restore the file from the system Trash.",trashTracked:"This file is tracked by Git; its removal will appear in repository changes.",trashLinked:"Other files link to it: ",trashDone:"File moved to Trash",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter",quickFiles:"Go to file",quickSearch:"Search folder",quickFilesPh:"Type a file name or alias…",quickSearchPh:"Search every document…",indexing:"Indexing folder…",noResults:"No results",homeKicker:"Your local reading space",homeTitle:"Return to your files where you left off",homeCopy:"Read and navigate Markdown without imports, accounts, or content changes.",continueReading:"Continue reading",openWorkspace:"Open current folder",recentFiles:"Recently read files",recentFolders:"Recent folders",currentFolder:"Current folder"}};
+ ar:{footnotes:"الحواشي",scLibrary:"ابحث في المكتبة",scSearchAll:"ابحث في كل الملفات",scFind:"ابحث في المستند",scFocus:"وضع التركيز",scSize:"حجم الخط",scTop:"إلى أعلى المستند",scBottom:"إلى آخر المستند",scBack:"رجوع وتقدّم",scClose:"أغلق اللوحة المفتوحة",scHelp:"هذه القائمة",filterHeadings:"رشّح العناوين…",noHeadingMatch:"لا عنوان مطابق",shortcuts:"اختصارات لوحة المفاتيح",open:"فتح",navigate:"تنقّل",export:"حفظ",print:"طباعة",settings:"الإعدادات",live:"حيّ",uilang:"لغة الواجهة",theme:"السمة",font:"الخط",size:"حجم الخط",lh:"تباعد الأسطر",width:"عرض النص",narrow:"ضيّق",mid:"متوسط",wide:"واسع",align:"محاذاة النص",alignStart:"من اليمين",alignJustify:"ضبط الأسطر",reset:"إعادة الضبط الافتراضي",contents:"المحتويات",files:"الملفات",backlinks:"روابط واردة",favorites:"المفضلة",later:"أكمل لاحقًا",annotations:"التعليقات",highlight:"تمييز",addNote:"إضافة ملاحظة",save:"حفظ",back:"رجوع",forward:"تقدّم",fileActions:"إجراءات الملف",openEditor:"فتح في المحرر",reveal:"إظهار في المجلد",copyPath:"نسخ المسار",moveTrash:"نقل إلى سلة المهملات",cancel:"إلغاء",confirmTrash:"نقل إلى السلة",trashTitle:"نقل الملف إلى سلة المهملات؟",trashSafe:"يمكن استعادة الملف من سلة النظام.",trashTracked:"هذا الملف متعقب في Git؛ سيظهر حذفه ضمن تغييرات المستودع.",trashLinked:"تشير إليه ملفات أخرى: ",trashDone:"نُقل الملف إلى سلة المهملات",findph:"بحث في المستند…",none:"لا نتائج",copy:"نسخ",copied:"✓ نُسخ",min:"دقيقة",words:"كلمة",failed:"تعذّر فتح الملف",thmanyahNote:"ثمانية · نص + عناوين Display (يتطلّب تنزيله)",drop:"أفلِت ملف Markdown هنا",frontmatter:"البيانات الوصفية",quickFiles:"انتقال إلى ملف",quickSearch:"بحث في المجلد",quickFilesPh:"اكتب اسم ملف أو اسمًا بديلًا…",quickSearchPh:"ابحث في جميع المستندات…",indexing:"جارٍ فهرسة المجلد…",noResults:"لا توجد نتائج",homeKicker:"مساحة القراءة المحلية",homeTitle:"عد إلى ملفاتك من حيث توقفت",homeCopy:"اقرأ ملفات Markdown وتنقّل بينها دون استيراد أو حساب أو تعديل محتواها.",continueReading:"متابعة القراءة",openWorkspace:"فتح المجلد الحالي",recentFiles:"ملفات قرأتها مؤخرًا",recentFolders:"المجلدات الأخيرة",currentFolder:"المجلد الحالي"},
+ en:{footnotes:"Footnotes",scLibrary:"Search the library",scSearchAll:"Search every file",scFind:"Find in this document",scFocus:"Focus mode",scSize:"Font size",scTop:"Jump to the top",scBottom:"Jump to the end",scBack:"Back and forward",scClose:"Close whatever is open",scHelp:"This list",filterHeadings:"Filter headings…",noHeadingMatch:"No matching heading",shortcuts:"Keyboard shortcuts",open:"Open",navigate:"Navigate",export:"Save",print:"Print",settings:"Settings",live:"Live",uilang:"UI language",theme:"Theme",font:"Font",size:"Font size",lh:"Line height",width:"Text width",narrow:"Narrow",mid:"Medium",wide:"Wide",align:"Alignment",alignStart:"Start",alignJustify:"Justify",reset:"Reset to defaults",contents:"Contents",files:"Files",backlinks:"Backlinks",favorites:"Favorites",later:"Read later",annotations:"Annotations",highlight:"Highlight",addNote:"Add note",save:"Save",back:"Back",forward:"Forward",fileActions:"File actions",openEditor:"Open in editor",reveal:"Reveal in folder",copyPath:"Copy path",moveTrash:"Move to Trash",cancel:"Cancel",confirmTrash:"Move to Trash",trashTitle:"Move file to Trash?",trashSafe:"You can restore the file from the system Trash.",trashTracked:"This file is tracked by Git; its removal will appear in repository changes.",trashLinked:"Other files link to it: ",trashDone:"File moved to Trash",findph:"Find in document…",none:"No matches",copy:"Copy",copied:"✓ Copied",min:"min",words:"words",failed:"Could not open the file",thmanyahNote:"Thmanyah · Text + Display headings (download required)",drop:"Drop a Markdown file here",frontmatter:"Frontmatter",quickFiles:"Go to file",quickSearch:"Search folder",quickFilesPh:"Type a file name or alias…",quickSearchPh:"Search every document…",indexing:"Indexing folder…",noResults:"No results",homeKicker:"Your local reading space",homeTitle:"Return to your files where you left off",homeCopy:"Read and navigate Markdown without imports, accounts, or content changes.",continueReading:"Continue reading",openWorkspace:"Open current folder",recentFiles:"Recently read files",recentFolders:"Recent folders",currentFolder:"Current folder"}};
 Object.assign(I18N.ar,{readingMode:"نمط القراءة",presetArticle:"مقالة",presetArticleDesc:"للمقالات والتدوينات؛ خط مريح وعرض متوسط.",presetAcademic:"بحث",presetAcademicDesc:"للأوراق والبحوث؛ نص أكثف ومحاذاة مضبوطة.",presetDocs:"توثيق",presetDocsDesc:"للأدلة التقنية؛ خط حديث ومساحة أوسع للكود.",presetLong:"نص طويل",presetLongDesc:"للكتب والتقارير؛ سطر أضيق وتباعد أريح.",annotations:"الملاحظات والتظليل",actionFavorite:"حفظ في المفضلة",actionLater:"إضافة إلى «أكمل لاحقًا»",liveDesc:"يتابع تغييرات الملف تلقائيًا",liveConnected:"التحديث التلقائي متصل",liveDisconnected:"التحديث التلقائي غير متصل",mapLabel:"خريطة المستند",mapOpen:"فتح جميع العناوين",mapClose:"إغلاق العناوين",foldSection:"طي القسم",expandSection:"توسيع القسم",highlightSaved:"حُفظ التمييز",favoriteSaved:"حُفظ المقتطف في المفضلة",noteSaved:"حُفظت الملاحظة",copyFailed:"تعذّر النسخ إلى الحافظة"});
 Object.assign(I18N.en,{readingMode:"Reading mode",presetArticle:"Article",presetArticleDesc:"For articles and posts; comfortable type and a medium measure.",presetAcademic:"Research",presetAcademicDesc:"For papers and research; denser text with justified lines.",presetDocs:"Documentation",presetDocsDesc:"For technical guides; modern type and more room for code.",presetLong:"Long-form",presetLongDesc:"For books and reports; a narrower measure and relaxed spacing.",annotations:"Notes & highlights",actionFavorite:"Save to favorites",actionLater:"Add to Read later",liveDesc:"Watches the file for changes automatically",liveConnected:"Automatic updates connected",liveDisconnected:"Automatic updates disconnected",mapLabel:"Document map",mapOpen:"Open all headings",mapClose:"Close headings",foldSection:"Collapse section",expandSection:"Expand section",highlightSaved:"Highlight saved",favoriteSaved:"Excerpt saved to favorites",noteSaved:"Note saved",copyFailed:"Could not copy to the clipboard"});
 Object.assign(I18N.ar,{largeProcessing:"مستند كبير؛ جارٍ تجهيزه للقراءة دون تجميد الواجهة…",largeMode:"وضع المستند الكبير: تُحمّل الأجزاء التالية أثناء التمرير للمحافظة على استجابة الواجهة.",largeMore:"تحميل الجزء التالي"});
@@ -727,6 +749,7 @@ function applyLang(){
   var els=document.querySelectorAll("[data-i18n]");
   for(var i=0;i<els.length;i++)els[i].textContent=T(els[i].getAttribute("data-i18n"));
   var fi=$("findinput");if(fi)fi.setAttribute("placeholder",T("findph"));
+  var tf=$("tocfilter");if(tf){tf.setAttribute("placeholder",T("filterHeadings"));tf.setAttribute("aria-label",T("filterHeadings"));}
   var dz=$("dropzone");if(dz)dz.textContent=T("drop");
 	  var bb=$("backbtn"),fb=$("forwardbtn");if(bb){bb.setAttribute("aria-label",T("back"));bb.title=T("back");}if(fb){fb.setAttribute("aria-label",T("forward"));fb.title=T("forward");}
 	  var ab=$("actionsbtn");if(ab){ab.setAttribute("aria-label",T("fileActions"));ab.title=T("fileActions");}
@@ -853,8 +876,61 @@ function buildToc(doc){
 	  for(var i=0;i<hs.length;i++){var h=hs[i],level=h.tagName.charAt(1),text=h.dataset.title||h.textContent.trim(),button=document.createElement("button"),tocLink=document.createElement("a");button.type="button";button.textContent=text;button.className="level-"+level;button.dataset.id=h.id;button.onclick=function(){jump(this.dataset.id);};list.appendChild(button);tocLink.href="#"+h.id;tocLink.textContent=text;tocLink.className="lvl"+level;tocLink.dataset.id=h.id;tocLink.onclick=function(e){e.preventDefault();jump(this.dataset.id);};$("toc").appendChild(tocLink);mapHeadingControls[h.id]=[button,tocLink];}
 	  for(var j=0;j<hs.length;j+=step){var group=hs.slice(j,j+step),mark=document.createElement("button"),level=group[0].tagName.charAt(1),label=group.map(function(h){return h.dataset.title||h.textContent.trim();}).join(" — ");mark.type="button";mark.className="map-mark level-"+level;mark.dataset.id=group[0].id;mark.dataset.label=label;mark.setAttribute("aria-label",label);mark.onmouseenter=function(){showMapPeek(this);};mark.onmouseleave=hideMapPeek;mark.onfocus=function(){showMapPeek(this);};mark.onblur=hideMapPeek;mark.onclick=function(){jump(this.dataset.id);};for(var k=0;k<group.length;k++)mapHeadingControls[group[k].id].push(mark);marks.appendChild(mark);}
 	  if($("toc-count"))$("toc-count").textContent=String(hs.length);
+	  resetTocFilter(hs.length);
 	  $("toc-sec").style.display="block";
 	  syncSide();return hs;
+}
+function normalizeQuery(value){
+  return window.MatnSearch?MatnSearch.normalizeSearch(value):String(value||"").toLowerCase();
+}
+// Long documents make the outline a wall. Filtering it is the cheapest way to reach
+// a section by name; the field only appears once scanning by eye stops being viable.
+var TOC_FILTER_FROM=8;
+function applyTocFilter(){
+  var field=$("tocfilter");if(!field)return;
+  var query=normalizeQuery(field.value.trim()),links=$("toc").querySelectorAll("a"),shown=0;
+  for(var i=0;i<links.length;i++){
+    var hit=!query||normalizeQuery(links[i].textContent).indexOf(query)>=0;
+    links[i].style.display=hit?"":"none";
+    if(hit)shown++;
+  }
+  var empty=$("tocempty");
+  if(empty){empty.textContent=T("noHeadingMatch");empty.style.display=query&&!shown?"block":"none";}
+  if($("toc-count"))$("toc-count").textContent=query?shown+"/"+links.length:String(links.length);
+}
+function resetTocFilter(count){
+  var field=$("tocfilter");if(!field)return;
+  field.value="";
+  field.style.display=count>=TOC_FILTER_FROM?"block":"none";
+  var empty=$("tocempty");if(empty)empty.style.display="none";
+}
+var mac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);
+var SHORTCUTS=[
+  [[mac?"\u2318":"Ctrl","K"],"scLibrary"],
+  [[mac?"\u2318":"Ctrl",mac?"\u21e7":"Shift","F"],"scSearchAll"],
+  [["/"],"scFind"],
+  [["F"],"scFocus"],
+  [["+","\u2212"],"scSize"],
+  [["G"],"scTop"],
+  [[mac?"\u21e7":"Shift","G"],"scBottom"],
+  [[mac?"\u2325":"Alt","\u2190","\u2192"],"scBack"],
+  [["Esc"],"scClose"],
+  [["?"],"scHelp"]
+];
+function buildShortcutList(){
+  var list=$("shortcutlist");if(!list)return;
+  list.textContent="";
+  SHORTCUTS.forEach(function(row){
+    var dt=document.createElement("dt");
+    row[0].forEach(function(k){var kbd=document.createElement("kbd");kbd.textContent=k;dt.appendChild(kbd);});
+    var dd=document.createElement("dd");dd.textContent=T(row[1]);
+    list.appendChild(dt);list.appendChild(dd);
+  });
+}
+function openShortcuts(){
+  var dialog=$("shortcutdialog");if(!dialog||dialog.open)return;
+  buildShortcutList();
+  if(dialog.showModal)dialog.showModal();else dialog.setAttribute("open","");
 }
 function readingTimeWords(w){var m=Math.max(1,Math.round(w/200));$("rtime").textContent=w+" "+T("words")+" · "+m+" "+T("min");}
 function readingTime(text){readingTimeWords((text.trim().match(/\S+/g)||[]).length);}
@@ -1080,7 +1156,7 @@ function fallbackFile(files){
 function startItem(title,path,meta,onClick){var b=document.createElement("button");b.type="button";b.className="start-item";b.onclick=onClick;var main=document.createElement("span");main.className="start-item-main";var strong=document.createElement("span");strong.className="start-item-title";strong.textContent=title;var sub=document.createElement("span");sub.className="start-item-path";sub.textContent=path;main.appendChild(strong);main.appendChild(sub);b.appendChild(main);if(meta){var m=document.createElement("span");m.className="start-item-meta";m.textContent=meta;b.appendChild(m);}return b;}
 function renderStart(files){
   if(cur)writeReaderState(cur,capturePosition());cur=null;loadSeq++;setViewMode("rendered");$("actionsbtn").disabled=true;$("fname").textContent="متن · Matn";$("rtime").textContent="";$("chapterboundary").style.display="none";document.title="متن · Matn";
-  var doc=$("doc");doc.className="start";doc.innerHTML="";$("toc-sec").style.display="none";$("backlinks-sec").style.display="none";$("documentmap").style.display="none";syncSide();
+  var doc=$("doc");doc.className="start";doc.innerHTML="";$("toc-sec").style.display="none";resetTocFilter(0);$("backlinks-sec").style.display="none";$("documentmap").style.display="none";syncSide();
   var hero=document.createElement("section");hero.className="start-hero";var kicker=document.createElement("div");kicker.className="start-kicker";kicker.textContent=T("homeKicker");var title=document.createElement("h1");title.className="start-title";title.textContent=T("homeTitle");var copy=document.createElement("p");copy.className="start-copy";copy.textContent=T("homeCopy");hero.appendChild(kicker);hero.appendChild(title);hero.appendChild(copy);
   var actions=document.createElement("div");actions.className="start-actions";var next=fallbackFile(files);if(readerState.workspace.lastFile&&next===readerState.workspace.lastFile){var resume=document.createElement("button");resume.type="button";resume.className="primary";resume.appendChild(document.createTextNode(T("continueReading")+" · "));var resumeName=document.createElement("bdi");resumeName.textContent=base(next);resume.appendChild(resumeName);resume.onclick=function(){loadFile(next);};actions.appendChild(resume);}var open=document.createElement("button");open.type="button";open.className=actions.childNodes.length?"secondary":"primary";open.textContent=T("openWorkspace");open.onclick=function(){if(next)loadFile(next);};actions.appendChild(open);hero.appendChild(actions);doc.appendChild(hero);
   var positions=readerState.workspace.positions||{};var recent=files.filter(function(f){return positions[f.rel];}).sort(function(a,b){return positions[b.rel].updatedAt-positions[a.rel].updatedAt;}).slice(0,6);
@@ -1270,6 +1346,19 @@ function findNav(d){if(!hits.length)return;hitIdx=(hitIdx+d+hits.length)%hits.le
 function openFind(){findbar.classList.add("open");findinput.focus();findinput.select();if(findinput.value)doFind(findinput.value);}
 function closeFind(){findbar.classList.remove("open");unwrapFind();findCount();}
 findinput.addEventListener("input",function(){doFind(findinput.value);});
+var shortcutdialog=$("shortcutdialog");
+if(shortcutdialog){
+  $("shortcutbtn").onclick=function(){panel.classList.remove("open");gearbtn.setAttribute("aria-expanded","false");openShortcuts();};
+  $("shortcutclose").onclick=function(){shortcutdialog.close();};
+  shortcutdialog.addEventListener("click",function(e){if(e.target===shortcutdialog)shortcutdialog.close();});
+}
+var tocfilter=$("tocfilter");
+if(tocfilter){
+  tocfilter.addEventListener("input",applyTocFilter);
+  tocfilter.addEventListener("keydown",function(e){
+    if(e.key==="Escape"&&this.value){e.preventDefault();e.stopPropagation();this.value="";applyTocFilter();}
+  });
+}
 findinput.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();findNav(e.shiftKey?-1:1);}else if(e.key==="Escape"){e.preventDefault();closeFind();}});
 $("findnext").onclick=function(){findNav(1);};$("findprev").onclick=function(){findNav(-1);};$("findclose").onclick=closeFind;
 
@@ -1315,6 +1404,7 @@ document.addEventListener("keydown",function(e){
   if(mod&&e.shiftKey&&key==="f"&&workspaceOpen){e.preventDefault();openQuick("all");return;}
   if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT")return;
   if(key==="f"&&!mod&&!e.altKey){e.preventDefault();S.focus=!S.focus;saveS();applyS();return;}
+  if(e.key==="?"){e.preventDefault();openShortcuts();return;}
   if(e.key==="/"){e.preventDefault();openFind();}
   else if(e.key==="+"||e.key==="=")step("size",1,15,28,true)();
   else if(e.key==="-"||e.key==="_")step("size",-1,15,28,true)();
