@@ -14,7 +14,7 @@ const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
 await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n```mermaid\ngraph TD; A-->B\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
-await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
+await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -328,8 +328,22 @@ try {
 
   // the footnote section heading is screen-reader-only and localised, so it belongs
   // to assistive tech — not to the visible outline
-  assert.equal(await reading.locator("#doc h2.sr-only").innerText(), "الحواشي#");
-  assert.deepEqual(await reading.locator("#toc a").allInnerTexts(), ["مقدمة", "Getting Started", "قسم أخير"]);
+  assert.equal(await reading.locator("#doc h2.sr-only").innerText(), "الحواشي");
+  assert.equal(await reading.locator("#doc h2.sr-only .anchor, #doc h2.sr-only .foldbtn").count(), 0);
+  assert.deepEqual(await reading.locator("#toc a").allInnerTexts(), ["مقدمة", "Getting Started", "Node.js والتشغيل المحلي", "قسم أخير"]);
+
+  // an Arabic document stays right-to-left, but a block written entirely in the other
+  // script reads in its own direction — otherwise its closing period lands at the
+  // start of the line. A heading with a Latin word or two must not flip.
+  assert.equal(await reading.locator("#doc p", { hasText: "This whole paragraph" }).evaluate((el) => getComputedStyle(el).direction), "ltr");
+  assert.equal(await reading.locator("#doc p", { hasText: "انظر" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+  assert.equal(await reading.locator("#doc h2", { hasText: "Getting Started" }).evaluate((el) => getComputedStyle(el).direction), "ltr");
+  assert.equal(await reading.locator("#doc h2", { hasText: "والتشغيل المحلي" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+
+  // Arabic runs inside code are isolated: without <bdi> the neutral `= "` between two
+  // Arabic runs joins them and the assignment renders back to front.
+  assert.equal(await reading.locator("#doc pre code bdi").first().innerText(), "مرحبا");
+  assert.equal(await reading.locator("#doc pre code").first().innerText().then((t) => t.trim()), 'const مرحبا = "أهلا";');
 
   // every standalone control clears the 24×24 floor; links inside a sentence are
   // exempt by WCAG 2.5.8 and are excluded here for that reason
