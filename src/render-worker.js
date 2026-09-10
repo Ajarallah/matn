@@ -17,7 +17,7 @@ if (self.marked && marked.use) {
       },
     }] });
   } catch {}
-  try { if (self.markedFootnote) marked.use(markedFootnote()); } catch {}
+  try { if (self.markedFootnote) marked.use(markedFootnote({ description: new URL(self.location.href).searchParams.get("footnotes") || "Footnotes" })); } catch {}
 }
 
 self.onmessage = (event) => {
