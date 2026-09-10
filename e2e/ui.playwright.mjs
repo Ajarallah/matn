@@ -16,6 +16,7 @@ await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية 
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
+await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -413,8 +414,26 @@ try {
   await reading.waitForSelector("#shortcutdialog[open]");
   assert.equal(await reading.locator("#panel").evaluate((el) => el.classList.contains("open")), false);
   await reading.locator("#shortcutclose").click();
+
+  // EPUB is XHTML. The DOM serialises HTML5, so <hr>, <br>, <img> and the task-list
+  // <input> came out unclosed and a conforming reader rejected the file outright.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "epub.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  const chapter = await reading.evaluate(() => {
+    const dir = document.querySelector("#doc").getAttribute("dir") || "rtl";
+    const body = toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>", ""));
+    return `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" dir="${dir}"><head><title>t</title></head><body>${body}</body></html>`;
+  });
+  assert.equal(await reading.evaluate((xml) => {
+    const parsed = new DOMParser().parseFromString(xml, "application/xhtml+xml");
+    const error = parsed.querySelector("parsererror");
+    return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
+  }, chapter), "", "the EPUB chapter is not well-formed XHTML");
+  assert.match(chapter, /<hr\s*\/>/);
+  assert.match(chapter, /<br\s*\/>/);
+  assert.match(chapter, /<img[^>]*\/>/);
   await readingContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, and shortcut sheet passed");
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, and EPUB well-formedness passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

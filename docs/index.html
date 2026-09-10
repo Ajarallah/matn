@@ -1443,6 +1443,11 @@ $("findnext").onclick=function(){findNav(1);};$("findprev").onclick=function(){f
 var DOCX_SRC="./vendor/html-docx.min.js",ZIP_SRC="./vendor/jszip.min.js";
 function fname(ext){return (base(cur)||$("fname").textContent||"matn").replace(MARKDOWN_RE,"")+"."+ext;}
 function saveBlob(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);}
+function toXhtmlBody(html){
+  var parsed=new DOMParser().parseFromString("<body>"+html+"</body>","text/html");
+  var body=new XMLSerializer().serializeToString(parsed.body);
+  return body.replace(/^<body[^>]*>/,"").replace(/<\/body>$/,"");
+}
 function docHTML(){
   var dir=$("doc").getAttribute("dir")||"rtl";
   var css="body{font-family:"+(FONTS[S.font]||FONTS.system)+";line-height:"+S.lh+";font-size:"+S.size+"px;max-width:46em;margin:2em auto;padding:0 1.5em;color:#1b1a17;background:#fff}pre{direction:ltr;text-align:left;background:#f4f3ee;padding:1em;border-radius:8px;overflow-x:auto}code{background:#eee;padding:.1em .35em;border-radius:4px}blockquote{border-inline-start:2px solid #999;margin-inline-start:0;padding:.2em 1em;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.4em .8em}img,svg{max-width:100%}";
@@ -1456,7 +1461,7 @@ function doExport(kind){
   if(kind==="docx"){loadScriptOnce(DOCX_SRC).then(function(){saveBlob(window.htmlDocx.asBlob(docHTML()),fname("docx"));}).catch(function(){});return;}
   if(kind==="epub"){loadScriptOnce(ZIP_SRC).then(function(){
     var dir=$("doc").getAttribute("dir")||"rtl",title=esc($("fname").textContent);
-    var xhtml='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" dir="'+dir+'"><head><title>'+title+'</title></head><body>'+docHTML().split("<body>")[1].replace("</body></html>","")+"</body></html>";
+    var xhtml='<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="'+(dir==="rtl"?"ar":"en")+'" lang="'+(dir==="rtl"?"ar":"en")+'" dir="'+dir+'"><head><title>'+title+'</title></head><body>'+toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>",""))+"</body></html>";
     var zip=new window.JSZip();
     zip.file("mimetype","application/epub+zip",{compression:"STORE"});
     zip.file("META-INF/container.xml",'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
