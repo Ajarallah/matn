@@ -891,7 +891,12 @@ function blockDir(text,dd){
 }
 function stampDir(root){var dd=$("doc").getAttribute("dir")||"rtl";var n=root.querySelectorAll(SEL);
 	  for(var i=0;i<n.length;i++){var el=n[i];if(el.getAttribute("dir")!=null)continue;
-	    var tag=el.tagName;el.setAttribute("dir",(tag==="TD"||tag==="TH")?"auto":blockDir(el.textContent||"",dd));}}
+	    var tag=el.tagName;
+	    // Headings always follow the document. Flipping one buys nothing — a heading
+	    // has no trailing punctuation to strand — and costs the page its rhythm: the
+	    // heading, its fold chevron and its rule all jump to the opposite margin.
+	    var flow=/^H[1-6]$/.test(tag)?dd:blockDir(el.textContent||"",dd);
+	    el.setAttribute("dir",(tag==="TD"||tag==="TH")?"auto":flow);}}
 function installFolds(doc,headings){
 	  for(var i=headings.length-1;i>=0;i--){(function(h,index){var level=Number(h.tagName.slice(1)),nodes=[],node=h.nextSibling;
 	    while(node){if(node.nodeType===1&&/^H[1-6]$/.test(node.tagName)&&Number(node.tagName.slice(1))<=level)break;nodes.push(node);node=node.nextSibling;}

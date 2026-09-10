@@ -334,13 +334,17 @@ try {
   assert.equal(await reading.locator("#doc h2.sr-only .anchor, #doc h2.sr-only .foldbtn").count(), 0);
   assert.deepEqual(await reading.locator("#toc a").allInnerTexts(), ["مقدمة", "Getting Started", "Node.js والتشغيل المحلي", "قسم أخير"]);
 
-  // an Arabic document stays right-to-left, but a block written entirely in the other
-  // script reads in its own direction — otherwise its closing period lands at the
-  // start of the line. A heading with a Latin word or two must not flip.
+  // an Arabic document stays right-to-left, but a paragraph written entirely in the
+  // other script reads in its own direction — otherwise its closing period lands at
+  // the start of the line.
   assert.equal(await reading.locator("#doc p", { hasText: "This whole paragraph" }).evaluate((el) => getComputedStyle(el).direction), "ltr");
   assert.equal(await reading.locator("#doc p", { hasText: "انظر" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
-  assert.equal(await reading.locator("#doc h2", { hasText: "Getting Started" }).evaluate((el) => getComputedStyle(el).direction), "ltr");
+  // headings are the exception: they carry no trailing punctuation to strand, and a
+  // flipped one drags its fold chevron and its rule to the opposite margin
+  assert.equal(await reading.locator("#doc h2", { hasText: "Getting Started" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
   assert.equal(await reading.locator("#doc h2", { hasText: "والتشغيل المحلي" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+  const headingEdges = await reading.evaluate(() => Array.from(document.querySelectorAll("#doc h2")).filter((h) => !h.classList.contains("sr-only")).map((h) => Math.round(h.getBoundingClientRect().right)));
+  assert.equal(new Set(headingEdges).size, 1, `headings hang off different margins: ${headingEdges.join(", ")}`);
 
   // Arabic runs inside code are isolated: without <bdi> the neutral `= "` between two
   // Arabic runs joins them and the assignment renders back to front.

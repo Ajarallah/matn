@@ -28,6 +28,7 @@
     "src",
     "vendor",
     "scripts",
+    "ARCHITECTURE.md",
     "SECURITY.md",
     "CHANGELOG.md",
     "README.md",
