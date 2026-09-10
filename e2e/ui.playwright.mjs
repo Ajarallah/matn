@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -14,6 +14,7 @@ const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
 await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n```mermaid\ngraph TD; A-->B\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
+await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -300,7 +301,62 @@ try {
   assert.equal(await systemDarkPage.locator("html").getAttribute("data-theme"), "dark");
   assert.equal(await systemDarkPage.locator("html").evaluate((el) => getComputedStyle(el).colorScheme), "dark");
   await systemDarkContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, and mobile drawer passed");
+
+  // The reading surface itself: direction, target sizes, and whether a save from an
+  // editor throws away where the reader was.
+  const readingContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const reading = await readingContext.newPage();
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#doc .katex-display .katex");
+  await reading.waitForSelector("#toc a");
+
+  // display math is centred in the column, not flushed against its edge — a blanket
+  // `.katex{text-align:left}` used to override KaTeX's own centring for display mode
+  const mathOffsets = await reading.evaluate(() => {
+    const inner = document.querySelector(".katex-display .katex .katex-html, .katex-display .katex");
+    const box = inner.getBoundingClientRect(), column = document.querySelector("#doc p").getBoundingClientRect();
+    return { left: box.left - column.left, right: column.right - box.right };
+  });
+  assert.ok(Math.abs(mathOffsets.left - mathOffsets.right) < 24,
+    `display math sits ${Math.round(mathOffsets.left)}px from one edge and ${Math.round(mathOffsets.right)}px from the other`);
+
+  // frontmatter keys and the card's own label are chrome: they read by their own
+  // content, not by whichever direction the document happens to vote for
+  assert.equal(await reading.locator("#doc .frontmatter summary").getAttribute("dir"), "auto");
+  assert.equal(await reading.locator("#doc .frontmatter dt").first().getAttribute("dir"), "auto");
+  assert.equal(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth), 0);
+
+  // the footnote section heading is screen-reader-only and localised, so it belongs
+  // to assistive tech — not to the visible outline
+  assert.equal(await reading.locator("#doc h2.sr-only").innerText(), "الحواشي#");
+  assert.deepEqual(await reading.locator("#toc a").allInnerTexts(), ["مقدمة", "Getting Started", "قسم أخير"]);
+
+  // every standalone control clears the 24×24 floor; links inside a sentence are
+  // exempt by WCAG 2.5.8 and are excluded here for that reason
+  const undersized = await reading.evaluate(() => {
+    const out = [];
+    document.querySelectorAll("#doc button, .sec button, .toolbar button").forEach((el) => {
+      const box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      if (box.width < 24 || box.height < 24) out.push(`${el.className} ${Math.round(box.width)}x${Math.round(box.height)}`);
+    });
+    return out;
+  });
+  assert.deepEqual(undersized, [], `controls under the 24px target floor: ${undersized.join(", ")}`);
+
+  // a save must not cost the reader their collapsed sections or their place
+  await reading.locator("#doc h2 .foldbtn").first().click();
+  await reading.evaluate(() => document.querySelector("main").scrollTo(0, 260));
+  await reading.waitForTimeout(200);
+  const before = await reading.evaluate(() => ({ folds: document.querySelectorAll(".fold-region.collapsed").length, scroll: Math.round(document.querySelector("main").scrollTop) }));
+  assert.equal(before.folds, 1);
+  await writeFile(join(root, "typography.md"), (await readFile(join(root, "typography.md"), "utf8")) + "\nسطر أضافه المحرر.\n");
+  await reading.waitForFunction(() => document.querySelector("#doc").textContent.includes("سطر أضافه المحرر"));
+  const after = await reading.evaluate(() => ({ folds: document.querySelectorAll(".fold-region.collapsed").length, scroll: Math.round(document.querySelector("main").scrollTop) }));
+  assert.equal(after.folds, before.folds, "a live reload dropped the collapsed section");
+  assert.ok(Math.abs(after.scroll - before.scroll) < 24, `a live reload moved the reader ${Math.abs(after.scroll - before.scroll)}px`);
+  await readingContext.close();
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, and live-reload state passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

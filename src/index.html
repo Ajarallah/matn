@@ -986,9 +986,23 @@ function renderBook(){var chapters=bookData.chapters||[];if(!chapters.length){$(
 function loadBook(attempt){fetch("/api/book").then(function(r){return r.ok?r.json():Promise.reject();}).then(function(payload){if(payload.indexing&&attempt<10){setTimeout(function(){loadBook(attempt+1);},100);return;}bookData=payload;renderBook();}).catch(function(){bookData={chapters:[]};renderBook();});}
 $("bookprev").onclick=function(){goBook(bookAt-1);};$("booknext").onclick=function(){goBook(bookAt+1);};
 function loadFile(absPath,options){
-  options=options||{};if(cur){rememberNavPosition();if(cur!==absPath)writeReaderState(cur,capturePosition());}
+  options=options||{};var keep=options.preserve&&cur===absPath?{folds:captureFolds(),scroll:scroller.scrollTop}:null;
+  if(cur){rememberNavPosition();if(cur!==absPath)writeReaderState(cur,capturePosition());}
+// An editor or agent saving the file re-renders the whole document. Without carrying
+// the reading state across, every save throws away collapsed sections and drops the
+// reader to an approximate scroll ratio — measured at ~800px of drift on a 97KB file.
+function captureFolds(){
+  var out=[],nodes=$("doc").querySelectorAll("h1.is-collapsed,h2.is-collapsed,h3.is-collapsed,h4.is-collapsed,h5.is-collapsed,h6.is-collapsed");
+  for(var i=0;i<nodes.length;i++)if(nodes[i].id)out.push(nodes[i].id);
+  return out;
+}
+function restoreFolds(ids){
+  for(var i=0;i<ids.length;i++){var h=document.getElementById(ids[i]);
+    if(!h||h.classList.contains("is-collapsed"))continue;
+    var button=h.querySelector(".foldbtn");if(button)button.click();}
+}
   var seq=++loadSeq;cur=absPath;$("actionsbtn").disabled=false;$("fname").textContent=base(absPath);document.title=base(absPath)+" · متن";
-  fetch("/api/raw?path="+encodeURIComponent(absPath)).then(function(r){if(!r.ok)return Promise.reject();var size=Number(r.headers.get("x-matn-file-size"))||0;return r.text().then(function(md){return{md:md,size:size};});}).then(function(payload){if(seq!==loadSeq)return;return renderSafelyAsync(payload.md,payload.size).then(function(){if(seq!==loadSeq)return;if(viewMode!=="rendered")renderSource(payload.md);applyAnnotations();if(options.record!==false)recordNavigation(absPath,options.anchor);var saved=options.position||(options.anchor?{heading:options.anchor,sectionRatio:0,overallRatio:0}:positionForFile(absPath));restorePosition(saved);writeReaderState(absPath,saved||{heading:"",sectionRatio:0,overallRatio:0});if(options.markRead!==false)stateAction("mark-read",{currentFile:absPath}).then(function(){var rel=relForFile(absPath);changedRels.delete(rel);var link=document.querySelector('#files a[data-p="'+CSS.escape(absPath)+'"]');if(link)link.classList.remove("changed");});loadContext(absPath,0);loadHealth(absPath,0);renderBook();});}).catch(function(){if(seq===loadSeq)$("doc").innerHTML='<div class="empty">'+T("failed")+'</div>';});
+  fetch("/api/raw?path="+encodeURIComponent(absPath)).then(function(r){if(!r.ok)return Promise.reject();var size=Number(r.headers.get("x-matn-file-size"))||0;return r.text().then(function(md){return{md:md,size:size};});}).then(function(payload){if(seq!==loadSeq)return;return renderSafelyAsync(payload.md,payload.size).then(function(){if(seq!==loadSeq)return;if(viewMode!=="rendered")renderSource(payload.md);applyAnnotations();if(options.record!==false)recordNavigation(absPath,options.anchor);var saved=options.position||(options.anchor?{heading:options.anchor,sectionRatio:0,overallRatio:0}:positionForFile(absPath));if(keep){restoreFolds(keep.folds);restoreVersion++;scroller.scrollTop=keep.scroll;}else restorePosition(saved);writeReaderState(absPath,saved||{heading:"",sectionRatio:0,overallRatio:0});if(options.markRead!==false)stateAction("mark-read",{currentFile:absPath}).then(function(){var rel=relForFile(absPath);changedRels.delete(rel);var link=document.querySelector('#files a[data-p="'+CSS.escape(absPath)+'"]');if(link)link.classList.remove("changed");});loadContext(absPath,0);loadHealth(absPath,0);renderBook();});}).catch(function(){if(seq===loadSeq)$("doc").innerHTML='<div class="empty">'+T("failed")+'</div>';});
   var links=document.querySelectorAll("#files a");for(var i=0;i<links.length;i++)links[i].classList.toggle("active",links[i].dataset.p===absPath);
   try{history.replaceState(null,"","/?path="+encodeURIComponent(absPath)+(options.anchor?"#"+encodeURIComponent(options.anchor):""));}catch(e){}
 }
@@ -1288,7 +1302,7 @@ Promise.all([
   if(d.path)return loadFile(d.path);
   if(d.dir)return openDir(d.dir,true,null);
 }).catch(function(){var path=params.get("path");if(path)loadFile(path);});
-try{var es=new EventSource("/api/events");es.onopen=function(){liveConnected=true;$("live").classList.add("on");updateLiveStatus();};es.onerror=function(){liveConnected=false;$("live").classList.remove("on");updateLiveStatus();};es.onmessage=function(ev){try{var d=JSON.parse(ev.data);if(d.type==="reload"&&d.path===cur)loadFile(cur,{record:false,markRead:false});else if(d.type==="reload"&&cur)loadHealth(cur,0);else if(d.type==="file-removed"){removeWorkspaceFile(d.path);if(cur)loadHealth(cur,0);}}catch(e){}};}catch(e){liveConnected=false;updateLiveStatus();}
+try{var es=new EventSource("/api/events");es.onopen=function(){liveConnected=true;$("live").classList.add("on");updateLiveStatus();};es.onerror=function(){liveConnected=false;$("live").classList.remove("on");updateLiveStatus();};es.onmessage=function(ev){try{var d=JSON.parse(ev.data);if(d.type==="reload"&&d.path===cur)loadFile(cur,{record:false,markRead:false,preserve:true});else if(d.type==="reload"&&cur)loadHealth(cur,0);else if(d.type==="file-removed"){removeWorkspaceFile(d.path);if(cur)loadHealth(cur,0);}}catch(e){}};}catch(e){liveConnected=false;updateLiveStatus();}
 </script>
 </body>
 </html>
