@@ -35,6 +35,7 @@ experience built for long-form Arabic.
 - 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
 - 🔧 **Reading controls** — font, size, line-height, column width, and text alignment (start / justify); every choice is saved locally.
 - 🌍 **Bilingual interface** — switch the whole UI between Arabic and English.
+- ⌨️ **Shortcuts you can find** — press `?` for the full list, or open it from the settings panel.
 
 **Content**
 
@@ -50,6 +51,7 @@ experience built for long-form Arabic.
 **Navigation & files**
 
 - 🧭 **Table of contents** — auto-generated, with scroll-spy and heading anchors.
+- 🔤 **Outline filter** — on a long document, type part of a section name to reach it. Matched with Arabic normalisation, so hamzas and diacritics don't get in the way.
 - 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
 - 📖 **Book mode** — reads `SUMMARY.md` as ordered chapters with previous/next and overall progress, without building or modifying files.
 - 🔎 **In-document search** — press `/` to find and jump between matches.
@@ -132,7 +134,7 @@ then `matn b.md` both land in the same window.
 - **Switch between rendered, source, and split views** with `</>`; the `¶` beside a heading opens its corresponding Markdown line.
 - **Drag** any `.md` onto the window to open it.
 - **Save ▾** exports PDF / HTML / Word / EPUB / Markdown; **🖨️** prints.
-- Press **/** to search. Keys: `+` / `−` size · `g` / `G` top / bottom · `Esc` close the panel.
+- Press **/** to search, **?** for the full shortcut list. Keys: `⌘K` library · `+` / `−` size · `g` / `G` top / bottom · `f` focus · `Esc` close the panel.
 
 ## Open `.md` on double-click
 
@@ -164,6 +166,10 @@ the document's dominant direction for correct bidi, highlights code with
 (both lazy-loaded), and pushes live-reload events over Server-Sent Events. Fonts
 and libraries are vendored, so it runs fully offline and never phones home.
 
+The testable logic lives in pure modules (`src/*-core.cjs`) that load in both Node and
+the browser, so Arabic normalisation and the render pipeline exist once rather than
+twice. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ## Security
 
 Matn binds to `127.0.0.1` by default and serves Markdown plus referenced raster
@@ -185,8 +191,11 @@ Full third-party notices in [NOTICE](./NOTICE).
 
 ## Contributing
 
-Issues and PRs welcome. Roadmap: presentation mode, more themes and font
-pairings. See the [CHANGELOG](./CHANGELOG.md).
+Issues and PRs welcome — start with [CONTRIBUTING](./.github/CONTRIBUTING.md). It
+names the commands CI runs and what usually gets turned down: a runtime dependency,
+an editing feature, a network call, a wider file root. Design decisions and the
+research behind them are in [plans/](./plans/README.md); changes in the
+[CHANGELOG](./CHANGELOG.md).
 
 ---
 
