@@ -1,22 +1,27 @@
 <div dir="rtl">
 
+<div align="center">
+
 # متن · Matn
 
-**قارئ ماركداون عربي بواجهة Liquid Glass مصممة للـMac.**
-مكتبة وفهرس وملاحظات حول مساحة قراءة محلية، مع خطوط عربية ومعادلات ومخططات وتصدير دون اتصال.
+### ماركداون عربي كما ينبغي أن يُقرأ
 
-**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)**
+قارئ محلي يعرض العربية من اليمين إلى اليسار ويبقي الكود والإنجليزية على اتجاههما،
+بواجهة Liquid Glass مصمّمة للـMac.
 
-**[English →](./README.en.md)**
+**[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)** ·
+[البدء السريع](#البدء-السريع) ·
+[الواجهة](#الواجهة) ·
+[English](./README.en.md)
 
 [![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
 [![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
 ![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
 ![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
-![متن — السمة الفاتحة](./assets/screenshot-light.png)
+</div>
 
----
+![متن — السمة الفاتحة](./assets/screenshot-light.png)
 
 ## لماذا متن
 
@@ -25,7 +30,43 @@
 كله إلى اليسار. **متن** يعرض ملف `.md` في المتصفح مستندا عربيا صحيحا من اليمين إلى اليسار،
 مع بقاء الكود والإنجليزية داخله من اليسار إلى اليمين، ضمن تجربة قراءة مريحة للنصوص الطويلة.
 
-## المزايا
+| عربية صحيحة | محلي وخاص | قارئ متكامل |
+|---|---|---|
+| يتبع المستند لغته الغالبة، فيبقى الملف العربي من اليمين إلى اليسار حتى لو بدأ عنوان بكلمة إنجليزية، وتبقى المقاطع اللاتينية على اتجاهها داخل السطر. | يعمل دون اتصال، ويرتبط بـ`127.0.0.1`، ولا يعرض إلا ما في المجلد الذي فتحته، ولا يرسل شيئا إلى أي خدمة. | مكتبة وبحث وفهرس وتمييز وملاحظات ووضع كتاب وتصدير — دون أن يعدّل ملفات Markdown إطلاقا. |
+
+## البدء السريع
+
+```bash
+npm install -g @ajarallah/matn
+matn README.md
+```
+
+> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء، فالتثبيت ثانية واحدة.
+
+**تشغيل بلا تثبيت:**
+```bash
+npx @ajarallah/matn README.md
+```
+
+**من المصدر (للتطوير):**
+```bash
+git clone https://github.com/Ajarallah/matn.git
+cd matn && npm link
+```
+
+> الاسم العام `matn` على npm تحجزه حزمة أخرى لا علاقة لها بالمشروع؛ لذلك الحزمة باسم
+> `@ajarallah/matn`، والأمر التنفيذي يبقى `matn`.
+
+**إزالة التثبيت:**
+```bash
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # على macOS
+npm rm -g @ajarallah/matn
+```
+
+## ما الذي يقدّمه
+
+<details>
+<summary><b>قائمة المزايا كاملة</b> — القراءة، والمحتوى، والتنقّل، والإخراج</summary>
 
 **القراءة**
 
@@ -73,7 +114,9 @@
 - 📄 **صيغ Markdown الشائعة** — يفتح `.md` و`.markdown` و`.mdown` و`.mkdn` و`.mkd`
   و`.mdwn` و`.mdtxt` و`.mdtext` و`.rmd` و`.qmd`.
 
-## لقطات
+</details>
+
+## الواجهة
 
 | سيبيا · أميري | داكن · تلوين ومعادلات |
 |---|---|
@@ -82,35 +125,6 @@
 | لوحة الإعدادات |
 |---|
 | ![الإعدادات](./assets/screenshot-settings.png) |
-
-## التثبيت
-
-```bash
-npm install -g @ajarallah/matn
-matn README.md
-```
-
-> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء، فالتثبيت ثانية واحدة.
-
-**تشغيل بلا تثبيت:**
-```bash
-npx @ajarallah/matn README.md
-```
-
-**من المصدر (للتطوير):**
-```bash
-git clone https://github.com/Ajarallah/matn.git
-cd matn && npm link
-```
-
-> الاسم العام `matn` على npm تحجزه حزمة أخرى لا علاقة لها بالمشروع؛ لذلك الحزمة باسم
-> `@ajarallah/matn`، والأمر التنفيذي يبقى `matn`.
-
-**إزالة التثبيت:**
-```bash
-bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # على macOS
-npm rm -g @ajarallah/matn
-```
 
 ## الاستعمال
 

@@ -1,20 +1,25 @@
+<div align="center">
+
 # متن · Matn
 
-**An Arabic Markdown reader with a Mac-first Liquid Glass interface.**
-A library, outline, notes, and inspector around a local reading surface, fully offline.
+### Arabic Markdown, the way it should read
 
-**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+A local reader that lays Arabic out right-to-left and leaves code and English on
+their own axis, in a Mac-first Liquid Glass interface.
 
-**[العربية →](./README.md)**
+**[▶ Try the live demo](https://ajarallah.github.io/matn/)** ·
+[Quick start](#quick-start) ·
+[Interface](#interface) ·
+[العربية](./README.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
 [![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
 ![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
 ![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
-![Matn — light theme](./assets/screenshot-light.png)
+</div>
 
----
+![Matn — light theme](./assets/screenshot-light.png)
 
 ## Why
 
@@ -25,7 +30,44 @@ renders your `.md` in the browser as a genuine right-to-left document — Arabic
 flows RTL while code and English read LTR inside it — wrapped in a reading
 experience built for long-form Arabic.
 
-## Features
+| Correct Arabic | Local and private | A complete reader |
+|---|---|---|
+| The document follows its dominant language, so an Arabic file stays right-to-left even when a heading opens with a Latin word — and Latin runs keep their own direction inside the line. | Runs offline, binds to `127.0.0.1`, serves only what is under the folder you opened, and sends nothing anywhere. | Library, search, outline, highlights, notes, book mode, and export — without ever modifying your Markdown. |
+
+## Quick start
+
+```bash
+npm install -g @ajarallah/matn
+matn README.md
+```
+
+> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step, so
+> installing takes about a second.
+
+**Run without installing:**
+```bash
+npx @ajarallah/matn README.md
+```
+
+**From source (for development):**
+```bash
+git clone https://github.com/Ajarallah/matn.git
+cd matn && npm link
+```
+
+> The bare `matn` name on npm belongs to an unrelated package, so this ships as
+> `@ajarallah/matn`. The command is still `matn`.
+
+**Uninstall:**
+```bash
+bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # macOS
+npm rm -g @ajarallah/matn
+```
+
+## What it does
+
+<details>
+<summary><b>The full feature list</b> — reading, content, navigation, output</summary>
 
 **Reading**
 
@@ -71,7 +113,9 @@ experience built for long-form Arabic.
 - 📄 **Common Markdown formats** — opens `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd`,
   `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, and `.qmd`.
 
-## Screenshots
+</details>
+
+## Interface
 
 | Sepia · Amiri | Dark · syntax + math |
 |---|---|
@@ -80,36 +124,6 @@ experience built for long-form Arabic.
 | Reading settings |
 |---|
 | ![settings](./assets/screenshot-settings.png) |
-
-## Install
-
-```bash
-npm install -g @ajarallah/matn
-matn README.md
-```
-
-> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step, so
-> installing takes about a second.
-
-**Run without installing:**
-```bash
-npx @ajarallah/matn README.md
-```
-
-**From source (for development):**
-```bash
-git clone https://github.com/Ajarallah/matn.git
-cd matn && npm link
-```
-
-> The bare `matn` name on npm belongs to an unrelated package, so this ships as
-> `@ajarallah/matn`. The command is still `matn`.
-
-**Uninstall:**
-```bash
-bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # macOS
-npm rm -g @ajarallah/matn
-```
 
 ## Usage
 
