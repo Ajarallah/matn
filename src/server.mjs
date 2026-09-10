@@ -2,7 +2,7 @@
 // with live-reload over SSE. No external dependencies.
 
 import { createServer } from "node:http";
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync, statSync, lstatSync, existsSync, watch, readdirSync, realpathSync } from "node:fs";
 import { resolve, dirname, join, sep, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -219,8 +219,14 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       return false;
     }
   }
+  function sameToken(value) {
+    const given = Buffer.from(String(value == null ? "" : value));
+    const expected = Buffer.from(sessionToken);
+    // compare digests so the lengths always match and a mismatch costs the same time
+    return timingSafeEqual(createHash("sha256").update(given).digest(), createHash("sha256").update(expected).digest());
+  }
   function validWriteRequest(req) {
-    if (req.headers["x-matn-session"] !== sessionToken) return false;
+    if (!sameToken(req.headers["x-matn-session"])) return false;
     if (req.headers["sec-fetch-site"] === "cross-site") return false;
     const origin = req.headers.origin;
     if (!origin || !req.headers.host) return false;
@@ -344,7 +350,14 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const actionWrite = ["/api/open-editor", "/api/reveal", "/api/trash"].includes(u.pathname) && req.method === "POST";
     if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
-    if (u.pathname === "/api/list" && req.headers["sec-fetch-site"] === "cross-site") return send(403, "text/plain", "cross-site request blocked");
+    // Every /api route is for this page only. A page on another origin cannot read the
+    // response anyway, but it can still make the reader index a folder, spawn git, or
+    // open watchers on the user's behalf — so refuse the request outright. Requests with
+    // no Sec-Fetch-Site (the CLI's own probe, curl) are not browser-driven and stay allowed.
+    const fetchSite = req.headers["sec-fetch-site"];
+    if (u.pathname.startsWith("/api/") && (fetchSite === "cross-site" || fetchSite === "same-site")) {
+      return send(403, "text/plain", "cross-site request blocked");
+    }
 
     if (u.pathname === "/") return send(200, "text/html; charset=utf-8", serverIndex, { "cache-control": "no-store" });
     if (u.pathname === "/marked.js") return send(200, "text/javascript; charset=utf-8", MARKED);
