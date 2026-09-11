@@ -579,7 +579,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     return close(callback);
   };
   server.on("close", cleanup);
-  server.matnDiagnostics = () => ({ ...diagnostics, indexedRecords: workspaceRecords.size, indexing });
+  server.matnDiagnostics = () => ({ ...diagnostics, indexedRecords: workspaceRecords.size, indexing, watchers: watched.size });
 
   return new Promise((resolveServer, reject) => {
     const onError = (error) => {
