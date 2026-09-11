@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the reader behaves wrongly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Markdown that reproduces it
+      description: >
+        The smallest file that shows the problem. For a direction or typography
+        issue this matters more than anything else — paste the actual Arabic text,
+        not a description of it.
+      render: markdown
+  - type: input
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: matn ./docs --port 5000
+  - type: input
+    id: versions
+    attributes:
+      label: Matn and Node versions
+      description: "`matn --version` and `node --version`"
+      placeholder: matn v1.3.0 · node v20.11.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Linux, Windows, Other]
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: The reader runs in your browser, so its version is usually relevant.
+      placeholder: Safari 18.2

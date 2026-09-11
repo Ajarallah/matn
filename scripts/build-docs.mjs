@@ -14,6 +14,7 @@ let s = src;
 s = s.replace(/url\("\/fonts\//g, 'url("./vendor/fonts/');
 s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marked.min.js"></script>');
 s = s.replace('<script src="/render-core.js"></script>', '<script src="./render-core.js"></script>');
+s = s.replace('<script src="/search-core.js"></script>', '<script src="./search-core.js"></script>');
 s = s.replace('<script src="/annotation-core.js"></script>', '<script src="./annotation-core.js"></script>');
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
@@ -26,9 +27,6 @@ const live = '<span class="live" id="live" role="status" title="يتابع تغ�
 const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn on GitHub"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4 6.7 19l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">GitHub</span></a>';
 if (!s.includes(live)) { console.error("build-docs: live indicator markup not found — aborting"); process.exit(1); }
 s = s.replace(live, openctrl);
-
-// 3) the drop handler references #live (gone in the demo)
-s = s.replace('$("live").classList.remove("on");', "");
 
 // 4) bundled sample (non-executed markdown), inserted before marked loads
 const SAMPLE = readFileSync(join(ROOT, "scripts", "demo-sample.md"), "utf8");
@@ -55,6 +53,7 @@ const DOCS = join(ROOT, "docs");
 mkdirSync(join(DOCS, "vendor", "fonts"), { recursive: true });
 writeFileSync(join(DOCS, "index.html"), s, "utf8");
 copyFileSync(join(ROOT, "src", "render-core.cjs"), join(DOCS, "render-core.js"));
+copyFileSync(join(ROOT, "src", "search-core.cjs"), join(DOCS, "search-core.js"));
 copyFileSync(join(ROOT, "src", "annotation-core.cjs"), join(DOCS, "annotation-core.js"));
 copyFileSync(join(ROOT, "vendor", "marked.min.js"), join(DOCS, "vendor", "marked.min.js"));
 copyFileSync(join(ROOT, "vendor", "highlight.min.js"), join(DOCS, "vendor", "highlight.min.js"));
@@ -67,6 +66,8 @@ for (const f of readdirSync(join(ROOT, "vendor", "fonts")))
 
 const checks = ["./vendor/marked.min.js", "./vendor/mermaid.min.js", "safeRenderer", "id=\"sample\""];
 const missing = checks.filter((c) => !s.includes(c));
+const unrewritten = s.match(/<script src="\/[^"]+"/g) || [];
+if (unrewritten.length) { console.error("build-docs: script tags still point at the server —", unrewritten.join(", ")); process.exit(1); }
 console.log("build-docs: wrote docs/index.html (" + s.length + " bytes)");
 console.log("build-docs: server refs left:", (s.match(/["']\/(api|marked|highlight|mermaid|fonts)/g) || []).length);
 if (missing.length) { console.error("build-docs: MISSING", missing); process.exit(1); }

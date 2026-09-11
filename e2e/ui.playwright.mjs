@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -14,6 +14,10 @@ const dataDir = await mkdtemp(join(tmpdir(), "matn-playwright-state-"));
 await mkdir(join(root, "docs"));
 await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية قابلة للتحديد والتمييز والنسخ.\n\n[الدليل](docs/guide.md#التثبيت) و[مفقود](docs/missing.md)\n\n## قسم ثان\nمقطع ثان لإضافة ملاحظة **واضحة**.\n\n- بند أول\n- بند ثان\n\n| الاسم | القيمة |\n|---|---|\n| اختبار | ناجح |\n\n```js\nconst direction = 'rtl';\n```\n\n```mermaid\ngraph TD; A-->B\n```\n\n### خاتمة\nنهاية المستند.\n");
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
+await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
+await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
+await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
+await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -300,7 +304,178 @@ try {
   assert.equal(await systemDarkPage.locator("html").getAttribute("data-theme"), "dark");
   assert.equal(await systemDarkPage.locator("html").evaluate((el) => getComputedStyle(el).colorScheme), "dark");
   await systemDarkContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, and mobile drawer passed");
+
+  // The reading surface itself: direction, target sizes, and whether a save from an
+  // editor throws away where the reader was.
+  const readingContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const reading = await readingContext.newPage();
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#doc .katex-display .katex");
+  await reading.waitForSelector("#toc a");
+
+  // display math is centred in the column, not flushed against its edge — a blanket
+  // `.katex{text-align:left}` used to override KaTeX's own centring for display mode
+  const mathOffsets = await reading.evaluate(() => {
+    const inner = document.querySelector(".katex-display .katex .katex-html, .katex-display .katex");
+    const box = inner.getBoundingClientRect(), column = document.querySelector("#doc p").getBoundingClientRect();
+    return { left: box.left - column.left, right: column.right - box.right };
+  });
+  assert.ok(Math.abs(mathOffsets.left - mathOffsets.right) < 24,
+    `display math sits ${Math.round(mathOffsets.left)}px from one edge and ${Math.round(mathOffsets.right)}px from the other`);
+
+  // frontmatter keys and the card's own label are chrome: they read by their own
+  // content, not by whichever direction the document happens to vote for
+  assert.equal(await reading.locator("#doc .frontmatter summary").getAttribute("dir"), "auto");
+  assert.equal(await reading.locator("#doc .frontmatter dt").first().getAttribute("dir"), "auto");
+  assert.equal(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth), 0);
+
+  // the footnote section heading is screen-reader-only and localised, so it belongs
+  // to assistive tech — not to the visible outline
+  assert.equal(await reading.locator("#doc h2.sr-only").innerText(), "الحواشي");
+  assert.equal(await reading.locator("#doc h2.sr-only .anchor, #doc h2.sr-only .foldbtn").count(), 0);
+  assert.deepEqual(await reading.locator("#toc a").allInnerTexts(), ["مقدمة", "Getting Started", "Node.js والتشغيل المحلي", "قسم أخير"]);
+
+  // an Arabic document stays right-to-left, but a paragraph written entirely in the
+  // other script reads in its own direction — otherwise its closing period lands at
+  // the start of the line.
+  assert.equal(await reading.locator("#doc p", { hasText: "This whole paragraph" }).evaluate((el) => getComputedStyle(el).direction), "ltr");
+  assert.equal(await reading.locator("#doc p", { hasText: "انظر" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+  // headings are the exception: they carry no trailing punctuation to strand, and a
+  // flipped one drags its fold chevron and its rule to the opposite margin
+  assert.equal(await reading.locator("#doc h2", { hasText: "Getting Started" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+  assert.equal(await reading.locator("#doc h2", { hasText: "والتشغيل المحلي" }).evaluate((el) => getComputedStyle(el).direction), "rtl");
+  const headingEdges = await reading.evaluate(() => Array.from(document.querySelectorAll("#doc h2")).filter((h) => !h.classList.contains("sr-only")).map((h) => Math.round(h.getBoundingClientRect().right)));
+  assert.equal(new Set(headingEdges).size, 1, `headings hang off different margins: ${headingEdges.join(", ")}`);
+
+  // Arabic runs inside code are isolated: without <bdi> the neutral `= "` between two
+  // Arabic runs joins them and the assignment renders back to front.
+  assert.equal(await reading.locator("#doc pre code bdi").first().innerText(), "مرحبا");
+  assert.equal(await reading.locator("#doc pre code").first().innerText().then((t) => t.trim()), 'const مرحبا = "أهلا";');
+
+  // every standalone control clears the 24×24 floor; links inside a sentence are
+  // exempt by WCAG 2.5.8 and are excluded here for that reason
+  const undersized = await reading.evaluate(() => {
+    const out = [];
+    document.querySelectorAll("#doc button, .sec button, .toolbar button").forEach((el) => {
+      const box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      if (box.width < 24 || box.height < 24) out.push(`${el.className} ${Math.round(box.width)}x${Math.round(box.height)}`);
+    });
+    return out;
+  });
+  assert.deepEqual(undersized, [], `controls under the 24px target floor: ${undersized.join(", ")}`);
+
+  // a save must not cost the reader their collapsed sections or their place
+  await reading.locator("#doc h2 .foldbtn").first().click();
+  await reading.evaluate(() => document.querySelector("main").scrollTo(0, 260));
+  await reading.waitForTimeout(200);
+  const before = await reading.evaluate(() => ({ folds: document.querySelectorAll(".fold-region.collapsed").length, scroll: Math.round(document.querySelector("main").scrollTop) }));
+  assert.equal(before.folds, 1);
+  await writeFile(join(root, "typography.md"), (await readFile(join(root, "typography.md"), "utf8")) + "\nسطر أضافه المحرر.\n");
+  await reading.waitForFunction(() => document.querySelector("#doc").textContent.includes("سطر أضافه المحرر"));
+  const after = await reading.evaluate(() => ({ folds: document.querySelectorAll(".fold-region.collapsed").length, scroll: Math.round(document.querySelector("main").scrollTop) }));
+  assert.equal(after.folds, before.folds, "a live reload dropped the collapsed section");
+  assert.ok(Math.abs(after.scroll - before.scroll) < 24, `a live reload moved the reader ${Math.abs(after.scroll - before.scroll)}px`);
+
+  // The outline is a wall on a long document. Filtering it uses the same Arabic
+  // normalisation the library search uses, so an unhamzated query still lands.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "outline.md"))}`);
+  await reading.waitForSelector("#toc a");
+  assert.equal(await reading.locator("#tocfilter").isVisible(), true);
+  assert.equal(await reading.locator("#toc-count").innerText(), "13");
+  await reading.locator("#tocfilter").fill("الاعدادات");
+  await reading.waitForFunction(() => document.querySelector("#toc-count").textContent === "1/13");
+  assert.deepEqual(await reading.locator("#toc a:visible").allInnerTexts(), ["الإعدادات"]);
+  await reading.locator("#tocfilter").fill("zzz");
+  await reading.waitForSelector("#tocempty:visible");
+  assert.equal(await reading.locator("#tocempty").innerText(), "لا عنوان مطابق");
+  // Escape clears the field rather than closing the inspector out from under it
+  await reading.locator("#tocfilter").press("Escape");
+  await reading.waitForFunction(() => document.querySelectorAll("#toc a:not([style*='none'])").length === 13);
+  assert.equal(await reading.locator("#inspector").isVisible(), true);
+  // a short outline is not worth a filter box
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#toc a");
+  assert.equal(await reading.locator("#tocfilter").isVisible(), false);
+
+  // The shortcuts all worked already; none of them were written down anywhere.
+  await reading.keyboard.press("?");
+  await reading.waitForSelector("#shortcutdialog[open]");
+  assert.equal(await reading.locator("#shortcutlist dt").count(), 10);
+  assert.equal(await reading.locator("#shortcutlist dd").last().innerText(), "هذه القائمة");
+  // key pairs read left to right even in the Arabic interface, as macOS does
+  assert.equal(await reading.locator("#shortcutlist dt").first().evaluate((el) => getComputedStyle(el).direction), "ltr");
+  await reading.locator("#shortcutclose").click();
+  await reading.waitForFunction(() => !document.querySelector("#shortcutdialog").open);
+  // and a "?" typed into a field is just a question mark
+  await reading.locator("#tocfilter").evaluate((el) => { el.style.display = "block"; el.focus(); });
+  await reading.keyboard.press("?");
+  assert.equal(await reading.locator("#shortcutdialog").evaluate((el) => el.open), false);
+  // the keystroke is undiscoverable on its own, so the settings panel opens it too
+  await reading.keyboard.press("Escape");
+  await reading.locator("#gearbtn").click();
+  await reading.waitForSelector("#panel.open");
+  await reading.locator("#shortcutbtn").click();
+  await reading.waitForSelector("#shortcutdialog[open]");
+  assert.equal(await reading.locator("#panel").evaluate((el) => el.classList.contains("open")), false);
+  await reading.locator("#shortcutclose").click();
+
+  // EPUB is XHTML. The DOM serialises HTML5, so <hr>, <br>, <img> and the task-list
+  // <input> came out unclosed and a conforming reader rejected the file outright.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "epub.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  const chapter = await reading.evaluate(() => {
+    const dir = document.querySelector("#doc").getAttribute("dir") || "rtl";
+    const body = toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>", ""));
+    return `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" dir="${dir}"><head><title>t</title></head><body>${body}</body></html>`;
+  });
+  assert.equal(await reading.evaluate((xml) => {
+    const parsed = new DOMParser().parseFromString(xml, "application/xhtml+xml");
+    const error = parsed.querySelector("parsererror");
+    return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
+  }, chapter), "", "the EPUB chapter is not well-formed XHTML");
+  assert.match(chapter, /<hr\s*\/>/);
+  assert.match(chapter, /<br\s*\/>/);
+  assert.match(chapter, /<img[^>]*\/>/);
+
+  // Markdown arrives on the clipboard as often as it arrives as a file.
+  await readingContext.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "outline.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await reading.evaluate(() => navigator.clipboard.writeText("# مستند ملصوق\n\nمن الحافظة.\n"));
+  await reading.keyboard.press(process.platform === "darwin" ? "Meta+V" : "Control+V");
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("مستند ملصوق"));
+  assert.equal(await reading.locator("#fname").innerText(), "نص ملصوق");
+  // a stray Cmd+V while reading must not cost you the document you had open
+  await reading.locator(".toast-undo").click();
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("دليل طويل"));
+  assert.equal(await reading.locator("#fname").innerText(), "outline.md");
+  // and a paste aimed at a field is just a paste
+  await reading.locator("#tocfilter").click();
+  await reading.evaluate(() => navigator.clipboard.writeText("الخطوط"));
+  await reading.keyboard.press(process.platform === "darwin" ? "Meta+V" : "Control+V");
+  await reading.waitForFunction(() => document.querySelector("#tocfilter").value === "الخطوط");
+  assert.match(await reading.locator("#doc h1").innerText(), /دليل طويل/);
+  await reading.locator("#tocfilter").fill("");
+
+  // A reload holds your place, so a change further down can land unseen. Point at
+  // it — but do not move the reader there without being asked.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "change.md"))}`);
+  await reading.waitForSelector("#doc h2");
+  await reading.evaluate(() => document.querySelector("main").scrollTo(0, 200));
+  await reading.waitForTimeout(200);
+  const scrollBefore = await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop));
+  await writeFile(join(root, "change.md"), (await readFile(join(root, "change.md"), "utf8")).replace("## قسم 9", "## قسم 9\n\nسطر أضافه الوكيل.\n"));
+  await reading.waitForSelector(".toast-undo");
+  assert.equal(await reading.locator("#toast span").first().innerText(), "تغيّر الملف");
+  assert.equal(await reading.locator(".toast-undo").innerText(), "اذهب إلى التغيير");
+  assert.ok(Math.abs(await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop)) - scrollBefore) < 24,
+    "a live reload moved the reader without being asked");
+  await reading.locator(".toast-undo").click();
+  await reading.waitForFunction(() => document.querySelector("main").scrollTop > 800);
+  assert.match(await reading.locator("#doc .source-target").innerText(), /قسم 9/);
+  await readingContext.close();
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, and change-jump passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
