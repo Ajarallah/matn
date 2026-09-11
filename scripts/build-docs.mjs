@@ -28,9 +28,6 @@ const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" ta
 if (!s.includes(live)) { console.error("build-docs: live indicator markup not found — aborting"); process.exit(1); }
 s = s.replace(live, openctrl);
 
-// 3) the drop handler references #live (gone in the demo)
-s = s.replace('$("live").classList.remove("on");', "");
-
 // 4) bundled sample (non-executed markdown), inserted before marked loads
 const SAMPLE = readFileSync(join(ROOT, "scripts", "demo-sample.md"), "utf8");
 const sampleBlock = '<script type="text/markdown" id="sample">' + SAMPLE + '</script>\n';

@@ -17,6 +17,7 @@ await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبي
 await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
+await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
 const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir, allowFileActions: true, editor: "/editor", platformActions: actions });
@@ -436,8 +437,45 @@ try {
   assert.match(chapter, /<hr\s*\/>/);
   assert.match(chapter, /<br\s*\/>/);
   assert.match(chapter, /<img[^>]*\/>/);
+
+  // Markdown arrives on the clipboard as often as it arrives as a file.
+  await readingContext.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "outline.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await reading.evaluate(() => navigator.clipboard.writeText("# مستند ملصوق\n\nمن الحافظة.\n"));
+  await reading.keyboard.press(process.platform === "darwin" ? "Meta+V" : "Control+V");
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("مستند ملصوق"));
+  assert.equal(await reading.locator("#fname").innerText(), "نص ملصوق");
+  // a stray Cmd+V while reading must not cost you the document you had open
+  await reading.locator(".toast-undo").click();
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("دليل طويل"));
+  assert.equal(await reading.locator("#fname").innerText(), "outline.md");
+  // and a paste aimed at a field is just a paste
+  await reading.locator("#tocfilter").click();
+  await reading.evaluate(() => navigator.clipboard.writeText("الخطوط"));
+  await reading.keyboard.press(process.platform === "darwin" ? "Meta+V" : "Control+V");
+  await reading.waitForFunction(() => document.querySelector("#tocfilter").value === "الخطوط");
+  assert.match(await reading.locator("#doc h1").innerText(), /دليل طويل/);
+  await reading.locator("#tocfilter").fill("");
+
+  // A reload holds your place, so a change further down can land unseen. Point at
+  // it — but do not move the reader there without being asked.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "change.md"))}`);
+  await reading.waitForSelector("#doc h2");
+  await reading.evaluate(() => document.querySelector("main").scrollTo(0, 200));
+  await reading.waitForTimeout(200);
+  const scrollBefore = await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop));
+  await writeFile(join(root, "change.md"), (await readFile(join(root, "change.md"), "utf8")).replace("## قسم 9", "## قسم 9\n\nسطر أضافه الوكيل.\n"));
+  await reading.waitForSelector(".toast-undo");
+  assert.equal(await reading.locator("#toast span").first().innerText(), "تغيّر الملف");
+  assert.equal(await reading.locator(".toast-undo").innerText(), "اذهب إلى التغيير");
+  assert.ok(Math.abs(await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop)) - scrollBefore) < 24,
+    "a live reload moved the reader without being asked");
+  await reading.locator(".toast-undo").click();
+  await reading.waitForFunction(() => document.querySelector("main").scrollTop > 800);
+  assert.match(await reading.locator("#doc .source-target").innerText(), /قسم 9/);
   await readingContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, and EPUB well-formedness passed");
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, and change-jump passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
