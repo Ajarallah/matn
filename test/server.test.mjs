@@ -295,6 +295,41 @@ test("switching indexed folders never leaks results from the previous folder", a
   assert.deepEqual(afterSwitch.results, []);
 });
 
+test("directory watchers stay bounded and are all released on close", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-watch-"));
+  for (let index = 0; index < 200; index++) {
+    await mkdir(join(root, "d" + index), { recursive: true });
+    await writeFile(join(root, "d" + index, "n.md"), `# ملف ${index}\n`, "utf8");
+  }
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const headers = { "sec-fetch-site": "same-origin" };
+  const watchers = () => process.getActiveResourcesInfo().filter((name) => /FSEvent|StatWatcher/i.test(name)).length;
+  const read = (dir) => fetch(`${base}/api/raw?path=${encodeURIComponent(join(root, dir, "n.md"))}`, { headers });
+
+  // reading a file watches its directory, so a large tree must not open one handle per folder
+  for (let index = 0; index < 200; index++) await read("d" + index);
+  assert.ok(watchers() <= 128, `watching 200 directories left ${watchers()} handles open`);
+
+  // and re-reading the same file must reuse the handle rather than stack new ones
+  const afterFirstPass = watchers();
+  for (let index = 0; index < 50; index++) await read("d0");
+  assert.equal(watchers(), afterFirstPass, "re-reading one file opened extra watchers");
+
+  // opening the folder installs one recursive watcher, which retires the per-directory ones
+  await fetch(`${base}/api/list?dir=${encodeURIComponent(root)}`, { headers });
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  assert.ok(watchers() < afterFirstPass, `a recursive watch left ${watchers()} per-directory handles behind`);
+
+  await new Promise((resolve) => server.close(resolve));
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  assert.equal(watchers(), 0, "closing the server left watchers running");
+});
+
 test("a page on another origin cannot reach any read endpoint", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-search-fetch-site-"));
   const file = join(root, "README.md");
