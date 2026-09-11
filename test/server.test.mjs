@@ -308,26 +308,31 @@ test("directory watchers stay bounded and are all released on close", async (t) 
   });
   const base = `http://127.0.0.1:${server.address().port}`;
   const headers = { "sec-fetch-site": "same-origin" };
-  const watchers = () => process.getActiveResourcesInfo().filter((name) => /FSEvent|StatWatcher/i.test(name)).length;
+  // Count what the server itself tracks, not OS handles: fs.watch({recursive}) is one
+  // FSEvents handle on macOS and one inotify watch per directory on Linux, so a handle
+  // count measures the platform rather than this bookkeeping.
+  const watchers = () => server.matnDiagnostics().watchers;
   const read = (dir) => fetch(`${base}/api/raw?path=${encodeURIComponent(join(root, dir, "n.md"))}`, { headers });
 
-  // reading a file watches its directory, so a large tree must not open one handle per folder
+  // reading a file watches its directory, so a large tree must not grow without bound
   for (let index = 0; index < 200; index++) await read("d" + index);
-  assert.ok(watchers() <= 128, `watching 200 directories left ${watchers()} handles open`);
+  assert.ok(watchers() <= 128, `reading 200 directories left ${watchers()} watchers registered`);
 
-  // and re-reading the same file must reuse the handle rather than stack new ones
+  // and re-reading the same file must reuse the entry rather than stack new ones
   const afterFirstPass = watchers();
   for (let index = 0; index < 50; index++) await read("d0");
-  assert.equal(watchers(), afterFirstPass, "re-reading one file opened extra watchers");
+  assert.equal(watchers(), afterFirstPass, "re-reading one file registered extra watchers");
 
-  // opening the folder installs one recursive watcher, which retires the per-directory ones
+  // opening the folder installs one recursive watch, which retires the per-directory ones
   await fetch(`${base}/api/list?dir=${encodeURIComponent(root)}`, { headers });
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  assert.ok(watchers() < afterFirstPass, `a recursive watch left ${watchers()} per-directory handles behind`);
+  assert.equal(watchers(), 1, `a recursive watch left ${watchers()} per-directory entries behind`);
+
+  // and a watched directory already covered by it must not register another
+  await read("d0");
+  assert.equal(watchers(), 1, "a read under a recursive watch registered its own watcher");
 
   await new Promise((resolve) => server.close(resolve));
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  assert.equal(watchers(), 0, "closing the server left watchers running");
+  assert.equal(watchers(), 0, "closing the server left watchers registered");
 });
 
 test("a page on another origin cannot reach any read endpoint", async (t) => {
