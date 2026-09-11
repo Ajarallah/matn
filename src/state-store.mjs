@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import StateActions from "./state-actions.cjs";
 
 const VERSION = 1;
 const MAX_RECENTS = 12;
@@ -146,17 +147,7 @@ export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.
   function updateWorkspace(root, patch = {}) {
     return mutate((state) => {
       const previous = cleanWorkspace(state.workspaces[root]);
-      const next = cleanWorkspace({
-        ...previous,
-        ...patch,
-        positions: { ...previous.positions, ...(patch.positions || {}) },
-        missingFiles: { ...previous.missingFiles, ...(patch.missingFiles || {}) },
-        favorites: patch.favorites === undefined ? previous.favorites : patch.favorites,
-        readLater: patch.readLater === undefined ? previous.readLater : patch.readLater,
-        annotations: patch.annotations === undefined ? previous.annotations : patch.annotations,
-        fileMeta: { ...previous.fileMeta, ...(patch.fileMeta || {}) },
-        lastOpenedAt: patch.lastOpenedAt ?? now()
-      });
+      const next = cleanWorkspace(StateActions.mergeWorkspace(previous, patch, now()));
       state.workspaces[root] = next;
       state.recent = [root, ...state.recent.filter((entry) => entry !== root)].slice(0, MAX_RECENTS);
       return cleanWorkspace(next);

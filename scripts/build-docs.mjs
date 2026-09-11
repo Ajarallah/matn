@@ -14,6 +14,7 @@ let s = src;
 s = s.replace(/url\("\/fonts\//g, 'url("./vendor/fonts/');
 s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marked.min.js"></script>');
 s = s.replace('<script src="/render-core.js"></script>', '<script src="./render-core.js"></script>');
+s = s.replace('<script src="/state-actions.js"></script>', '<script src="./state-actions.js"></script>');
 s = s.replace('<script src="/search-core.js"></script>', '<script src="./search-core.js"></script>');
 s = s.replace('<script src="/annotation-core.js"></script>', '<script src="./annotation-core.js"></script>');
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
@@ -44,7 +45,10 @@ const boot = `applyS();
 document.body.classList.add("ui-ready");
 var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
+cur="demo:sample";fileRels[cur]=cur;
+readerState=localSnapshot();renderCollections();
 renderSafely(SAMPLE);
+applyAnnotations();
 `; // file-open is handled by the app's own #fileinput listener
 s = s.slice(0, i) + boot + "\n" + s.slice(j);
 
@@ -53,6 +57,7 @@ const DOCS = join(ROOT, "docs");
 mkdirSync(join(DOCS, "vendor", "fonts"), { recursive: true });
 writeFileSync(join(DOCS, "index.html"), s, "utf8");
 copyFileSync(join(ROOT, "src", "render-core.cjs"), join(DOCS, "render-core.js"));
+copyFileSync(join(ROOT, "src", "state-actions.cjs"), join(DOCS, "state-actions.js"));
 copyFileSync(join(ROOT, "src", "search-core.cjs"), join(DOCS, "search-core.js"));
 copyFileSync(join(ROOT, "src", "annotation-core.cjs"), join(DOCS, "annotation-core.js"));
 copyFileSync(join(ROOT, "vendor", "marked.min.js"), join(DOCS, "vendor", "marked.min.js"));
