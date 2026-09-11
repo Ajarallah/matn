@@ -23,6 +23,10 @@ s = s.replace('DOCX_SRC="/html-docx.js",ZIP_SRC="/jszip.js"', 'DOCX_SRC="./vendo
 s = s.replace('KATEX_JS="/katex.js",KATEX_CSS="/katex.css"', 'KATEX_JS="./vendor/katex.min.js",KATEX_CSS="./vendor/katex.min.css"');
 s = s.replace('<script src="/marked-footnote.js"></script>', '<script src="./vendor/marked-footnote.umd.js"></script>');
 
+// the demo never ships the user-supplied font, so its @font-face would only 404
+s = s.replace(/\/\*THMANYAH-START\*\/[\s\S]*?\/\*THMANYAH-END\*\//, "");
+s = s.replace('<meta charset="utf-8">', '<meta charset="utf-8"><meta name="matn-localfonts" content="0">');
+
 // 2) header: swap the live-reload indicator for an open-file button + a GitHub link
 const live = '<span class="live" id="live" role="status" title="يتابع تغييرات الملف تلقائيًا" aria-label="الاتصال بالتحديث التلقائي غير متاح"><span class="dot"></span><span class="sr-only" id="livestatus">التحديث التلقائي غير متصل</span></span>';
 const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" target="_blank" rel="noopener" title="Matn on GitHub"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4 6.7 19l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">GitHub</span></a>';

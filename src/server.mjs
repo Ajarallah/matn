@@ -50,7 +50,11 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
   const sessionToken = randomBytes(32).toString("hex");
-  const serverIndex = INDEX.replace("</head>", `<meta name="matn-session" content="${sessionToken}">\n</head>`);
+  // Safari fetches every declared @font-face eagerly, so shipping the optional
+  // Thmanyah declaration to someone who never installed it costs three 404s a load.
+  const hasLocalFonts = existsSync(join(VENDOR, "fonts-local", "thmanyah-text.woff2"));
+  const shellIndex = hasLocalFonts ? INDEX : INDEX.replace(/\/\*THMANYAH-START\*\/[\s\S]*?\/\*THMANYAH-END\*\//, "");
+  const serverIndex = shellIndex.replace("</head>", `<meta name="matn-session" content="${sessionToken}">\n<meta name="matn-localfonts" content="${hasLocalFonts ? "1" : "0"}">\n</head>`);
   const stateStore = createStateStore({ dataDir });
   const actions = platformActions || createPlatformActions({ editor });
 

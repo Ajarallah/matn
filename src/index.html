@@ -194,9 +194,9 @@ html[data-theme="light"] .toast-undo,html[data-theme="sepia"] .toast-undo{color:
 .zoomable{overflow:hidden;cursor:zoom-in}
 .zoomable>img,.zoomable>svg{transition:transform .18s var(--ease)}
 .zoomable.zooming>img,.zoomable.zooming>svg{transform:scale(1.9)}
-/* Thmanyah (user-supplied, not redistributed) */
+/*THMANYAH-START*//* Thmanyah (user-supplied, not redistributed) */
 @font-face{font-family:"Thmanyah Serif Display";font-weight:400 700;font-display:swap;src:url("/fonts-local/thmanyah-display.woff2") format("woff2"),url("/fonts-local/thmanyah-display.otf") format("opentype"),url("/fonts-local/thmanyah-display.ttf") format("truetype")}
-@font-face{font-family:"Thmanyah Serif Text";font-weight:400 700;font-display:swap;src:url("/fonts-local/thmanyah-text.woff2") format("woff2"),url("/fonts-local/thmanyah-text.otf") format("opentype"),url("/fonts-local/thmanyah-text.ttf") format("truetype")}
+@font-face{font-family:"Thmanyah Serif Text";font-weight:400 700;font-display:swap;src:url("/fonts-local/thmanyah-text.woff2") format("woff2"),url("/fonts-local/thmanyah-text.otf") format("opentype"),url("/fonts-local/thmanyah-text.ttf") format("truetype")}/*THMANYAH-END*/
 #doc h1,#doc h2,#doc h3,#doc h4{font-family:var(--rfont-display,inherit)}
 .live{width:24px;height:24px;color:var(--muted);display:inline-grid;place-items:center;white-space:nowrap;margin-inline-start:2px;border-radius:50%;cursor:help}
 .live .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);transition:background var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
@@ -639,7 +639,7 @@ article#doc{padding-top:48px}
         <option value="amiri" style="font-family:'Amiri',serif">أميري · نسخ كلاسيكي</option>
         <option value="plex" style="font-family:'IBM Plex Sans Arabic',sans-serif">IBM بلكس · حديث</option>
         <option value="tajawal" style="font-family:'Tajawal',sans-serif">تجوّل · هندسي</option>
-        <option value="thmanyah" style="font-family:'Thmanyah Serif Text','Noto Naskh Arabic',serif" data-i18n="thmanyahNote">ثمانية · نص + عناوين (يتطلّب تنزيله)</option>
+        <option value="thmanyah" data-localfont="1" style="font-family:'Thmanyah Serif Text','Noto Naskh Arabic',serif" data-i18n="thmanyahNote">ثمانية · نص + عناوين (يتطلّب تنزيله)</option>
       </select></div>
   </div>
   <div class="grp"><div class="lbl">حجم الخط</div>
@@ -1056,6 +1056,7 @@ var scroller=$("scroller");
 var scrollEdgeFrame=0;function syncScrollEdge(){scrollEdgeFrame=0;scroller.classList.toggle("is-scrolled",scroller.scrollTop>6);}scroller.addEventListener("scroll",function(){if(!scrollEdgeFrame)scrollEdgeFrame=requestAnimationFrame(syncScrollEdge);},{passive:true});syncScrollEdge();
 function progress(){var h=scroller.scrollHeight-scroller.clientHeight;$("progress").style.transform="scaleX("+(h>0?scroller.scrollTop/h:0)+")";updateBookProgress();}
 var sessionToken=(document.querySelector('meta[name="matn-session"]')||{}).content||"";
+if((document.querySelector('meta[name="matn-localfonts"]')||{}).content==="0"){var _lf=document.querySelector("#fontsel option[data-localfont]");if(_lf)_lf.remove();}
 var readerState={workspace:{root:"",lastFile:null,positions:{},lastOpenedAt:0},recentWorkspaces:[]};
 var bookData={chapters:[]},bookAt=-1;
 var workspaceFiles=[],workspaceDir="",stateTimer=null,restoreVersion=0,userMovedDuringRestore=0,changedRels=new Set();
