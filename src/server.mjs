@@ -10,6 +10,7 @@ import SearchCore from "./search-core.cjs";
 import LinkCore from "./link-core.cjs";
 import BookCore from "./book-core.cjs";
 import MarkdownFiles from "./markdown-files.cjs";
+import StateActions from "./state-actions.cjs";
 import { createStateStore } from "./state-store.mjs";
 import { createPlatformActions, runCommand } from "./platform-actions.mjs";
 
@@ -21,6 +22,7 @@ const INDEX = readFileSync(join(HERE, "index.html"), "utf8");
 const MARKED = readFileSync(join(VENDOR, "marked.min.js"), "utf8");
 const RENDER_CORE = readFileSync(join(HERE, "render-core.cjs"), "utf8");
 const SEARCH_CORE = readFileSync(join(HERE, "search-core.cjs"), "utf8");
+const STATE_ACTIONS = readFileSync(join(HERE, "state-actions.cjs"), "utf8");
 const ANNOTATION_CORE = readFileSync(join(HERE, "annotation-core.cjs"), "utf8");
 const RENDER_WORKER = readFileSync(join(HERE, "render-worker.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
@@ -363,6 +365,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/") return send(200, "text/html; charset=utf-8", serverIndex, { "cache-control": "no-store" });
     if (u.pathname === "/marked.js") return send(200, "text/javascript; charset=utf-8", MARKED);
     if (u.pathname === "/render-core.js") return send(200, "text/javascript; charset=utf-8", RENDER_CORE);
+    if (u.pathname === "/state-actions.js") return send(200, "text/javascript; charset=utf-8", STATE_ACTIONS);
     if (u.pathname === "/search-core.js") return send(200, "text/javascript; charset=utf-8", SEARCH_CORE);
     if (u.pathname === "/annotation-core.js") return send(200, "text/javascript; charset=utf-8", ANNOTATION_CORE);
     if (u.pathname === "/render-worker.js") return send(200, "text/javascript; charset=utf-8", RENDER_WORKER);
@@ -427,27 +430,12 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         const action = typeof body.action === "string" ? body.action : "position";
         if (action !== "position") {
           const snapshot = await stateStore.snapshot(rootReal);
-          const workspace = snapshot.workspace;
-          let patch = {};
-          if (action === "toggle-favorite") {
-            const bookmark = body.bookmark && typeof body.bookmark === "object" ? { ...body.bookmark, path: rel } : null;
-            if (!bookmark || typeof bookmark.id !== "string" || !bookmark.id) return send(400, "application/json", JSON.stringify({ error: "invalid favorite" }));
-            const exists = workspace.favorites.some((item) => item.id === bookmark.id);
-            patch.favorites = exists ? workspace.favorites.filter((item) => item.id !== bookmark.id) : workspace.favorites.concat(bookmark);
-          } else if (action === "toggle-read-later") {
-            const id = "later:" + rel;
-            const exists = workspace.readLater.some((item) => item.id === id);
-            patch.readLater = exists ? workspace.readLater.filter((item) => item.id !== id) : workspace.readLater.concat({ id, type: "file", path: rel, createdAt: Date.now() });
-          } else if (action === "upsert-annotation") {
-            const annotation = body.annotation && typeof body.annotation === "object" ? { ...body.annotation, path: rel } : null;
-            if (!annotation || typeof annotation.id !== "string" || !annotation.id || typeof annotation.quote !== "string" || !annotation.quote) return send(400, "application/json", JSON.stringify({ error: "invalid annotation" }));
-            patch.annotations = workspace.annotations.filter((item) => item.id !== annotation.id).concat(annotation);
-          } else if (action === "delete-annotation") {
-            if (typeof body.id !== "string" || !body.id) return send(400, "application/json", JSON.stringify({ error: "invalid annotation" }));
-            patch.annotations = workspace.annotations.filter((item) => item.id !== body.id);
-          } else if (action === "mark-read") {
-            patch.fileMeta = { [rel]: fingerprint(abs) };
-          } else return send(400, "application/json", JSON.stringify({ error: "unknown state action" }));
+          const result = StateActions.applyAction(snapshot.workspace, {
+            action, rel, bookmark: body.bookmark, annotation: body.annotation, id: body.id,
+            fileMeta: action === "mark-read" ? fingerprint(abs) : undefined
+          });
+          if (result.error) return send(400, "application/json", JSON.stringify({ error: result.error }));
+          const patch = result.patch;
           await stateStore.updateWorkspace(rootReal, patch);
           return send(200, "application/json", JSON.stringify(await clientState()), { "cache-control": "no-store" });
         }
@@ -553,7 +541,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       ensureWatch(dirname(abs));
       try {
         const raw = readFileSync(abs, "utf8");
-        return send(200, "text/plain; charset=utf-8", raw, { "x-matn-file-size": String(Buffer.byteLength(raw)) });
+        const rel = relative(rootReal, realpathSync(abs)).split(sep).join("/");
+        return send(200, "text/plain; charset=utf-8", raw, { "x-matn-file-size": String(Buffer.byteLength(raw)), "x-matn-file-rel": encodeURIComponent(rel) });
       }
       catch { return send(404, "text/plain", "not found"); }
     }

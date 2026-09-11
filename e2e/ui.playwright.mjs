@@ -474,8 +474,49 @@ try {
   await reading.locator(".toast-undo").click();
   await reading.waitForFunction(() => document.querySelector("main").scrollTop > 800);
   assert.match(await reading.locator("#doc .source-target").innerText(), /قسم 9/);
+
+  // Opening one file instead of a folder is the first example in the README, and a
+  // highlight made that way used to save on the server and never appear: with no
+  // folder listing the client had no relative path, so it filtered its own
+  // annotations against "" and matched none of them.
+  const singleRoot = await mkdtemp(join(tmpdir(), "matn-single-"));
+  const singleFile = join(singleRoot, "README.md");
+  await writeFile(singleFile, "# عنوان\n\nفقرة عربية طويلة نسبيا قابلة للتحديد والتمييز داخل القارئ.\n");
+  const singleDataDir = await mkdtemp(join(tmpdir(), "matn-single-state-"));
+  const singleServer = await startServer({ port: 0, host: "127.0.0.1", defaultArg: singleFile, dataDir: singleDataDir });
+  const singleBase = `http://127.0.0.1:${singleServer.address().port}`;
+  try {
+    const single = await readingContext.newPage();
+    await single.goto(`${singleBase}/?path=${encodeURIComponent(singleFile)}`);
+    await single.waitForSelector("#doc p");
+    assert.equal(await single.evaluate(() => relForFile(cur)), "README.md", "the reader could not name the file it had open");
+    const box = await single.evaluate(() => {
+      const node = [...document.querySelector("#doc p").childNodes].find((n) => n.nodeType === 3 && n.nodeValue.trim().length > 20);
+      const range = document.createRange();
+      range.setStart(node, 0);
+      range.setEnd(node, 18);
+      const rect = range.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, y: rect.top + rect.height / 2 };
+    });
+    await single.mouse.move(box.right - 2, box.y);
+    await single.mouse.down();
+    await single.mouse.move(box.left + 2, box.y, { steps: 8 });
+    await single.mouse.up();
+    await single.waitForSelector("#selectiontools.open");
+    await single.locator('[data-selection-color="yellow"]').click();
+    await single.waitForSelector("mark.annotation-mark");
+    // and it has to still be there after a reload, not just after the click that made it
+    await single.reload();
+    await single.waitForSelector("#doc p");
+    await single.waitForFunction(() => document.querySelectorAll("mark.annotation-mark").length === 1);
+    await single.close();
+  } finally {
+    await new Promise((resolve) => singleServer.close(resolve));
+    await rm(singleRoot, { recursive: true, force: true });
+    await rm(singleDataDir, { recursive: true, force: true });
+  }
   await readingContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, and change-jump passed");
+  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
