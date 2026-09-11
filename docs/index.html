@@ -180,9 +180,10 @@ html[data-theme="light"] .toast-undo,html[data-theme="sepia"] .toast-undo{color:
 .selection-tools button:hover .selection-icon{color:var(--accent)}
 /* pick the colour at highlight time — one click instead of highlight→open→recolour→save */
 .selection-colors{display:flex;align-items:center;gap:3px;padding:0 3px}
-.selection-colors button{width:19px;height:19px;padding:0;border-radius:50%;border:1.5px solid transparent;box-shadow:inset 0 0 0 1px rgb(var(--shadow)/.15)}
-.selection-colors button:hover{border-color:var(--ink);background:transparent}
-.selection-colors [data-selection-color="yellow"]{background:#f5db72}.selection-colors [data-selection-color="green"]{background:#8fd3a4}.selection-colors [data-selection-color="blue"]{background:#8fc4e6}.selection-colors [data-selection-color="rose"]{background:#e9a0a0}
+.selection-colors button{width:24px;height:24px;padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%;cursor:pointer}
+.selection-colors button::before{content:"";width:19px;height:19px;border-radius:50%;border:1.5px solid transparent;background:inherit;box-shadow:inset 0 0 0 1px rgb(var(--shadow)/.15);transition:border-color var(--dur) var(--ease)}
+.selection-colors button:hover::before{border-color:var(--ink)}
+.selection-colors [data-selection-color="yellow"]::before{background:#f5db72}.selection-colors [data-selection-color="green"]::before{background:#8fd3a4}.selection-colors [data-selection-color="blue"]::before{background:#8fc4e6}.selection-colors [data-selection-color="rose"]::before{background:#e9a0a0}
 .selection-sep{width:1px;align-self:stretch;margin:3px 2px;background:var(--line)}
 .annotation-mark{color:inherit;padding:0 .04em;border-radius:3px;cursor:pointer}.annotation-yellow{background:#f5db72aa}.annotation-green{background:#8fd3a488}.annotation-blue{background:#8fc4e688}.annotation-rose{background:#e9a0a088}html[data-theme="dark"] .annotation-mark,html[data-theme="night"] .annotation-mark{color:var(--ink)}
 /* keeps <dialog>'s focus trap and Esc handling, but sits beside the highlight it
@@ -329,7 +330,7 @@ article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:1
   opacity:0;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
 html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 .findbar.open{display:flex;opacity:1;transform:translateX(50%) translateY(0)}
-.findbar input{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--text-ui);width:190px;outline:none}
+.findbar input{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--text-ui);width:190px;min-height:24px;outline:none}
 .find-count{font-size:var(--text-xs);color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px;text-align:center}
 .find-btn{width:28px;height:28px;border:0;background:transparent;color:var(--ink-soft);border-radius:50%;cursor:pointer;font-size:14px;line-height:1;transition:background var(--dur) var(--ease),color var(--dur) var(--ease)}
 .find-btn:hover{background:var(--surface);color:var(--accent)}
@@ -465,7 +466,8 @@ article#doc{font-family:var(--rfont);padding:64px clamp(42px,7vw,112px) 40vh}
 .panel{top:68px;inset-inline-end:16px;width:356px;border-radius:24px;padding:18px;max-height:calc(100dvh - 92px);display:block;visibility:hidden;pointer-events:none;opacity:0;transform:translateY(-9px) scale(.92);filter:blur(7px);transform-origin:var(--popover-origin-x,50%) top;transition:opacity 180ms ease,transform 320ms var(--ease),filter 220ms ease,visibility 0s linear 320ms}.panel.open{visibility:visible;pointer-events:auto;opacity:1;transform:translateY(0) scale(1);filter:blur(0);transition-delay:0s}
 .panel .lbl{font:650 .7rem/1.2 var(--ui);letter-spacing:0;text-transform:none}.preset-list{grid-template-columns:1fr 1fr;display:grid;gap:8px}.preset-list button{min-height:76px;border-radius:16px;background:rgb(120 120 128/.08);border-color:var(--line-soft);padding:11px}.preset-list button:hover{background:rgb(120 120 128/.14)}
 .seg{gap:3px;padding:3px;border-radius:13px;background:var(--fill);box-shadow:inset 0 0 0 1px var(--line-soft)}.seg button{border:0;border-radius:10px;background:transparent;min-height:29px;transition:color 130ms ease,background-color 180ms ease,box-shadow 180ms ease,transform 100ms var(--ease-press)}.seg button:active{transform:scale(.97)}.seg button[data-active="1"]{background:rgb(var(--glass-edge)/.72);box-shadow:0 4px 12px -9px rgb(0 0 0/.55),inset 0 0 0 1px var(--line-soft);color:var(--ink)}
-.themes{grid-template-columns:repeat(4,1fr)}.themes button[data-theme-val="system"]{grid-column:1/-1}.themes button{height:42px;border-radius:14px;transition:border-color 160ms ease,transform 160ms var(--ease),box-shadow 160ms ease}.themes button:hover{transform:translateY(-1px)}.themes button:active{transform:scale(.96)}.sel{border-radius:12px;background:var(--fill);min-height:38px}.rowbtn,.primary,.secondary,.danger-btn,.reset{border-radius:12px;min-height:34px;font-family:var(--ui)}
+.themes{grid-template-columns:repeat(4,1fr)}.themes button[data-theme-val="system"]{grid-column:1/-1;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px}
+.themes button[data-theme-val="system"]::before{content:"";inline-size:17px;block-size:17px;flex:none;border-radius:50%;background:linear-gradient(135deg,#f2f2f7 49%,#1c1c1e 51%);box-shadow:inset 0 0 0 1px rgb(var(--shadow)/.22)}.themes button{height:42px;border-radius:14px;transition:border-color 160ms ease,transform 160ms var(--ease),box-shadow 160ms ease}.themes button:hover{transform:translateY(-1px)}.themes button:active{transform:scale(.96)}.sel{border-radius:12px;background:var(--fill);min-height:38px}.rowbtn,.primary,.secondary,.danger-btn,.reset{border-radius:12px;min-height:34px;font-family:var(--ui)}
 .start-actions .primary,.start-actions .secondary{border-radius:999px}
 .menu{border-radius:18px;padding:7px;min-width:208px;display:block;visibility:hidden;pointer-events:none;opacity:0;transform:translateY(-7px) scale(.90);filter:blur(5px);transform-origin:85% top;transition:opacity 130ms ease,transform 260ms var(--ease),filter 180ms ease,visibility 0s linear 260ms}.menu.open{visibility:visible;pointer-events:auto;opacity:1;transform:translateY(0) scale(1);filter:blur(0);transition-delay:0s}.menu button{min-height:34px;border-radius:11px;font:500 .8rem/1.35 var(--ui);transition:background-color 90ms ease,color 90ms ease,transform 100ms var(--ease-press)}.menu button:hover{background:var(--accent);color:white}.menu button:active{transform:scale(.985)}.menu button:hover .menu-action-icon{color:white}
 .quick{border-radius:28px;transform-origin:50% 12%;animation:glass-materialize 380ms var(--ease)}.quick-overlay{background:rgb(0 0 0/.12);backdrop-filter:blur(8px)}.quick-head{min-height:58px}.quick-input{font-family:var(--ui)}
@@ -623,7 +625,7 @@ article#doc{padding-top:48px}
     </div></div>
   <div class="grp"><div class="lbl" data-i18n="theme">السمة</div>
     <div class="themes" id="themes">
-      <button data-theme-val="system" style="background:linear-gradient(135deg,#f2f2f7 49%,#1c1c1e 51%);color:#007aff" data-i18n="themeSystem">النظام</button>
+      <button data-theme-val="system" data-i18n="themeSystem">النظام</button>
       <button data-theme-val="light" style="background:#f2f2f7;color:#000" data-i18n="themeLight">فاتح</button>
       <button data-theme-val="sepia" style="background:#f1e6ce;color:#453620" data-i18n="themeSepia">سيبيا</button>
       <button data-theme-val="dark" style="background:#1c1c1e;color:#fff" data-i18n="themeDark">داكن</button>
