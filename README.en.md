@@ -10,6 +10,7 @@ their own axis, in a Mac-first Liquid Glass interface.
 **[▶ Try the live demo](https://ajarallah.github.io/matn/)** ·
 [Quick start](#quick-start) ·
 [Interface](#interface) ·
+[Architecture](./ARCHITECTURE.md) ·
 [العربية](./README.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
@@ -183,7 +184,8 @@ and libraries are vendored, so it runs fully offline and never phones home.
 
 The testable logic lives in pure modules (`src/*-core.cjs`) that load in both Node and
 the browser, so Arabic normalisation and the render pipeline exist once rather than
-twice. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+twice. See [ARCHITECTURE.md](./ARCHITECTURE.md), and [plans/](./plans/README.md) for why
+each call was made and what was turned down first.
 
 ## Security
 

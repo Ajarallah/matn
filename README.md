@@ -12,6 +12,7 @@
 **[▶ جرّب النسخة الحيّة](https://ajarallah.github.io/matn/)** ·
 [البدء السريع](#البدء-السريع) ·
 [الواجهة](#الواجهة) ·
+[البنية](./ARCHITECTURE.md) ·
 [English](./README.en.md)
 
 [![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
@@ -181,7 +182,8 @@ LaunchServices — بلا حاجة إلى Homebrew أو `duti`. وإن تعذّ�
 
 المنطق القابل للاختبار مفصول في وحدات نقية (`src/*-core.cjs`) تعمل في Node وفي المتصفح
 معا، فلا تتكرّر قواعد التطبيع العربي ولا العرض في مكانين. التفصيل في
-[ARCHITECTURE.md](./ARCHITECTURE.md).
+[ARCHITECTURE.md](./ARCHITECTURE.md)، وسبب كل قرار — وما رُفض قبله — في
+[دفتر العمل](./plans/README.md).
 
 ## الأمان
 
