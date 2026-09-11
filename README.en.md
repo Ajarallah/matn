@@ -1,20 +1,25 @@
+<div align="center">
+
 # متن · Matn
 
-**A right-to-left Markdown reader for Arabic.**
-Reading themes, embedded Arabic fonts, math, diagrams, and export — all in your browser, fully offline.
+### Arabic Markdown, the way it should read
 
-**[▶ Try the live demo](https://ajarallah.github.io/matn/)**
+A local reader that lays Arabic out right-to-left and leaves code and English on
+their own axis, in a Mac-first Liquid Glass interface.
 
-**[العربية →](./README.md)**
+**[▶ Try the live demo](https://ajarallah.github.io/matn/)** ·
+[Quick start](#quick-start) ·
+[Interface](#interface) ·
+[العربية](./README.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
 [![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
 ![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
 ![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
-![Matn — light theme](./assets/screenshot-light.png)
+</div>
 
----
+![Matn — light theme](./assets/screenshot-light.png)
 
 ## Why
 
@@ -25,60 +30,11 @@ renders your `.md` in the browser as a genuine right-to-left document — Arabic
 flows RTL while code and English read LTR inside it — wrapped in a reading
 experience built for long-form Arabic.
 
-## Features
+| Correct Arabic | Local and private | A complete reader |
+|---|---|---|
+| The document follows its dominant language, so an Arabic file stays right-to-left even when a heading opens with a Latin word — and Latin runs keep their own direction inside the line. | Runs offline, binds to `127.0.0.1`, serves only what is under the folder you opened, and sends nothing anywhere. | Library, search, outline, highlights, notes, book mode, and export — without ever modifying your Markdown. |
 
-**Reading**
-
-- 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
-- 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
-- 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
-- 🔧 **Reading controls** — font, size, line-height, column width, and text alignment (start / justify); every choice is saved locally.
-- 🌍 **Bilingual interface** — switch the whole UI between Arabic and English.
-
-**Content**
-
-- 🌈 **Syntax highlighting** — theme-aware, via highlight.js.
-- 🧮 **Math** — inline `$…$` and block `$$…$$` rendered with KaTeX, offline.
-- 📊 **Mermaid diagrams** — rendered inline and theme-aware; hover to magnify.
-- 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
-- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
-- ◇ **Document health** — a local report for missing links, images, and headings, without network checks or leaving the reading root.
-- 📝 **Footnotes**, a **YAML frontmatter card**, task lists, tables, blockquotes.
-- 🖼️ **Hover zoom** — magnify diagrams and images at the cursor.
-
-**Navigation & files**
-
-- 🧭 **Table of contents** — auto-generated, with scroll-spy and heading anchors.
-- 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
-- 📖 **Book mode** — reads `SUMMARY.md` as ordered chapters with previous/next and overall progress, without building or modifying files.
-- 🔎 **In-document search** — press `/` to find and jump between matches.
-- ♻️ **Live reload** — edit in any editor; the view updates on save.
-- 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
-- 🖱️ **Drag & drop** any `.md` onto the window.
-
-**Output**
-
-- 📤 **Export** — PDF, standalone HTML, Word (`.docx`), EPUB 3 (RTL page progression), or raw Markdown.
-- 🖨️ **Print** — a clean print layout.
-
-**Foundations**
-
-- 📦 **Zero runtime dependencies** — pure Node plus vendored assets, fully offline; never phones home.
-- 🔒 **Contained** — binds to `127.0.0.1`, serves only from the folder you opened, escapes raw HTML, and blocks unsafe URL schemes.
-- 📄 **Common Markdown formats** — opens `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd`,
-  `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, and `.qmd`.
-
-## Screenshots
-
-| Sepia · Amiri | Dark · syntax + math |
-|---|---|
-| ![sepia](./assets/screenshot-sepia.png) | ![dark](./assets/screenshot-dark.png) |
-
-| Reading settings |
-|---|
-| ![settings](./assets/screenshot-settings.png) |
-
-## Install
+## Quick start
 
 ```bash
 npm install -g @ajarallah/matn
@@ -108,6 +64,68 @@ bash "$(npm root -g)/@ajarallah/matn/scripts/install-macos.sh" --uninstall   # m
 npm rm -g @ajarallah/matn
 ```
 
+## What it does
+
+<details>
+<summary><b>The full feature list</b> — reading, content, navigation, output</summary>
+
+**Reading**
+
+- 🫧 **Real Liquid Glass structure** — a floating library sidebar, separate inspector, and refractive toolbar groups above an opaque content layer, with reduced-transparency and reduced-motion fallbacks.
+- 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
+- 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
+- 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
+- 🔧 **Reading controls** — font, size, line-height, column width, and text alignment (start / justify); every choice is saved locally.
+- 🌍 **Bilingual interface** — switch the whole UI between Arabic and English.
+- ⌨️ **Shortcuts you can find** — press `?` for the full list, or open it from the settings panel.
+
+**Content**
+
+- 🌈 **Syntax highlighting** — theme-aware, via highlight.js.
+- 🧮 **Math** — inline `$…$` and block `$$…$$` rendered with KaTeX, offline.
+- 📊 **Mermaid diagrams** — rendered inline and theme-aware; hover to magnify.
+- 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
+- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
+- ◇ **Document health** — a local report for missing links, images, and headings, without network checks or leaving the reading root.
+- 📝 **Footnotes**, a **YAML frontmatter card**, task lists, tables, blockquotes.
+- 🖼️ **Hover zoom** — magnify diagrams and images at the cursor.
+
+**Navigation & files**
+
+- 🧭 **Table of contents** — auto-generated, with scroll-spy and heading anchors.
+- 🔤 **Outline filter** — on a long document, type part of a section name to reach it. Matched with Arabic normalisation, so hamzas and diacritics don't get in the way.
+- 🗂️ **File tree** — open a folder to browse a nested, collapsible directory tree.
+- 📖 **Book mode** — reads `SUMMARY.md` as ordered chapters with previous/next and overall progress, without building or modifying files.
+- 🔎 **In-document search** — press `/` to find and jump between matches.
+- ♻️ **Live reload** — edit in any editor; the view updates on save.
+- 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
+- 🖱️ **Drag & drop** any `.md` onto the window, or **paste** Markdown straight from the clipboard (`⌘V`) — agent output, a slice of a chat — with an undo that restores what you had open.
+- 🔔 **Tells you what changed** — when the file is edited elsewhere your place is kept, and a toast names the section that changed so you can jump to it if you want.
+
+**Output**
+
+- 📤 **Export** — PDF, standalone HTML, Word (`.docx`), EPUB 3 (RTL page progression), or raw Markdown.
+- 🖨️ **Print** — a clean print layout.
+
+**Foundations**
+
+- 📦 **Zero runtime dependencies** — pure Node plus vendored assets, fully offline; never phones home.
+- 🔒 **Contained** — binds to `127.0.0.1`, serves only from the folder you opened, escapes raw HTML, and blocks unsafe URL schemes.
+- 📄 **Common Markdown formats** — opens `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd`,
+  `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, and `.qmd`.
+
+</details>
+
+## Interface
+
+| Sepia · Amiri | Dark · syntax + math |
+|---|---|
+| ![sepia](./assets/screenshot-sepia.png) | ![dark](./assets/screenshot-dark.png) |
+
+| Reading settings |
+|---|
+| ![settings](./assets/screenshot-settings.png) |
+
 ## Usage
 
 ```bash
@@ -131,7 +149,7 @@ then `matn b.md` both land in the same window.
 - **Switch between rendered, source, and split views** with `</>`; the `¶` beside a heading opens its corresponding Markdown line.
 - **Drag** any `.md` onto the window to open it.
 - **Save ▾** exports PDF / HTML / Word / EPUB / Markdown; **🖨️** prints.
-- Press **/** to search. Keys: `+` / `−` size · `g` / `G` top / bottom · `Esc` close the panel.
+- Press **/** to search, **?** for the full shortcut list. Keys: `⌘K` library · `+` / `−` size · `g` / `G` top / bottom · `f` focus · `Esc` close the panel.
 
 ## Open `.md` on double-click
 
@@ -163,6 +181,10 @@ the document's dominant direction for correct bidi, highlights code with
 (both lazy-loaded), and pushes live-reload events over Server-Sent Events. Fonts
 and libraries are vendored, so it runs fully offline and never phones home.
 
+The testable logic lives in pure modules (`src/*-core.cjs`) that load in both Node and
+the browser, so Arabic normalisation and the render pipeline exist once rather than
+twice. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ## Security
 
 Matn binds to `127.0.0.1` by default and serves Markdown plus referenced raster
@@ -184,8 +206,11 @@ Full third-party notices in [NOTICE](./NOTICE).
 
 ## Contributing
 
-Issues and PRs welcome. Roadmap: presentation mode, more themes and font
-pairings. See the [CHANGELOG](./CHANGELOG.md).
+Issues and PRs welcome — start with [CONTRIBUTING](./.github/CONTRIBUTING.md). It
+names the commands CI runs and what usually gets turned down: a runtime dependency,
+an editing feature, a network call, a wider file root. Design decisions and the
+research behind them are in [plans/](./plans/README.md); changes in the
+[CHANGELOG](./CHANGELOG.md).
 
 ---
 

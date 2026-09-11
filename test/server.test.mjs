@@ -295,16 +295,60 @@ test("switching indexed folders never leaks results from the previous folder", a
   assert.deepEqual(afterSwitch.results, []);
 });
 
-test("cross-site browser requests cannot trigger folder indexing", async (t) => {
+test("a page on another origin cannot reach any read endpoint", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-search-fetch-site-"));
+  const file = join(root, "README.md");
+  await writeFile(file, "# البداية\n", "utf8");
   const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
     await rm(root, { recursive: true, force: true });
   });
   const base = `http://127.0.0.1:${server.address().port}`;
-  const response = await fetch(`${base}/api/list?dir=${encodeURIComponent(root)}`, { headers: { "sec-fetch-site": "cross-site" } });
-  assert.equal(response.status, 403);
+  // Same-site counts too: any other port on 127.0.0.1 is a different app.
+  // /api/file-info shells out to git and /api/list walks the tree, so an unguarded
+  // read endpoint is a way to spend the user's machine, not just to peek at it.
+  const guarded = [
+    `/api/list?dir=${encodeURIComponent(root)}`,
+    `/api/raw?path=${encodeURIComponent(file)}`,
+    `/api/file-info?path=${encodeURIComponent(file)}`,
+    "/api/search?q=a",
+    "/api/changes",
+    "/api/root"
+  ];
+  for (const site of ["cross-site", "same-site"]) {
+    for (const path of guarded) {
+      const response = await fetch(base + path, { headers: { "sec-fetch-site": site } });
+      assert.equal(response.status, 403, `${path} answered a ${site} request`);
+    }
+  }
+  const allowed = await fetch(`${base}/api/root`, { headers: { "sec-fetch-site": "same-origin" } });
+  assert.equal(allowed.status, 200);
+  // the CLI probes /api/root with node's fetch, which sends no Sec-Fetch-Site at all
+  assert.equal((await fetch(`${base}/api/root`)).status, 200);
+});
+
+test("the session token is compared without leaking its bytes through timing", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-token-"));
+  const file = join(root, "README.md");
+  await writeFile(file, "# البداية\n", "utf8");
+  const dataDir = await mkdtemp(join(tmpdir(), "matn-token-data-"));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const host = base.slice("http://".length);
+  for (const token of ["", "x", "0".repeat(64)]) {
+    const response = await fetch(`${base}/api/state`, {
+      method: "PUT",
+      headers: { "content-type": "application/json", "x-matn-session": token, origin: base, host },
+      body: JSON.stringify({ currentFile: file })
+    });
+    assert.equal(response.status, 403);
+  }
 });
 
 test("reader state requires a same-origin session token and persists outside the workspace", async (t) => {

@@ -14,6 +14,7 @@ let s = src;
 s = s.replace(/url\("\/fonts\//g, 'url("./vendor/fonts/');
 s = s.replace('<script src="/marked.js"></script>', '<script src="./vendor/marked.min.js"></script>');
 s = s.replace('<script src="/render-core.js"></script>', '<script src="./render-core.js"></script>');
+s = s.replace('<script src="/search-core.js"></script>', '<script src="./search-core.js"></script>');
 s = s.replace('<script src="/annotation-core.js"></script>', '<script src="./annotation-core.js"></script>');
 s = s.replace('<script src="/highlight.js"></script>', '<script src="./vendor/highlight.min.js"></script>');
 s = s.replace('MERMAID_SRC="/mermaid.js"', 'MERMAID_SRC="./vendor/mermaid.min.js"');
@@ -27,9 +28,6 @@ const openctrl = '<a class="iconbtn" href="https://github.com/Ajarallah/matn" ta
 if (!s.includes(live)) { console.error("build-docs: live indicator markup not found — aborting"); process.exit(1); }
 s = s.replace(live, openctrl);
 
-// 3) the drop handler references #live (gone in the demo)
-s = s.replace('$("live").classList.remove("on");', "");
-
 // 4) bundled sample (non-executed markdown), inserted before marked loads
 const SAMPLE = readFileSync(join(ROOT, "scripts", "demo-sample.md"), "utf8");
 const sampleBlock = '<script type="text/markdown" id="sample">' + SAMPLE + '</script>\n';
@@ -38,11 +36,12 @@ const sampleBlock = '<script type="text/markdown" id="sample">' + SAMPLE + '</sc
 s = s.replace('<script src="./vendor/marked.min.js"></script>', () => sampleBlock + '<script src="./vendor/marked.min.js"></script>');
 
 // 5) replace the server-dependent boot block with a static boot
-const anchor = "applyS();\nvar params=new URLSearchParams";
+const anchor = "applyS();\nrequestAnimationFrame";
 const i = s.indexOf(anchor);
 const j = s.indexOf("</script>", i);
 if (i < 0 || j < 0) { console.error("build-docs: boot block not found — aborting"); process.exit(1); }
 const boot = `applyS();
+document.body.classList.add("ui-ready");
 var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
 renderSafely(SAMPLE);
@@ -54,6 +53,7 @@ const DOCS = join(ROOT, "docs");
 mkdirSync(join(DOCS, "vendor", "fonts"), { recursive: true });
 writeFileSync(join(DOCS, "index.html"), s, "utf8");
 copyFileSync(join(ROOT, "src", "render-core.cjs"), join(DOCS, "render-core.js"));
+copyFileSync(join(ROOT, "src", "search-core.cjs"), join(DOCS, "search-core.js"));
 copyFileSync(join(ROOT, "src", "annotation-core.cjs"), join(DOCS, "annotation-core.js"));
 copyFileSync(join(ROOT, "vendor", "marked.min.js"), join(DOCS, "vendor", "marked.min.js"));
 copyFileSync(join(ROOT, "vendor", "highlight.min.js"), join(DOCS, "vendor", "highlight.min.js"));
@@ -66,6 +66,8 @@ for (const f of readdirSync(join(ROOT, "vendor", "fonts")))
 
 const checks = ["./vendor/marked.min.js", "./vendor/mermaid.min.js", "safeRenderer", "id=\"sample\""];
 const missing = checks.filter((c) => !s.includes(c));
+const unrewritten = s.match(/<script src="\/[^"]+"/g) || [];
+if (unrewritten.length) { console.error("build-docs: script tags still point at the server —", unrewritten.join(", ")); process.exit(1); }
 console.log("build-docs: wrote docs/index.html (" + s.length + " bytes)");
 console.log("build-docs: server refs left:", (s.match(/["']\/(api|marked|highlight|mermaid|fonts)/g) || []).length);
 if (missing.length) { console.error("build-docs: MISSING", missing); process.exit(1); }

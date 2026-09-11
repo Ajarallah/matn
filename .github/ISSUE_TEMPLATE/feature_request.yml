@@ -1,0 +1,26 @@
+name: Feature request
+description: Something the reader should be able to do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to read, and what gets in the way
+      description: >
+        Describe the situation rather than the solution. Matn deliberately stays a
+        reader — it does not edit files, sync, or reach the network — so a request
+        framed as a problem is easier to place inside those limits.
+    validations:
+      required: true
+  - type: textarea
+    id: elsewhere
+    attributes:
+      label: How other tools handle it
+      description: Optional. A link or a screenshot, if some reader already solves this well.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This works without a runtime dependency and without network access.
+        - label: This does not require modifying the Markdown files being read.
