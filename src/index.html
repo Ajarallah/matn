@@ -180,9 +180,10 @@ html[data-theme="light"] .toast-undo,html[data-theme="sepia"] .toast-undo{color:
 .selection-tools button:hover .selection-icon{color:var(--accent)}
 /* pick the colour at highlight time — one click instead of highlight→open→recolour→save */
 .selection-colors{display:flex;align-items:center;gap:3px;padding:0 3px}
-.selection-colors button{width:19px;height:19px;padding:0;border-radius:50%;border:1.5px solid transparent;box-shadow:inset 0 0 0 1px rgb(var(--shadow)/.15)}
-.selection-colors button:hover{border-color:var(--ink);background:transparent}
-.selection-colors [data-selection-color="yellow"]{background:#f5db72}.selection-colors [data-selection-color="green"]{background:#8fd3a4}.selection-colors [data-selection-color="blue"]{background:#8fc4e6}.selection-colors [data-selection-color="rose"]{background:#e9a0a0}
+.selection-colors button{width:24px;height:24px;padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%;cursor:pointer}
+.selection-colors button::before{content:"";width:19px;height:19px;border-radius:50%;border:1.5px solid transparent;background:inherit;box-shadow:inset 0 0 0 1px rgb(var(--shadow)/.15);transition:border-color var(--dur) var(--ease)}
+.selection-colors button:hover::before{border-color:var(--ink)}
+.selection-colors [data-selection-color="yellow"]::before{background:#f5db72}.selection-colors [data-selection-color="green"]::before{background:#8fd3a4}.selection-colors [data-selection-color="blue"]::before{background:#8fc4e6}.selection-colors [data-selection-color="rose"]::before{background:#e9a0a0}
 .selection-sep{width:1px;align-self:stretch;margin:3px 2px;background:var(--line)}
 .annotation-mark{color:inherit;padding:0 .04em;border-radius:3px;cursor:pointer}.annotation-yellow{background:#f5db72aa}.annotation-green{background:#8fd3a488}.annotation-blue{background:#8fc4e688}.annotation-rose{background:#e9a0a088}html[data-theme="dark"] .annotation-mark,html[data-theme="night"] .annotation-mark{color:var(--ink)}
 /* keeps <dialog>'s focus trap and Esc handling, but sits beside the highlight it
@@ -329,7 +330,7 @@ article#doc{max-width:min(1120px,100%);margin:0 auto;padding:44px 0 40vh;width:1
   opacity:0;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
 html[dir="rtl"] .findbar{transform:translateX(50%) translateY(-8px)}
 .findbar.open{display:flex;opacity:1;transform:translateX(50%) translateY(0)}
-.findbar input{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--text-ui);width:190px;outline:none}
+.findbar input{border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:var(--text-ui);width:190px;min-height:24px;outline:none}
 .find-count{font-size:var(--text-xs);color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px;text-align:center}
 .find-btn{width:28px;height:28px;border:0;background:transparent;color:var(--ink-soft);border-radius:50%;cursor:pointer;font-size:14px;line-height:1;transition:background var(--dur) var(--ease),color var(--dur) var(--ease)}
 .find-btn:hover{background:var(--surface);color:var(--accent)}
