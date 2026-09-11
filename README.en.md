@@ -99,7 +99,8 @@ npm rm -g @ajarallah/matn
 - 🔎 **In-document search** — press `/` to find and jump between matches.
 - ♻️ **Live reload** — edit in any editor; the view updates on save.
 - 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
-- 🖱️ **Drag & drop** any `.md` onto the window.
+- 🖱️ **Drag & drop** any `.md` onto the window, or **paste** Markdown straight from the clipboard (`⌘V`) — agent output, a slice of a chat — with an undo that restores what you had open.
+- 🔔 **Tells you what changed** — when the file is edited elsewhere your place is kept, and a toast names the section that changed so you can jump to it if you want.
 
 **Output**
 
