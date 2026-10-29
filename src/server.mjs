@@ -381,7 +381,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       { res.writeHead(code, Object.assign({ "content-type": type }, securityHeaders, extra)); res.end(body); };
 
     if (!validHostHeader(req.headers.host || "")) return send(421, "text/plain", "misdirected request");
-    const stateWrite = u.pathname === "/api/state" && req.method === "PUT";
+    const stateWrite = (u.pathname === "/api/state" || u.pathname === "/api/seen") && req.method === "PUT";
     const actionWrite = ["/api/open-editor", "/api/reveal", "/api/trash"].includes(u.pathname) && req.method === "POST";
     if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
@@ -453,7 +453,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         return send(500, "application/json", JSON.stringify({ error: "state unavailable" }));
       }
     }
-    if (stateWrite) {
+    if (stateWrite && u.pathname === "/api/state") {
       try {
         const body = await readJson(req);
         const abs = safeMd(body.currentFile);
@@ -571,6 +571,21 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         const status = error && (error.code === "ENOENT" || error.code === "ENOEDITOR") ? 501 : error && error.statusCode ? error.statusCode : 500;
         return send(status, "application/json", JSON.stringify({ error: error && error.message ? error.message : "file action failed" }));
       }
+    }
+    if (u.pathname === "/api/seen") {
+      const abs = safeMd(u.searchParams.get("path"));
+      if (!abs) return send(400, "text/plain", "bad file");
+      const real = realpathSync(abs);
+      if (req.method === "PUT") {
+        // The server records what is on disk, never what the page claims it showed.
+        try {
+          if (statSync(real).size > MAX_INDEX_BYTES) return send(413, "text/plain", "too large");
+          await stateStore.writeSeen(real, readFileSync(real, "utf8"));
+          return send(204, "text/plain", "");
+        } catch { return send(500, "text/plain", "seen unavailable"); }
+      }
+      const seen = await stateStore.readSeen(real);
+      return seen == null ? send(204, "text/plain", "") : send(200, "text/plain; charset=utf-8", seen);
     }
     if (u.pathname === "/api/raw") {
       const abs = safeMd(u.searchParams.get("path"));

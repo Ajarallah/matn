@@ -167,6 +167,52 @@
     return from<0?null:lines.slice(from).join("\n");
   }
 
-  return {esc:esc,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
+  // ---- What changed since you last read --------------------------------------------
+  // Blocks are what a reader sees as one unit: a paragraph, one list item, a heading,
+  // a whole fence, a whole table. Rewrapping a paragraph is not a change.
+  function splitBlocks(md){
+    var lines=parseFrontmatter(String(md==null?"":md)).body.split(/\r?\n/),out=[],buf=[],fence=null;
+    function flush(){if(buf.length){out.push(buf.join("\n"));buf=[];}}
+    for(var i=0;i<lines.length;i++){
+      var line=lines[i],marker=/^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
+      if(fence){buf.push(line);if(marker&&marker[1][0]===fence[0]&&marker[1].length>=fence.length){fence=null;flush();}continue;}
+      if(marker){flush();fence=marker[1];buf.push(line);continue;}
+      if(!line.trim()){flush();continue;}
+      if(/^[ \t]{0,3}#{1,6}[ \t]/.test(line)){flush();out.push(line);continue;}
+      if(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]/.test(line)&&!/^[ \t]*(?:[-*_][ \t]*){3,}$/.test(line))flush();
+      buf.push(line);
+    }
+    flush();
+    return out;
+  }
+  function blockKey(src){return src.replace(/\s+/g," ").trim();}
+  function similar(x,y){var a=x.split(" "),b=y.split(" "),seen={},common=0,i;for(i=0;i<a.length;i++)seen[a[i]]=(seen[a[i]]||0)+1;for(i=0;i<b.length;i++)if(seen[b[i]]>0){seen[b[i]]--;common++;}return common*2>=Math.max(a.length,b.length);}
+  function blockDiff(before,after){
+    var a=splitBlocks(before),b=splitBlocks(after),ak=a.map(blockKey),bk=b.map(blockKey),n=a.length,m=b.length,pairs=[],i,j;
+    if(n*m<=4000000){
+      var dp=new Array(n+1);for(i=0;i<=n;i++)dp[i]=new Uint32Array(m+1);
+      for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=ak[i]===bk[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+      for(i=0,j=0;i<n&&j<m;){if(ak[i]===bk[j]){pairs.push([i,j]);i++;j++;}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;}
+    }else{
+      // ponytail: too big for LCS — match the unchanged head and tail only
+      for(i=0;i<n&&i<m&&ak[i]===bk[i];i++)pairs.push([i,i]);
+      var tail=[];for(var k=1;k<=n-i&&k<=m-i&&ak[n-k]===bk[m-k];k++)tail.unshift([n-k,m-k]);pairs=pairs.concat(tail);
+    }
+    pairs.push([n,m]);
+    var blocks=b.map(function(src){return {src:src,status:"same"};}),removed=[],count=0,pi=0,pj=0;
+    for(var p=0;p<pairs.length;p++){
+      var del=[],ins=[];for(i=pi;i<pairs[p][0];i++)del.push(i);for(j=pj;j<pairs[p][1];j++)ins.push(j);
+      // A removal and an addition count as one edit only when they share most of their words.
+      for(var di=0,ii=0;di<del.length||ii<ins.length;count++){
+        if(di<del.length&&ii<ins.length&&similar(ak[del[di]],bk[ins[ii]])){blocks[ins[ii]].status="changed";blocks[ins[ii]].old=a[del[di]];di++;ii++;}
+        else if(di<del.length&&(ii>=ins.length||!del.slice(di).some(function(d){return similar(ak[d],bk[ins[ii]]);}))){removed.push({src:a[del[di]],at:ii<ins.length?ins[ii]:pairs[p][1]});di++;}
+        else{blocks[ins[ii]].status="added";ii++;}
+      }
+      pi=pairs[p][0]+1;pj=pairs[p][1]+1;
+    }
+    return {blocks:blocks,removed:removed,count:count};
+  }
+
+  return {esc:esc,splitBlocks:splitBlocks,blockDiff:blockDiff,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
     extractMath:extractMath,preprocess:preprocess,restoreMath:restoreMath,voteDir:voteDir,parseFrontmatter:parseFrontmatter};
 });

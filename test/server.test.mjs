@@ -628,3 +628,28 @@ test("image embeds resolve by name inside the root and never outside it", async 
   assert.equal((await fetch(`${base}/api/asset?from=${from}&name=${enc(outsideImage)}`)).status, 404);
   assert.equal((await fetch(`${base}/api/asset?from=${from}&name=a.md`)).status, 404);
 });
+
+test("last-read copies record the file on disk and need the session token", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-seen-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "matn-seen-data-"));
+  const file = join(root, "plan.md");
+  await writeFile(file, "# v1\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`, url = `${base}/api/seen?path=${encodeURIComponent(file)}`;
+  const token = /<meta name="matn-session" content="([a-f0-9]{64})">/.exec(await (await fetch(base + "/")).text())[1];
+  const put = (headers) => fetch(url, { method: "PUT", headers });
+
+  assert.equal((await fetch(url)).status, 204);
+  assert.equal((await put({ origin: base })).status, 403);
+  assert.equal((await put({ "x-matn-session": token, origin: base })).status, 204);
+  await writeFile(file, "# v2\n", "utf8");
+  const seen = await fetch(url);
+  assert.equal(seen.status, 200);
+  assert.equal(await seen.text(), "# v1\n");
+  assert.equal((await fetch(`${base}/api/seen?path=${encodeURIComponent(join(tmpdir(), "x.md"))}`)).status, 400);
+});

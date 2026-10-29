@@ -201,3 +201,20 @@ test("sliceSection returns the heading section or the block an embed points at",
   assert.equal(core.sliceSection(note, "^gone"), null);
   assert.ok(!core.sliceSection(note, "").includes("a: b"));
 });
+
+test("blockDiff reports added, changed and removed blocks, and ignores rewrapping", () => {
+  const before = "# خطة\n\nفقرة أولى\nتلتف هنا.\n\n- بند أ\n- بند ب\n\n```js\nx = 1\n\ny = 2\n```\n\nفقرة ستُحذف";
+  const after = "# خطة\n\nفقرة أولى تلتف هنا.\n\n- بند أ\n- بند ب معدّل\n- بند ج\n\n```js\nx = 1\n\ny = 2\n```";
+  assert.deepEqual(core.splitBlocks(before), ["# خطة", "فقرة أولى\nتلتف هنا.", "- بند أ", "- بند ب", "```js\nx = 1\n\ny = 2\n```", "فقرة ستُحذف"]);
+  const diff = core.blockDiff(before, after);
+  assert.deepEqual(diff.blocks.map((b) => b.status), ["same", "same", "same", "changed", "added", "same"]);
+  assert.equal(diff.blocks[3].old, "- بند ب");
+  assert.deepEqual(diff.removed, [{ src: "فقرة ستُحذف", at: 6 }]);
+  assert.equal(diff.count, 3);
+  assert.equal(core.blockDiff(after, after).count, 0);
+  assert.equal(core.blockDiff("", "سطر").blocks[0].status, "added");
+  const swap = core.blockDiff("- العربية تحتاج اتجاهًا\n- الوكلاء يكتبون Markdown", "- العربية تحتاج اتجاهًا صحيحًا\n- القارئ يُظهر ما تغيّر");
+  assert.deepEqual(swap.blocks.map((b) => b.status), ["changed", "added"]);
+  assert.deepEqual(swap.removed, [{ src: "- الوكلاء يكتبون Markdown", at: 1 }]);
+  assert.equal(swap.count, 3);
+});
