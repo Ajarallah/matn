@@ -109,7 +109,7 @@
     }
     if(inline)return '<a class="wikilink internal-link" href="#" data-wiki="'+esc(target)+'" title="'+esc(target)+'">'+esc(alias||target)+"</a>";
     var parts=target.split("#"),label=alias||(parts[0]+(parts[1]&&parts[1][0]!=="^"?" › "+parts[1]:""));
-    return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'">'+esc(label)+'</a><div class="md-embed-body"></div></div>';
+    return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'"><svg class="md-embed-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'+esc(label)+'</a><div class="md-embed-body"></div></div>';
   }
   function obsidianExtensions(){
     return [
@@ -136,7 +136,7 @@
       {name:"tag",level:"inline",
         start:function(s){var m=/(?:^|[\s(])#(?=[\p{L}_])/u.exec(s);return m?m.index+(s[m.index]==="#"?0:1):undefined;},
         tokenizer:function(s){var m=/^#([\p{L}_][\p{L}\p{M}\p{N}_\/-]*)/u.exec(s);if(m)return{type:"tag",raw:m[0],name:m[1]};},
-        renderer:function(t){return '<a class="md-tag" href="#" data-tag="'+esc(t.name)+'">#'+esc(t.name)+"</a>";}}
+        renderer:function(t){return '<a class="md-tag" href="#" data-tag="'+esc(t.name)+'"><span class="md-tag-hash">#</span>'+esc(t.name)+"</a>";}}
     ];
   }
   // The part of a note that ![[note#Heading]] or ![[note#^id]] points at; null when it is gone.

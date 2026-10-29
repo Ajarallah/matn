@@ -179,7 +179,7 @@ test("Obsidian syntax renders instead of printing its markers", () => {
   assert.doesNotMatch(html, /\^abc1</);
   assert.match(html, /<div class="md-embed" data-embed="ملاحظة#قسم">/);
   assert.match(html, /<img class="md-embed-img" data-embed-src="a.png" alt="a.png" width="200">/);
-  assert.match(html, /data-tag="وسم">#وسم<\/a>/);
+  assert.match(html, /data-tag="وسم"><span class="md-tag-hash">#<\/span>وسم<\/a>/);
   assert.doesNotMatch(html, /data-tag="sharp"|data-tag="12"/);
   assert.match(html, /<code>==code==<\/code>/);
   assert.doesNotMatch(html, /سر|مخفي|%%/);
