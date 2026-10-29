@@ -31,5 +31,31 @@ function reattach(source, anchor) {
   return best || { status: "orphan", start: -1, end: -1, score: 0 };
 }
 
-return { createAnchor, reattach };
+// Notes written for an agent to act on: each one quotes the text it is about and says
+// where that text is in the file now, so the agent can edit without guessing.
+function lineOf(source, quote) {
+  const text = String(source || ""), q = String(quote || "").trim();
+  if (!q) return 0;
+  let at = text.indexOf(q);
+  if (at < 0) {
+    // the quote is rendered text; the source may carry **, _, ` or links between the words
+    const words = q.split(/\s+/).filter((w) => w.length > 1).slice(0, 4);
+    for (let i = 0; at < 0 && i < words.length; i++) at = text.indexOf(words[i]);
+  }
+  return at < 0 ? 0 : text.slice(0, at).split("\n").length;
+}
+function reviewMarkdown({ rel, source, annotations }) {
+  const items = (annotations || []).slice().map((item) => ({ ...item, line: item.status === "orphan" ? 0 : lineOf(source, item.quote) }))
+    .sort((a, b) => (a.line || Infinity) - (b.line || Infinity));
+  const out = [`# Review: ${rel}`, "", `${items.length} ${items.length === 1 ? "note" : "notes"} on this file. Each quotes the text it is about; line numbers are for the file as it is now.`];
+  items.forEach((item, index) => {
+    const where = [item.line ? `line ${item.line}` : "", item.heading ? `under "${item.heading}"` : ""].filter(Boolean).join(", ");
+    out.push("", `## ${index + 1}.${where ? " " + where.charAt(0).toUpperCase() + where.slice(1) : ""}`, "", ...String(item.quote).trim().split(/\r?\n/).map((line) => "> " + line.trim()), "");
+    out.push(item.note && item.note.trim() ? item.note.trim() : "(highlighted, no comment)");
+    if (item.status === "orphan") out.push("", "_The quoted text is no longer in the file._");
+  });
+  return out.join("\n") + "\n";
+}
+
+return { createAnchor, reattach, reviewMarkdown };
 });

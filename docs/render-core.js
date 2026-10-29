@@ -186,7 +186,8 @@
     return out;
   }
   function blockKey(src){return src.replace(/\s+/g," ").trim();}
-  function similar(x,y){var a=x.split(" "),b=y.split(" "),seen={},common=0,i;for(i=0;i<a.length;i++)seen[a[i]]=(seen[a[i]]||0)+1;for(i=0;i<b.length;i++)if(seen[b[i]]>0){seen[b[i]]--;common++;}return common*2>=Math.max(a.length,b.length);}
+  function words(t){return t.split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);}
+  function similar(x,y){var a=words(x),b=words(y),seen={},common=0,i;for(i=0;i<a.length;i++)seen[a[i]]=(seen[a[i]]||0)+1;for(i=0;i<b.length;i++)if(seen[b[i]]>0){seen[b[i]]--;common++;}return common*2>=Math.max(a.length,b.length);}
   function blockDiff(before,after){
     var a=splitBlocks(before),b=splitBlocks(after),ak=a.map(blockKey),bk=b.map(blockKey),n=a.length,m=b.length,pairs=[],i,j;
     if(n*m<=4000000){

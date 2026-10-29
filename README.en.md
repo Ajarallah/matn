@@ -86,7 +86,8 @@ npm rm -g @ajarallah/matn
 - 🧮 **Math** — inline `$…$` and block `$$…$$` rendered with KaTeX, offline.
 - 📊 **Mermaid diagrams** — rendered inline and theme-aware; hover to magnify.
 - 💬 **GFM callouts** — `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, … styled per type.
-- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian.
+- 🔗 **Wikilinks** — `[[page]]` and `[[page|alias]]`, like Obsidian, with a hover preview that renders the section the link lands on.
+- 🪨 **Reads an Obsidian vault as Obsidian shows it** — embeds of notes, sections, blocks and images (`![[note#Heading]]`, `![[note#^id]]`, `![[image.png]]`), block references, `==highlights==`, `#tags`, hidden `%%comments%%`, and every Obsidian callout type with `+`/`-` folding.
 - ◇ **Document health** — a local report for missing links, images, and headings, without network checks or leaving the reading root.
 - 📝 **Footnotes**, a **YAML frontmatter card**, task lists, tables, blockquotes.
 - 🖼️ **Hover zoom** — magnify diagrams and images at the cursor.
@@ -102,6 +103,8 @@ npm rm -g @ajarallah/matn
 - 🐘 **Responsive large files** — documents over 2MB render in a Worker and load progressively without freezing the reader.
 - 🖱️ **Drag & drop** any `.md` onto the window, or **paste** Markdown straight from the clipboard (`⌘V`) — agent output, a slice of a chat — with an undo that restores what you had open.
 - 🔔 **Tells you what changed** — when the file is edited elsewhere your place is kept, and a toast names the section that changed so you can jump to it if you want.
+- 🆕 **What's new since you last read it** — come back to a file an agent or a colleague edited and the added blocks are marked green, edited ones amber (old text on hover), removed ones struck through, with a bar to step between them and mark the file read.
+- 🤖 **Review for agents** — highlight and annotate a plan, then copy the notes as Markdown an agent can act on (each quotes its text and gives the line), or let the agent run `matn review PLAN.md` and receive them on stdout when you press *Send to agent*.
 
 **Output**
 
@@ -134,6 +137,7 @@ matn <file.md>        # open a single file
 matn ./docs           # browse a folder (file-tree sidebar)
 matn                  # open the current directory
 command | matn -      # read Markdown from stdin in a temporary session
+matn review PLAN.md   # for agents: wait for your notes, then print them to stdout
 matn PLAN.md -p 5000  # custom port
 ```
 

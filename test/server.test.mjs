@@ -653,3 +653,42 @@ test("last-read copies record the file on disk and need the session token", asyn
   assert.equal(await seen.text(), "# v1\n");
   assert.equal((await fetch(`${base}/api/seen?path=${encodeURIComponent(join(tmpdir(), "x.md"))}`)).status, 400);
 });
+
+test("a review waits for the page and hands the notes to whoever asked", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-review-"));
+  await writeFile(join(root, "plan.md"), "# plan\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir: await mkdtemp(join(tmpdir(), "matn-review-data-")) });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, id = "a".repeat(32);
+  const token = /<meta name="matn-session" content="([a-f0-9]{64})">/.exec(await (await fetch(base + "/")).text())[1];
+  const send = (headers, body) => fetch(`${base}/api/review`, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+
+  const waiting = fetch(`${base}/api/review-wait?id=${id}`);
+  assert.equal((await send({ origin: base }, { id, markdown: "x" })).status, 403);
+  assert.equal((await send({ origin: base, "x-matn-session": token }, { id: "../x", markdown: "x" })).status, 400);
+  const sent = await send({ origin: base, "x-matn-session": token }, { id, markdown: "# Review: plan.md\n" });
+  assert.deepEqual(await sent.json(), { delivered: true });
+  const got = await waiting;
+  assert.equal(got.status, 200);
+  assert.equal(await got.text(), "# Review: plan.md\n");
+
+  const late = "b".repeat(32);
+  await send({ origin: base, "x-matn-session": token }, { id: late, markdown: "later" });
+  assert.equal(await (await fetch(`${base}/api/review-wait?id=${late}`)).text(), "later");
+  assert.equal((await fetch(`${base}/api/review-wait?id=nope`)).status, 400);
+});
+
+test("links from a single opened file resolve to nearby notes without a folder index", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-nearby-"));
+  await writeFile(join(root, "plan.md"), "![[ref#^key]]\n", "utf8");
+  await writeFile(join(root, "ref.md"), "# ref\nsentence ^key\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: join(root, "plan.md") });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, enc = encodeURIComponent;
+  const hit = await fetch(`${base}/api/resolve?from=${enc(join(root, "plan.md"))}&target=${enc("ref#^key")}`);
+  assert.equal(hit.status, 200);
+  const body = await hit.json();
+  assert.equal(body.rel, "ref.md");
+  assert.equal(body.heading.id, "^key");
+  assert.equal((await fetch(`${base}/api/resolve?from=${enc(join(root, "plan.md"))}&target=${enc("../../etc/passwd")}`)).status, 404);
+});

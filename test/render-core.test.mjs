@@ -217,4 +217,5 @@ test("blockDiff reports added, changed and removed blocks, and ignores rewrappin
   assert.deepEqual(swap.blocks.map((b) => b.status), ["changed", "added"]);
   assert.deepEqual(swap.removed, [{ src: "- الوكلاء يكتبون Markdown", at: 1 }]);
   assert.equal(swap.count, 3);
+  assert.equal(core.blockDiff("نص ==مميَّز== هنا.", "نص ==مميَّز== هنا وفيه زيادة.").blocks[0].status, "changed");
 });
