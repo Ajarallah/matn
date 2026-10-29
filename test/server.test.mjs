@@ -604,3 +604,27 @@ test("trash is disabled by default and rejects symlink file actions", async (t) 
   assert.equal(called, false);
   assert.equal(await readFile(file, "utf8"), "# باقٍ\n");
 });
+
+test("image embeds resolve by name inside the root and never outside it", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-asset-"));
+  const outsideImage = join(tmpdir(), `matn-asset-out-${Date.now()}.png`);
+  await mkdir(join(root, "notes"));
+  await mkdir(join(root, "attachments", "deep"), { recursive: true });
+  await writeFile(join(root, "notes", "a.md"), "# a\n![[شكل 1.png]]\n![[missing.png]]\n", "utf8");
+  await writeFile(join(root, "attachments", "deep", "شكل 1.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  await writeFile(outsideImage, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+    await rm(outsideImage, { force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`, enc = encodeURIComponent, from = enc(join(root, "notes", "a.md"));
+
+  const found = await (await fetch(`${base}/api/asset?from=${from}&name=${enc("شكل 1.png")}`)).json();
+  assert.equal(found.url, "/attachments/deep/" + enc("شكل 1.png"));
+  assert.equal((await fetch(base + found.url)).status, 200);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=${enc("../../" + basename(outsideImage))}`)).status, 404);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=${enc(outsideImage)}`)).status, 404);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=a.md`)).status, 404);
+});

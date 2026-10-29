@@ -163,3 +163,41 @@ test("preprocess drops HTML comments from prose but never from code", () => {
   const indented = core.preprocess("    <!-- keep indented -->\n");
   assert.match(indented.src, /<!-- keep indented -->/);
 });
+
+function obsidianMarked() {
+  const ex = {};
+  runInNewContext(readFileSync(new URL("../vendor/marked.min.js", import.meta.url), "utf8"), { exports: ex, module: { exports: ex } });
+  ex.use({ extensions: core.obsidianExtensions() });
+  return (md) => { const pre = core.preprocess(md); return core.restoreMath(ex.parse(pre.src, { renderer: core.safeRenderer(ex) }), pre.store); };
+}
+
+test("Obsidian syntax renders instead of printing its markers", () => {
+  const render = obsidianMarked();
+  const html = render("نص ==مميَّز **جدًا**== هنا ^abc1\n\n![[ملاحظة#قسم|بديل]]\n\n![[a.png|200]] #وسم و C#sharp و #12 و `==code==`\n\n%%سر\nمخفي%%\nبعد");
+  assert.match(html, /<mark class="md-mark">مميَّز <strong>جدًا<\/strong><\/mark>/);
+  assert.match(html, /<span class="block-id" id="\^abc1"><\/span>/);
+  assert.doesNotMatch(html, /\^abc1</);
+  assert.match(html, /<div class="md-embed" data-embed="ملاحظة#قسم">/);
+  assert.match(html, /<img class="md-embed-img" data-embed-src="a.png" alt="a.png" width="200">/);
+  assert.match(html, /data-tag="وسم">#وسم<\/a>/);
+  assert.doesNotMatch(html, /data-tag="sharp"|data-tag="12"/);
+  assert.match(html, /<code>==code==<\/code>/);
+  assert.doesNotMatch(html, /سر|مخفي|%%/);
+});
+
+test("embed targets cannot smuggle markup or script URLs", () => {
+  const html = obsidianMarked()('![[x"><img src=y onerror=alert(1)>]]');
+  assert.doesNotMatch(html, /<img src=y/);
+  assert.match(html, /&quot;&gt;&lt;img/);
+});
+
+test("sliceSection returns the heading section or the block an embed points at", () => {
+  const note = "---\na: b\n---\n# A\nx\n## قسم فرعي\nسطر ^p1\n- item ^li\n```\n# not a heading\n```\n# B\nw";
+  assert.equal(core.sliceSection(note, "قسم فرعي"), "## قسم فرعي\nسطر ^p1\n- item ^li\n```\n# not a heading\n```");
+  assert.equal(core.sliceSection(note, "^p1"), "سطر");
+  assert.equal(core.sliceSection(note, "^li"), "- item");
+  assert.equal(core.sliceSection(note, "B"), "# B\nw");
+  assert.equal(core.sliceSection(note, "missing"), null);
+  assert.equal(core.sliceSection(note, "^gone"), null);
+  assert.ok(!core.sliceSection(note, "").includes("a: b"));
+});

@@ -214,6 +214,33 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     catch { return null; }
     return { abs, type };
   }
+  // Obsidian embeds name an image, not a path: ![[diagram.png]] means "the one in this vault".
+  // Next to the note first, then from the root, then by name anywhere under the root.
+  let assetNames = null, assetNamesAt = 0;
+  function findAsset(fromAbs, name) {
+    const clean = String(name || "").replace(/\\/g, "/").split("#")[0].trim();
+    if (!clean || !imageTypes.has(extname(clean).toLowerCase())) return null;
+    const asUrl = (abs) => "/" + relative(root, abs).split(sep).map(encodeURIComponent).join("/");
+    for (const candidate of [resolve(dirname(fromAbs), clean), resolve(root, "." + "/" + clean.replace(/^\/+/, ""))]) {
+      if (safeImage("/" + relative(root, candidate).split(sep).join("/"))) return asUrl(candidate);
+    }
+    // ponytail: one walk cached for 5s; a watcher-driven index if vaults with 100k images show up
+    if (!assetNames || Date.now() - assetNamesAt > 5000) {
+      assetNames = new Map(); assetNamesAt = Date.now();
+      (function walk(d) {
+        let es = [];
+        try { es = readdirSync(d, { withFileTypes: true }); } catch { return; }
+        for (const e of es) {
+          if (e.name.startsWith(".") || e.name === "node_modules") continue;
+          const p = join(d, e.name);
+          if (e.isDirectory()) walk(p);
+          else if (imageTypes.has(extname(e.name).toLowerCase()) && !assetNames.has(e.name.toLowerCase())) assetNames.set(e.name.toLowerCase(), p);
+        }
+      })(root);
+    }
+    const found = assetNames.get(clean.split("/").pop().toLowerCase());
+    return found && withinRoot(found) ? asUrl(found) : null;
+  }
   function validHostHeader(value) {
     if (host !== "127.0.0.1" && host !== "localhost" && host !== "::1") return true;
     if (!value || /[\s/@\\]/.test(value)) return false;
@@ -301,6 +328,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       const target = LinkCore.splitTarget(reference.target);
       const base = { ...reference, id: `health-${index + 1}`, status: "ok", resolved: null };
       if (LinkCore.isExternal(target.file) || /^data:/i.test(target.file)) return { ...base, status: "external-unchecked" };
+      if (reference.kind === "embed-image") return findAsset(abs, target.file) ? base : { ...base, status: "missing" };
       const resolved = reference.kind !== "image" ? LinkCore.resolve(records, abs, reference.target) : null;
       if (resolved) {
         if (target.heading && !resolved.heading) return { ...base, status: "missing-heading", resolved };
@@ -486,6 +514,11 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       refreshStaleRecords();
       const resolved = resolvedPayload(LinkCore.resolve(Array.from(workspaceRecords.values()), from, target));
       return resolved ? send(200, "application/json", JSON.stringify(resolved)) : send(404, "application/json", JSON.stringify({ error: "unresolved link", indexing }));
+    }
+    if (u.pathname === "/api/asset") {
+      const from = safeMd(u.searchParams.get("from"));
+      const url = from && findAsset(from, (u.searchParams.get("name") || "").slice(0, 500));
+      return url ? send(200, "application/json", JSON.stringify({ url })) : send(404, "application/json", JSON.stringify({ error: "no such image" }));
     }
     if (u.pathname === "/api/context") {
       const path = safeMd(u.searchParams.get("path"));
