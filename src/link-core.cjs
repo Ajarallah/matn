@@ -40,6 +40,8 @@ function headings(content) {
 }
 function headingFor(record, requested) {
   if (!requested) return null;
+  // Obsidian block references: [[note#^id]] lands on the block that ends in " ^id".
+  if (requested.startsWith("^")) return RenderCore.sliceSection(record.content, requested) == null ? null : { level: 0, text: requested, id: requested };
   const wanted = SearchCore.normalizeSearch(requested.replace(/^#/, "").replace(/-/g, " "));
   const list = headings(record.content);
   return list.find((heading) => heading.id === requested || SearchCore.normalizeSearch(heading.text) === wanted) || null;
@@ -89,8 +91,12 @@ function references(record) {
   for (let index = 0; index < visible.length; index++) {
     const line = visible[index];
     let match;
-    const wiki = /\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/g;
-    while ((match = wiki.exec(line))) links.push({ target: match[1].trim(), text: (match[2] || match[1]).trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "wiki" });
+    const wiki = /(!?)\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/g;
+    while ((match = wiki.exec(line))) {
+      const target = match[2].trim();
+      const kind = match[1] && RenderCore.isImage(splitTarget(target).file) ? "embed-image" : "wiki";
+      links.push({ target, text: (match[3] || match[2]).trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind });
+    }
     const image = /!\[([^\]\n]*)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g;
     while ((match = image.exec(line))) links.push({ target: match[2].trim(), text: match[1].trim(), line: index + 1, context: original[index].trim().slice(0, 280), kind: "image" });
     const markdown = /(^|[^!])\[([^\]\n]+)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g;
@@ -102,7 +108,7 @@ function references(record) {
   return links;
 }
 function outgoing(record) {
-  return references(record).filter((link) => link.kind !== "image" && !isExternal(link.target) && !/^data:/i.test(link.target));
+  return references(record).filter((link) => link.kind !== "image" && link.kind !== "embed-image" && !isExternal(link.target) && !/^data:/i.test(link.target));
 }
 function context(records, path) {
   const current = records.find((record) => record.path === path);

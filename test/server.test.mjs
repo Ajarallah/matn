@@ -604,3 +604,91 @@ test("trash is disabled by default and rejects symlink file actions", async (t) 
   assert.equal(called, false);
   assert.equal(await readFile(file, "utf8"), "# باقٍ\n");
 });
+
+test("image embeds resolve by name inside the root and never outside it", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-asset-"));
+  const outsideImage = join(tmpdir(), `matn-asset-out-${Date.now()}.png`);
+  await mkdir(join(root, "notes"));
+  await mkdir(join(root, "attachments", "deep"), { recursive: true });
+  await writeFile(join(root, "notes", "a.md"), "# a\n![[شكل 1.png]]\n![[missing.png]]\n", "utf8");
+  await writeFile(join(root, "attachments", "deep", "شكل 1.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  await writeFile(outsideImage, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+    await rm(outsideImage, { force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`, enc = encodeURIComponent, from = enc(join(root, "notes", "a.md"));
+
+  const found = await (await fetch(`${base}/api/asset?from=${from}&name=${enc("شكل 1.png")}`)).json();
+  assert.equal(found.url, "/attachments/deep/" + enc("شكل 1.png"));
+  assert.equal((await fetch(base + found.url)).status, 200);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=${enc("../../" + basename(outsideImage))}`)).status, 404);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=${enc(outsideImage)}`)).status, 404);
+  assert.equal((await fetch(`${base}/api/asset?from=${from}&name=a.md`)).status, 404);
+});
+
+test("last-read copies record the file on disk and need the session token", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-seen-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "matn-seen-data-"));
+  const file = join(root, "plan.md");
+  await writeFile(file, "# v1\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir });
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`, url = `${base}/api/seen?path=${encodeURIComponent(file)}`;
+  const token = /<meta name="matn-session" content="([a-f0-9]{64})">/.exec(await (await fetch(base + "/")).text())[1];
+  const put = (headers) => fetch(url, { method: "PUT", headers });
+
+  assert.equal((await fetch(url)).status, 204);
+  assert.equal((await put({ origin: base })).status, 403);
+  assert.equal((await put({ "x-matn-session": token, origin: base })).status, 204);
+  await writeFile(file, "# v2\n", "utf8");
+  const seen = await fetch(url);
+  assert.equal(seen.status, 200);
+  assert.equal(await seen.text(), "# v1\n");
+  assert.equal((await fetch(`${base}/api/seen?path=${encodeURIComponent(join(tmpdir(), "x.md"))}`)).status, 400);
+});
+
+test("a review waits for the page and hands the notes to whoever asked", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-review-"));
+  await writeFile(join(root, "plan.md"), "# plan\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir: await mkdtemp(join(tmpdir(), "matn-review-data-")) });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, id = "a".repeat(32);
+  const token = /<meta name="matn-session" content="([a-f0-9]{64})">/.exec(await (await fetch(base + "/")).text())[1];
+  const send = (headers, body) => fetch(`${base}/api/review`, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+
+  const waiting = fetch(`${base}/api/review-wait?id=${id}`);
+  assert.equal((await send({ origin: base }, { id, markdown: "x" })).status, 403);
+  assert.equal((await send({ origin: base, "x-matn-session": token }, { id: "../x", markdown: "x" })).status, 400);
+  const sent = await send({ origin: base, "x-matn-session": token }, { id, markdown: "# Review: plan.md\n" });
+  assert.deepEqual(await sent.json(), { delivered: true });
+  const got = await waiting;
+  assert.equal(got.status, 200);
+  assert.equal(await got.text(), "# Review: plan.md\n");
+
+  const late = "b".repeat(32);
+  await send({ origin: base, "x-matn-session": token }, { id: late, markdown: "later" });
+  assert.equal(await (await fetch(`${base}/api/review-wait?id=${late}`)).text(), "later");
+  assert.equal((await fetch(`${base}/api/review-wait?id=nope`)).status, 400);
+});
+
+test("links from a single opened file resolve to nearby notes without a folder index", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-nearby-"));
+  await writeFile(join(root, "plan.md"), "![[ref#^key]]\n", "utf8");
+  await writeFile(join(root, "ref.md"), "# ref\nsentence ^key\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: join(root, "plan.md") });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, enc = encodeURIComponent;
+  const hit = await fetch(`${base}/api/resolve?from=${enc(join(root, "plan.md"))}&target=${enc("ref#^key")}`);
+  assert.equal(hit.status, 200);
+  const body = await hit.json();
+  assert.equal(body.rel, "ref.md");
+  assert.equal(body.heading.id, "^key");
+  assert.equal((await fetch(`${base}/api/resolve?from=${enc(join(root, "plan.md"))}&target=${enc("../../etc/passwd")}`)).status, 404);
+});

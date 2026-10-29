@@ -163,3 +163,59 @@ test("preprocess drops HTML comments from prose but never from code", () => {
   const indented = core.preprocess("    <!-- keep indented -->\n");
   assert.match(indented.src, /<!-- keep indented -->/);
 });
+
+function obsidianMarked() {
+  const ex = {};
+  runInNewContext(readFileSync(new URL("../vendor/marked.min.js", import.meta.url), "utf8"), { exports: ex, module: { exports: ex } });
+  ex.use({ extensions: core.obsidianExtensions() });
+  return (md) => { const pre = core.preprocess(md); return core.restoreMath(ex.parse(pre.src, { renderer: core.safeRenderer(ex) }), pre.store); };
+}
+
+test("Obsidian syntax renders instead of printing its markers", () => {
+  const render = obsidianMarked();
+  const html = render("نص ==مميَّز **جدًا**== هنا ^abc1\n\n![[ملاحظة#قسم|بديل]]\n\n![[a.png|200]] #وسم و C#sharp و #12 و `==code==`\n\n%%سر\nمخفي%%\nبعد");
+  assert.match(html, /<mark class="md-mark">مميَّز <strong>جدًا<\/strong><\/mark>/);
+  assert.match(html, /<span class="block-id" id="\^abc1"><\/span>/);
+  assert.doesNotMatch(html, /\^abc1</);
+  assert.match(html, /<div class="md-embed" data-embed="ملاحظة#قسم">/);
+  assert.match(html, /<img class="md-embed-img" data-embed-src="a.png" alt="a.png" width="200">/);
+  assert.match(html, /data-tag="وسم"><span class="md-tag-hash">#<\/span>وسم<\/a>/);
+  assert.doesNotMatch(html, /data-tag="sharp"|data-tag="12"/);
+  assert.match(html, /<code>==code==<\/code>/);
+  assert.doesNotMatch(html, /سر|مخفي|%%/);
+});
+
+test("embed targets cannot smuggle markup or script URLs", () => {
+  const html = obsidianMarked()('![[x"><img src=y onerror=alert(1)>]]');
+  assert.doesNotMatch(html, /<img src=y/);
+  assert.match(html, /&quot;&gt;&lt;img/);
+});
+
+test("sliceSection returns the heading section or the block an embed points at", () => {
+  const note = "---\na: b\n---\n# A\nx\n## قسم فرعي\nسطر ^p1\n- item ^li\n```\n# not a heading\n```\n# B\nw";
+  assert.equal(core.sliceSection(note, "قسم فرعي"), "## قسم فرعي\nسطر ^p1\n- item ^li\n```\n# not a heading\n```");
+  assert.equal(core.sliceSection(note, "^p1"), "سطر");
+  assert.equal(core.sliceSection(note, "^li"), "- item");
+  assert.equal(core.sliceSection(note, "B"), "# B\nw");
+  assert.equal(core.sliceSection(note, "missing"), null);
+  assert.equal(core.sliceSection(note, "^gone"), null);
+  assert.ok(!core.sliceSection(note, "").includes("a: b"));
+});
+
+test("blockDiff reports added, changed and removed blocks, and ignores rewrapping", () => {
+  const before = "# خطة\n\nفقرة أولى\nتلتف هنا.\n\n- بند أ\n- بند ب\n\n```js\nx = 1\n\ny = 2\n```\n\nفقرة ستُحذف";
+  const after = "# خطة\n\nفقرة أولى تلتف هنا.\n\n- بند أ\n- بند ب معدّل\n- بند ج\n\n```js\nx = 1\n\ny = 2\n```";
+  assert.deepEqual(core.splitBlocks(before), ["# خطة", "فقرة أولى\nتلتف هنا.", "- بند أ", "- بند ب", "```js\nx = 1\n\ny = 2\n```", "فقرة ستُحذف"]);
+  const diff = core.blockDiff(before, after);
+  assert.deepEqual(diff.blocks.map((b) => b.status), ["same", "same", "same", "changed", "added", "same"]);
+  assert.equal(diff.blocks[3].old, "- بند ب");
+  assert.deepEqual(diff.removed, [{ src: "فقرة ستُحذف", at: 6 }]);
+  assert.equal(diff.count, 3);
+  assert.equal(core.blockDiff(after, after).count, 0);
+  assert.equal(core.blockDiff("", "سطر").blocks[0].status, "added");
+  const swap = core.blockDiff("- العربية تحتاج اتجاهًا\n- الوكلاء يكتبون Markdown", "- العربية تحتاج اتجاهًا صحيحًا\n- القارئ يُظهر ما تغيّر");
+  assert.deepEqual(swap.blocks.map((b) => b.status), ["changed", "added"]);
+  assert.deepEqual(swap.removed, [{ src: "- الوكلاء يكتبون Markdown", at: 1 }]);
+  assert.equal(swap.count, 3);
+  assert.equal(core.blockDiff("نص ==مميَّز== هنا.", "نص ==مميَّز== هنا وفيه زيادة.").blocks[0].status, "changed");
+});
