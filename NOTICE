@@ -21,5 +21,12 @@ Libraries
 - highlight.js — BSD 3-Clause License — https://github.com/highlightjs/highlight.js
   (vendor/licenses/highlightjs-LICENSE.txt)
 
+Icons
+-----
+- Polaris Icons — MIT License, Copyright (c) Shopify Inc. —
+  https://github.com/Shopify/polaris (vendor/licenses/polaris-icons-LICENSE.md)
+  The icons used are in vendor/polaris-icons/ and are inlined, unmodified, in
+  src/index.html and src/render-core.cjs.
+
 All bundled assets are redistributed unmodified. Matn's own source code is
 licensed under the MIT License (see LICENSE).

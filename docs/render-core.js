@@ -109,7 +109,7 @@
     }
     if(inline)return '<a class="wikilink internal-link" href="#" data-wiki="'+esc(target)+'" title="'+esc(target)+'">'+esc(alias||target)+"</a>";
     var parts=target.split("#"),label=alias||(parts[0]+(parts[1]&&parts[1][0]!=="^"?" › "+parts[1]:""));
-    return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'"><svg class="md-embed-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'+esc(label)+'</a><div class="md-embed-body"></div></div>';
+    return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'"><svg class="md-embed-ico pi" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12.5a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-4Z"/><path fill-rule="evenodd" d="M6.75 2.5a2.75 2.75 0 0 0-2.75 2.75v9.5a2.75 2.75 0 0 0 2.75 2.75h6.5a2.75 2.75 0 0 0 2.75-2.75v-6a.75.75 0 0 0-.22-.53l-5.5-5.5a.75.75 0 0 0-.53-.22h-3Zm-1.25 2.75c0-.69.56-1.25 1.25-1.25h2.25v3.75c0 .966.784 1.75 1.75 1.75h3.75v5.25c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-9.5Zm7.94 2.75-2.94-2.94v2.69c0 .138.112.25.25.25h2.69Z"/></svg>'+esc(label)+'</a><div class="md-embed-body"></div></div>';
   }
   function obsidianExtensions(){
     return [
