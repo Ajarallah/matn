@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      { "matcher": "ExitPlanMode", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/matn.mjs\" hook plan-gate", "timeout": 1800 } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write|Edit|MultiEdit", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/matn.mjs\" hook follow", "timeout": 10 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/matn.mjs\" hook reply", "timeout": 10 } ] }
+    ]
+  }
+}

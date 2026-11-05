@@ -49,6 +49,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   let workspaceDir = null;
   const diagnostics = { fullIndexes: 0, fullRecords: 0, incrementalRecords: 0 };
   const reviews = new Map(), reviewWaiters = new Map();
+  const REVIEW_DECISIONS = new Set(["send", "approve", "changes"]);
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
   const sessionToken = randomBytes(32).toString("hex");
@@ -398,6 +399,18 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (!validHostHeader(req.headers.host || "")) return send(421, "text/plain", "misdirected request");
     const stateWrite = (u.pathname === "/api/state" || u.pathname === "/api/seen") && req.method === "PUT";
     const actionWrite = ["/api/open-editor", "/api/reveal", "/api/trash", "/api/review"].includes(u.pathname) && req.method === "POST";
+    // `matn <file>` on a running instance asks the open page to show the file instead of
+    // opening another tab. Browsers always send Origin on a POST, so a request without
+    // Origin or Sec-Fetch-Site comes from a local process, never from a web page.
+    if (u.pathname === "/api/follow" && req.method === "POST") {
+      if (req.headers.origin || req.headers["sec-fetch-site"]) return send(403, "application/json", JSON.stringify({ error: "follow is for the matn command" }));
+      let body;
+      try { body = await readJson(req, 16 * 1024); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid follow" })); }
+      const abs = body && typeof body.path === "string" ? safeMd(body.path) : null;
+      if (!abs) return send(400, "application/json", JSON.stringify({ error: "bad file" }));
+      broadcastMessage({ type: "follow", path: abs });
+      return send(200, "application/json", JSON.stringify({ delivered: clients.size }));
+    }
     if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
     // Every /api route is for this page only. A page on another origin cannot read the
@@ -592,8 +605,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     if (u.pathname === "/api/review-wait") {
       const id = u.searchParams.get("id") || "";
       if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");
-      if (reviews.has(id)) { const text = reviews.get(id); reviews.delete(id); return send(200, "text/markdown; charset=utf-8", text); }
-      const done = (text) => { clearTimeout(timer); reviewWaiters.delete(id); reviews.delete(id); send(200, "text/markdown; charset=utf-8", text); };
+      if (reviews.has(id)) { const result = reviews.get(id); reviews.delete(id); return send(200, "application/json", JSON.stringify(result)); }
+      const done = (result) => { clearTimeout(timer); reviewWaiters.delete(id); reviews.delete(id); send(200, "application/json", JSON.stringify(result)); };
       const timer = setTimeout(() => { reviewWaiters.delete(id); send(204, "text/plain", ""); }, 50000);
       reviewWaiters.set(id, done);
       req.on("close", () => { clearTimeout(timer); if (reviewWaiters.get(id) === done) reviewWaiters.delete(id); });
@@ -603,8 +616,23 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       let body;
       try { body = await readJson(req, 1024 * 1024); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid review" })); }
       if (!body || !REVIEW_ID.test(String(body.id || "")) || typeof body.markdown !== "string") return send(400, "application/json", JSON.stringify({ error: "invalid review" }));
+      const result = { decision: REVIEW_DECISIONS.has(body.decision) ? body.decision : "send", markdown: body.markdown };
+      // what the reviewer just read becomes the "seen" copy, so the revised file opens
+      // showing what the agent changed in answer to the notes
+      const reviewed = body.path ? safeMd(body.path) : null;
+      if (reviewed) {
+        try {
+          const real = realpathSync(reviewed);
+          if (statSync(real).size <= MAX_INDEX_BYTES) await stateStore.writeSeen(real, readFileSync(real, "utf8"));
+          // the notes just sent are never sent again; stamped here, because the agent's
+          // `matn review` may exit (and take this server with it) the moment it has them
+          const rel = relative(rootReal, real).split(sep).join("/"), at = Date.now();
+          const { workspace } = await stateStore.snapshot(rootReal);
+          await stateStore.updateWorkspace(rootReal, { annotations: workspace.annotations.map((item) => item.path === rel && !item.sentAt ? { ...item, sentAt: at } : item) });
+        } catch {}
+      }
       const waiter = reviewWaiters.get(body.id);
-      if (waiter) waiter(body.markdown); else reviews.set(body.id, body.markdown);
+      if (waiter) waiter(result); else reviews.set(body.id, result);
       return send(200, "application/json", JSON.stringify({ delivered: Boolean(waiter) }));
     }
     if (u.pathname === "/api/seen") {

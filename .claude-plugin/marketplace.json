@@ -1,0 +1,14 @@
+{
+  "name": "matn",
+  "owner": {
+    "name": "Ali Aljarallah"
+  },
+  "plugins": [
+    {
+      "name": "matn",
+      "source": "./",
+      "description": "Review Claude's plans in Matn and read its replies with correct Arabic."
+    }
+  ],
+  "description": "Matn, the Markdown reader that gets Arabic right, for Claude Code."
+}

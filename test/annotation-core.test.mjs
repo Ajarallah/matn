@@ -44,3 +44,13 @@ test("reviewMarkdown orders notes by line and quotes what each one is about", ()
   assert.match(md, /> نص أول\.\n\n\(highlighted, no comment\)/);
   assert.match(md, /## 3\.\n\n> جملة حُذفت\n\nراجعها\n\n_The quoted text is no longer in the file\._/);
 });
+
+test("review notes carry suggested replacements and skip notes already sent", async () => {
+  const md = AnnotationCore.reviewMarkdown({ rel: "p.md", source: "a\nship it\n", annotations: [
+    { id: "1", quote: "ship it", note: "", suggestion: "ship one region\nthen the rest", status: "attached" },
+    { id: "2", quote: "a", note: "old round", sentAt: 5, status: "attached" },
+  ] });
+  assert.match(md, /1 note on this file/);
+  assert.match(md, /\(no comment\)\n\nSuggested replacement:\n\n> ship one region\n> then the rest/);
+  assert.doesNotMatch(md, /old round/);
+});

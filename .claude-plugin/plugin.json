@@ -1,0 +1,18 @@
+{
+  "name": "matn",
+  "version": "1.3.0",
+  "description": "Read what the agent writes in Matn — correct Arabic and RTL — and review plans there: approve, or send line-anchored notes back.",
+  "author": {
+    "name": "Ali Aljarallah"
+  },
+  "homepage": "https://github.com/Ajarallah/matn",
+  "repository": "https://github.com/Ajarallah/matn",
+  "license": "MIT",
+  "keywords": [
+    "markdown",
+    "arabic",
+    "rtl",
+    "plan-review",
+    "reader"
+  ]
+}

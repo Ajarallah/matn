@@ -144,7 +144,7 @@ matn PLAN.md -p 5000  # custom port
 Options: `-p, --port` · `--host` · `--no-open` · `--editor <executable>` · `--allow-file-actions` · `--stdin-name <name>` · `-h, --help` · `-v, --version`.
 
 Matn opens your browser automatically and reuses a running instance, so `matn a.md`
-then `matn b.md` both land in the same window.
+then `matn b.md` both show in the page you already have open, without a new tab.
 
 ### In the browser
 
@@ -155,6 +155,38 @@ then `matn b.md` both land in the same window.
 - **Drag** any `.md` onto the window to open it.
 - **Save ▾** exports PDF / HTML / Word / EPUB / Markdown; **🖨️** prints.
 - Press **/** to search, **?** for the full shortcut list. Keys: `⌘K` library · `+` / `−` size · `g` / `G` top / bottom · `f` focus · `Esc` close the panel.
+
+## With agents: Claude Code and Codex
+
+Install Matn as a Claude Code plugin in one step — no npm needed:
+
+```text
+/plugin install matn --marketplace Ajarallah/matn
+```
+
+Then:
+
+- **When Claude leaves plan mode**, the plan opens in Matn. Comment on anything, optionally type replacement text for what you highlighted, and press **Approve plan** or **Request changes**. Claude gets your decision with every note quoted and located by line. If you don't answer within half an hour, the question goes back to the terminal as before.
+- **When Claude comes back with a revised plan**, Matn shows what changed since the version you reviewed, and says for each note you sent whether the text it was about changed.
+- **`/matn:last`** shows Claude's last reply in Matn, so Arabic and mixed-direction text read correctly where the terminal and many chat panels scramble them.
+- **`/matn:review`**, **`/matn:open`** and **`/matn:changes`** ask for a review of a file, open it, and tell the agent what you changed since it last read it.
+
+Settings, from the terminal:
+
+```bash
+matn agent                  # show settings
+matn agent gate off         # stop opening plans for approval
+matn agent follow on        # open every Markdown file the agent writes
+matn agent replies arabic   # open long Arabic replies automatically
+```
+
+**Codex** has no plan-approval hook, so it gets the skill, which teaches it to write plans and reports to files and ask for your review before acting:
+
+```bash
+matn setup codex
+```
+
+Any agent that runs commands can also use `matn review FILE` (with `--gate`, `--json`, `--timeout`) and `matn changes FILE --reader NAME --mark` directly.
 
 ## Open `.md` on double-click
 
