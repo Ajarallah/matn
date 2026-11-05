@@ -19,11 +19,20 @@
     return /^(https?|mailto|tel)$/.test(m[1])?h:"";
   }
   function slug(t,i){return (t||"").trim().replace(/\s+/g,"-").replace(/[^\p{L}\p{N}-]/gu,"").slice(0,60)+"-"+i;}
+  function unesc(t){return String(t==null?"":t).replace(/&(lt|gt|quot|#39|amp);/g,function(_,k){return {lt:"<",gt:">",quot:'"',"#39":"'",amp:"&"}[k];});}
+  var SAFE_TAGS=/^(details|summary|br|kbd|sup|sub|b|strong|i|em|u|s|del|ins|mark|small|hr)$/i;
   function safeRenderer(marked){
     var r=new marked.Renderer();
-    r.html=function(html){return esc(html);};
+    // Raw HTML stays text, except a few formatting tags READMEs lean on (collapsible
+    // <details>, <kbd>, <br>…). They pass with every attribute dropped, so no script,
+    // event handler or URL can ride along.
+    r.html=function(html){return String(html).split(/(<\/?[a-zA-Z][^<>]*>)/).map(function(part,i){
+      var tag=i%2?/^<(\/?)([a-zA-Z]+)/.exec(part):null;
+      if(tag&&SAFE_TAGS.test(tag[2]))return "<"+tag[1]+tag[2].toLowerCase()+">";
+      return esc(part);}).join("");};
     r.link=function(href,title,text){var u=safeHref(href,"link");if(!u)return text;return '<a href="'+esc(u)+'"'+(title?' title="'+esc(title)+'"':"")+">"+text+"</a>";};
-    r.image=function(href,title,text){var u=safeHref(href,"img");if(!u)return esc(text);return '<img src="'+esc(u)+'" alt="'+esc(text)+'"'+(title?' title="'+esc(title)+'"':"")+">";};
+    // marked hands over alt text already escaped; undo that once so `>=` doesn't become &amp;gt;=
+    r.image=function(href,title,text){text=unesc(text);var u=safeHref(href,"img");if(!u)return esc(text);return '<img src="'+esc(u)+'" alt="'+esc(text)+'"'+(title?' title="'+esc(title)+'"':"")+">";};
     return r;
   }
   function extractMath(src,store){

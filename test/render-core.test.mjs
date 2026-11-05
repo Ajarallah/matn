@@ -219,3 +219,22 @@ test("blockDiff reports added, changed and removed blocks, and ignores rewrappin
   assert.equal(swap.count, 3);
   assert.equal(core.blockDiff("نص ==مميَّز== هنا.", "نص ==مميَّز== هنا وفيه زيادة.").blocks[0].status, "changed");
 });
+
+test("README formatting tags render, stripped of every attribute; anything else stays text", () => {
+  const exports = {};
+  runInNewContext(readFileSync(new URL("../vendor/marked.min.js", import.meta.url), "utf8"), { exports, module: { exports } });
+  const renderer = core.safeRenderer(exports);
+  const html = exports.parse('<details open onclick="bad()">\n<summary><b>More</b></summary>\n\nText with <kbd>⌘K</kbd>.\n\n</details>\n\n<script>alert(1)</script>\n\n<div style="x">box</div>', { renderer });
+  assert.match(html, /<details>\s*<summary><b>More<\/b><\/summary>/);
+  assert.match(html, /<kbd>⌘K<\/kbd>/);
+  assert.match(html, /<\/details>/);
+  assert.doesNotMatch(html, /onclick|<script|<div/);
+  assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+});
+
+test("image alt text is escaped exactly once", () => {
+  const exports = {};
+  runInNewContext(readFileSync(new URL("../vendor/marked.min.js", import.meta.url), "utf8"), { exports, module: { exports } });
+  const html = exports.parse("![node >=18](x.png)", { renderer: core.safeRenderer(exports) });
+  assert.match(html, /alt="node &gt;=18"/);
+});

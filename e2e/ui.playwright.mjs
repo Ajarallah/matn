@@ -566,6 +566,8 @@ try {
   assert.equal(await reading.locator("#reviewsend").isDisabled(), true, "notes already sent are not sent again");
   const approveWait = fetch(`${base}/api/review-wait?id=${"e".repeat(32)}`).then((r) => r.json());
   await reading.locator("#reviewapprove").click();
+  assert.match(await reading.locator("#reviewapprove").innerText(), /للتأكيد/, "approving asks for a second press");
+  await reading.locator("#reviewapprove").click();
   assert.equal((await approveWait).decision, "approve");
 
   // `matn <file>` on a running reader shows the file in the open page.
