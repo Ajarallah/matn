@@ -215,6 +215,7 @@ html[dir="rtl"] .findbar{padding:4px 12px 4px 4px}
 .quick-item.active .quick-path,.quick-item.active .quick-snippet,.quick-item.active .quick-alias{color:rgb(255 255 255/.82)}
 .quick-item mark{background:transparent;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .quick-empty{padding:28px 16px;text-align:center;color:var(--ink-3)}
+.quick-group{padding:12px 12px 4px;font-size:var(--t-xs);font-weight:600;color:var(--ink-3)}
 .quick-status{padding:6px 14px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--ink-3)}
 
 .selection-tools{position:fixed;z-index:47;display:flex;align-items:center;gap:2px;padding:3px;border-radius:10px;background:var(--raised);box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity 120ms,transform 160ms var(--ease),visibility 0s linear 160ms}
@@ -847,6 +848,8 @@ Object.assign(I18N.ar,{folderCount:"ملفات Markdown في هذا المجلد
 Object.assign(I18N.en,{folderCount:"Markdown files in this folder: {n}",openFile:"Open",latestFiles:"Latest files"});
 Object.assign(I18N.ar,{exportFailed:"تعذّر التصدير. أعد المحاولة.",docxNote:"يفتحه Microsoft Word. أما Pages وGoogle Docs فلا يقرآن طريقة الحفظ هذه"});
 Object.assign(I18N.en,{exportFailed:"Export failed. Try again.",docxNote:"Opens in Microsoft Word. Pages and Google Docs cannot read this kind of file"});
+Object.assign(I18N.ar,{quickInText:"داخل الملفات"});
+Object.assign(I18N.en,{quickInText:"Inside files"});
 Object.assign(I18N.ar,{remoteFailed:"تعذّر جلب الملف من الرابط.",recentlyChanged:"تغيّر حديثًا",exportNotes:"المفضلة والتعليقات (.md)",exportCritic:"ملاحظاتي داخل النص (CriticMarkup)",scStep:"الكتلة التالية والسابقة",lhLabels:"متقارب|مريح|واسع",finishedReading:"أنهيته",stoppedHere:"هنا توقفت",sizeLabels:"صغير جدًا|صغير|متوسط|كبير|كبير جدًا",shareLink:"انسخ رابط مشاركة",shareCopied:"نُسخ الرابط. المستند داخل الرابط نفسه، ولا يُرفع إلى أي خادم.",shareLong:"نُسخ الرابط، لكنه طويل جدًا وقد لا تقبله بعض التطبيقات.",shareBroken:"الرابط المشترك تالف أو ناقص.",shareUnsupported:"هذا المتصفح لا يدعم الضغط اللازم للمشاركة.",orphanNote:"النص الذي كانت عليه لم يعد في الملف",copyHeadingLink:"انسخ رابط العنوان",noResults:"لا نتائج",changedShort:"تغيّر",fontSizeLabel:"حجم الخط",lineHeightLabel:"تباعد الأسطر",notMarkdown:"هذا الملف ليس Markdown، فلا يفتحه متن",noteDiscard:"تجاهل الملاحظة التي كتبتها؟",approveConfirm:"اضغط مرة أخرى للتأكيد",reviewStored:"حُفظت ملاحظاتك؛ تصل إلى الوكيل حين يطلبها",remoteImage:"صورة من الإنترنت لا يحمّلها متن حفاظًا على خصوصيتك؛ انقر لفتحها",suggestLabel:"نص بديل تقترحه (اختياري)",reviewGateHint:"وافق، أو ظلّل ما تريد تغييره",suggestHint:"اكتب النص الذي تريده مكان المظلَّل",approvePlan:"وافق على الخطة",requestChanges:"اطلب تعديلًا",planApproved:"وافقت على الخطة؛ سيبدأ الوكيل التنفيذ",noteChanged:"تغيّر",noteSame:"لم يتغيّر",notesTouched:"ملاحظاتك السابقة: تغيّر نص {n} من {of}",followed:"فُتح هذا الملف من الطرفية"});
 Object.assign(I18N.en,{remoteFailed:"Could not fetch the file from that link.",recentlyChanged:"Recently changed",exportNotes:"Favorites and notes (.md)",exportCritic:"My notes inside the text (CriticMarkup)",scStep:"Next and previous block",lhLabels:"Tight|Comfortable|Airy",finishedReading:"Finished",stoppedHere:"You stopped here",sizeLabels:"Tiny|Small|Medium|Large|Huge",shareLink:"Copy share link",shareCopied:"Link copied. The document lives inside the link; nothing is uploaded.",shareLong:"Link copied, but it is very long; some apps may cut it.",shareBroken:"This shared link is damaged or incomplete.",shareUnsupported:"This browser cannot compress the document for sharing.",orphanNote:"The text it was on is no longer in the file",copyHeadingLink:"Copy the heading link",noResults:"No results",changedShort:"changed",fontSizeLabel:"Font size",lineHeightLabel:"Line spacing",notMarkdown:"This file is not Markdown, so Matn does not open it",noteDiscard:"Discard the note you typed?",approveConfirm:"Press again to confirm",reviewStored:"Your notes are saved; the agent gets them when it asks",remoteImage:"Matn does not load images from the internet, for privacy; click to open it",suggestLabel:"Suggested replacement (optional)",reviewGateHint:"Approve, or highlight what should change",suggestHint:"The text you want instead of the highlight",approvePlan:"Approve plan",requestChanges:"Request changes",planApproved:"Plan approved; the agent will start",noteChanged:"changed",noteSame:"unchanged",notesTouched:"your earlier notes: {n} of {of} changed",followed:"Opened from the terminal"});
 Object.assign(I18N.ar,{changeAdded:"جديد",changeEdited:"عُدِّل",changeRemoved:"حُذف",embedMissing:"غير موجودة",reviewDone:"أُرسلت"});
@@ -1744,12 +1747,15 @@ function setQuickActive(next){
 function renderQuick(payload){
   quickItems=payload.results||[];quickActive=0;quickresults.innerHTML="";
   if(!quickItems.length&&!payload.indexing){var empty=document.createElement("div");empty.className="quick-empty";empty.textContent=T("noResults");quickresults.appendChild(empty);}
+  // ⌘K is one switcher: names first, then files that only mention the words, under their own heading
+  var grouped=quickMode==="files"&&quickinput.value.trim(),textHeader=false;
   for(var i=0;i<quickItems.length;i++){(function(item,index){
+    if(grouped&&item.byName===false&&!textHeader){textHeader=true;var head=document.createElement("div");head.className="quick-group";head.setAttribute("role","presentation");head.textContent=T("quickInText");quickresults.appendChild(head);}
     var button=document.createElement("button");button.type="button";button.id="quick-option-"+index;button.className="quick-item"+(index===0?" active":"");button.setAttribute("role","option");button.setAttribute("aria-selected",index===0?"true":"false");
     var title=document.createElement("div");title.className="quick-title";title.textContent=item.title;
     if(item.aliases&&item.aliases.length){var alias=document.createElement("span");alias.className="quick-alias";alias.textContent=item.aliases.join(" · ");title.appendChild(alias);}
     var path=document.createElement("div");path.className="quick-path";path.textContent=item.rel;button.appendChild(title);button.appendChild(path);
-    if(quickMode==="all"&&item.snippet){var snippet=document.createElement("div");snippet.className="quick-snippet";snippet.textContent=item.snippet;button.appendChild(snippet);}
+    if((quickMode==="all"||item.byName===false)&&item.snippet){var snippet=document.createElement("div");snippet.className="quick-snippet";snippet.textContent=item.snippet;button.appendChild(snippet);}
     button.onmouseenter=function(){setQuickActive(index);};button.onclick=function(){loadFile(item.path);closeQuick();};quickresults.appendChild(button);
   })(quickItems[i],i);}
   quickinput.setAttribute("aria-activedescendant",quickItems.length?"quick-option-0":"");
@@ -1757,7 +1763,7 @@ function renderQuick(payload){
 }
 function queryQuick(){
   if(!quickoverlay.classList.contains("open"))return;var seq=++quickSeq;
-  fetch("/api/search?q="+encodeURIComponent(quickinput.value)+"&mode="+quickMode+"&limit=40").then(function(r){return r.ok?r.json():Promise.reject();}).then(function(payload){
+  fetch("/api/search?q="+encodeURIComponent(quickinput.value)+"&mode=all&limit=40").then(function(r){return r.ok?r.json():Promise.reject();}).then(function(payload){
     if(seq!==quickSeq)return;renderQuick(payload);quickItemsFor=quickinput.value;if(quickEnterPending&&!payload.indexing){quickEnterPending=false;if(quickItems[quickActive]){loadFile(quickItems[quickActive].path);closeQuick();}}if(payload.indexing)setTimeout(function(){if(seq===quickSeq)queryQuick();},180);
   }).catch(function(){if(seq!==quickSeq)return;renderQuick({results:[],indexing:false});});
 }

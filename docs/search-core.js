@@ -80,7 +80,8 @@
     if(originalAt<record.bodyStart)originalAt=record.bodyStart;
     var start=Math.max(0,originalAt-70),end=Math.min(record.content.length,originalAt+140);
     if(start<record.bodyStart)start=record.bodyStart;
-    var text=record.content.slice(start,end).replace(/\s+/g," ").trim();
+    // a snippet reads as text: no heading hashes, list bullets, emphasis marks or link targets
+    var text=record.content.slice(start,end).replace(/^[ \t]{0,3}(?:#{1,6}|[-*+]|\d+[.)]|>)[ \t]+/gm,"").replace(/!?\[([^\]]*)\]\([^)]*\)/g,"$1").replace(/(\*\*|__|\*|`|~~)(?=\S)([^\n]*?\S)\1/g,"$2").replace(/\s+/g," ").trim();
     return (start?"…":"")+text+(end<record.content.length?"…":"");
   }
   function searchRecords(records,query,options){
@@ -89,7 +90,7 @@
     var normalized=normalizeSearch(query),terms=normalized?normalized.split(" ").filter(Boolean):[];
     var found=[];
     for(var i=0;i<records.length;i++){
-      var r=records[i],score=0,matched=true;
+      var r=records[i],score=0,matched=true,byName=true;
       for(var j=0;j<terms.length;j++){
         var term=terms[j],termScore=0;
         if(r.titleNorm===term)termScore=220;
@@ -98,12 +99,12 @@
         if(r.aliasNorm.indexOf(term)>=0)termScore=Math.max(termScore,130);
         if(r.pathNorm.indexOf(term)>=0)termScore=Math.max(termScore,70);
         if(mode==="all"&&r.contentNorm.indexOf(term)>=0)termScore=Math.max(termScore,20);
-        if(!termScore){matched=false;break;}score+=termScore;
+        if(!termScore){matched=false;break;}if(termScore<70)byName=false;score+=termScore;
       }
       if(!matched)continue;
       if(!terms.length)score=Math.min(50,Math.floor(r.mtimeMs/100000000));
       var firstContentTerm=terms.find(function(term){return r.contentNorm.indexOf(term)>=0;})||"";
-      found.push({path:r.path,rel:r.rel,title:r.title,aliases:r.aliases,snippet:mode==="all"?snippetFor(r,firstContentTerm):r.rel,score:score,mtimeMs:r.mtimeMs});
+      found.push({path:r.path,rel:r.rel,title:r.title,aliases:r.aliases,snippet:mode==="all"?snippetFor(r,firstContentTerm):r.rel,byName:byName,score:score,mtimeMs:r.mtimeMs});
     }
     found.sort(function(a,b){return b.score-a.score||b.mtimeMs-a.mtimeMs||a.title.localeCompare(b.title,"ar");});
     return found.slice(0,limit).map(function(r){delete r.mtimeMs;return r;});

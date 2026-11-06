@@ -83,3 +83,18 @@ test("Arabic search folds what writers spell differently: digits, taa marbuta, h
   same("مُعَلِّمٌ", "معلم");
   assert.notEqual(core.normalizeSearch("كتب"), core.normalizeSearch("كتاب"));
 });
+
+test("each hit says whether its name matched or only its text, so a switcher can group them", () => {
+  const records = [
+    searchCore.createRecord({ path: "/plan.md", rel: "plan.md", mtimeMs: 1, content: "# خطة الإشعارات\nنص" }),
+    searchCore.createRecord({ path: "/notes/meeting.md", rel: "notes/meeting.md", mtimeMs: 2, content: "# اجتماع\nناقشنا الإشعارات اليوم" })
+  ];
+  const hits = searchCore.searchRecords(records, "الاشعارات", { mode: "all" });
+  assert.deepEqual(hits.map((hit) => [hit.path, hit.byName]), [["/plan.md", true], ["/notes/meeting.md", false]]);
+});
+
+test("snippets read as text, without Markdown syntax", () => {
+  const record = searchCore.createRecord({ path: "/m.md", rel: "m.md", mtimeMs: 1, content: "# اجتماع الفريق\n\n- ناقشنا **الإشعارات** و[الطابور](queue.md) و`notify.ts`\n" });
+  const [hit] = searchCore.searchRecords([record], "الاشعارات");
+  assert.equal(hit.snippet, "اجتماع الفريق ناقشنا الإشعارات والطابور وnotify.ts");
+});
