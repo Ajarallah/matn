@@ -108,7 +108,8 @@ body.focus-mode aside#side,body.focus-mode aside#inspector{display:none!importan
 
 /* title bar: one band with the content, a hairline once you scroll */
 header{position:sticky;top:0;z-index:20;height:52px;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--canvas);border-bottom:1px solid transparent;transition:border-color var(--dur),background var(--dur)}
-main.is-scrolled header{border-bottom-color:var(--line);background:color-mix(in srgb,var(--canvas) 88%,transparent);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
+/* opaque: text never shows through the bar above the line being read; the hairline marks the edge */
+main.is-scrolled header{border-bottom-color:var(--line)}
 body.focus-mode header{opacity:0;transition:opacity 220ms}
 body.focus-mode header:hover,body.focus-mode header:focus-within,body.focus-mode.focus-peek header{opacity:1}
 .toolbar-group{display:inline-flex;align-items:center;gap:2px}
@@ -216,6 +217,7 @@ html[dir="rtl"] .findbar{padding:4px 12px 4px 4px}
 .quick-item mark{background:transparent;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .quick-empty{padding:28px 16px;text-align:center;color:var(--ink-3)}
 #doc li[data-task="-"]{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-4)}
+#doc td.tight,#doc th.tight{white-space:nowrap}
 .quick-group{padding:12px 12px 4px;font-size:var(--t-xs);font-weight:600;color:var(--ink-3)}
 .quick-status{padding:6px 14px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--ink-3)}
 
@@ -1080,7 +1082,10 @@ function swapRemoteImages(doc){doc.querySelectorAll('img[src^="http://"],img[src
 // "-" cancelled, "?" question...); GFM knows only " " and "x". Give the rest a checkbox and
 // keep the character as data-task, as Obsidian does, so the state shows.
 function taskStatuses(doc){doc.querySelectorAll("li").forEach(function(li){if(li.querySelector(":scope>input[type=checkbox],:scope>p>input[type=checkbox]")){li.classList.add("task");return;}var host=li.firstElementChild&&li.firstElementChild.tagName==="P"&&!li.firstChild.textContent.trim()?li.firstElementChild:li,text=host.firstChild;if(!text||text.nodeType!==3)return;var m=/^\s*\[([^\s\]xX])\][ \t]+/.exec(text.textContent);if(!m)return;text.textContent=text.textContent.slice(m[0].length);var box=document.createElement("input");box.type="checkbox";box.disabled=true;box.checked=m[1]!=="/"&&m[1]!=="?";if(m[1]==="/")box.indeterminate=true;host.insertBefore(box,text);host.insertBefore(document.createTextNode(" "),text);li.setAttribute("data-task",m[1]);li.classList.add("task","task-status");});}
-function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);
+// a column whose cells are all short (numbers, page ranges, dates) keeps each on one line,
+// so the auto table layout gives the room to the column of prose beside it
+function tightColumns(doc){doc.querySelectorAll("table").forEach(function(table){var rows=table.rows,cols={};for(var r=0;r<rows.length;r++)for(var c=0;c<rows[r].cells.length;c++){var len=rows[r].cells[c].textContent.trim().length;cols[c]=Math.max(cols[c]||0,len);}Object.keys(cols).forEach(function(c){if(cols[c]>0&&cols[c]<=18)for(var r=0;r<rows.length;r++){var cell=rows[r].cells[c];if(cell)cell.classList.add("tight");}});});}
+function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColumns(doc);
   options=options||{};
   // pull ```mermaid fences out before highlighting
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");
@@ -1240,7 +1245,8 @@ function openShortcuts(){
   buildShortcutList();
   if(dialog.showModal)dialog.showModal();else dialog.setAttribute("open","");
 }
-var lastWordCount=null;function readingTimeWords(w){lastWordCount=w;var m=Math.max(1,Math.round(w/200));$("rtime").textContent=w+" "+T("words")+" · "+m+" "+T("min");}
+// a long document reads in hours, not "212 minutes"; Intl gives Arabic its plural forms (ساعتان، 3 ساعات)
+var lastWordCount=null;function readingTimeWords(w){lastWordCount=w;var loc=S.lang==="en"?"en":"ar-u-nu-latn",m=Math.max(1,Math.round(w/200)),unit=function(u,n){try{return new Intl.NumberFormat(loc,{style:"unit",unit:u,unitDisplay:"long"}).format(n);}catch(e){return n+" "+(u==="hour"?"h":T("min"));}},time=m<60?unit("minute",m):unit("hour",Math.floor(m/60))+(m%60?(S.lang==="en"?" ":" و")+unit("minute",m%60):"");var count;try{count=new Intl.NumberFormat(loc).format(w);}catch(e){count=String(w);}$("rtime").textContent=count+" "+T("words")+" · "+time;}
 function readingTime(text){readingTimeWords((text.trim().match(/\S+/g)||[]).length);}
 // dominant-script detection: whole-document direction follows the majority language,
 // so a file that merely STARTS with Latin still reads RTL when Arabic dominates.
@@ -1342,7 +1348,7 @@ function renderSafely(md){try{render(md);return true;}catch(e){$("doc").innerHTM
 var LARGE_RENDER_BYTES=2*1024*1024;
 function renderLarge(md,seq){lastMD=md;var doc=$("doc");if(largeWorker){largeWorker.terminate();largeWorker=null;}doc.classList.remove("start");doc.innerHTML='<div class="empty" role="status" aria-live="polite">'+T("largeProcessing")+'</div>';var chunks=[];
   return new Promise(function(resolve,reject){var worker=largeWorker=new Worker("/render-worker.js?footnotes="+encodeURIComponent(T("footnotes")));worker.onmessage=function(event){if(seq!=null&&seq!==loadSeq){worker.terminate();return;}var result=event.data||{};if(result.type==="chunk"){chunks[result.index]=result.html;return;}if(result.type!=="done")return;worker.terminate();if(largeWorker===worker)largeWorker=null;if(!result.ok){reject(new Error(result.error||"render failed"));return;}doc.innerHTML="";var note=document.createElement("div");note.className="large-document-note";note.setAttribute("role","status");note.textContent=T("largeMode");doc.appendChild(note);var cursor=0,button=document.createElement("button"),observer=null;
-      function appendBatch(){button.remove();var end=Math.min(cursor+3,chunks.length),box=processed?document.createElement("div"):null;for(;cursor<end;cursor++){var template=document.createElement("template");template.innerHTML=chunks[cursor];(box||doc).appendChild(template.content);}
+      function appendBatch(){button.remove();var end=Math.min(cursor+2,chunks.length),box=processed?document.createElement("div"):null;for(;cursor<end;cursor++){var template=document.createElement("template");template.innerHTML=chunks[cursor];(box||doc).appendChild(template.content);}
         // chunks after the first render get the same treatment the first ones had: direction,
         // highlighting, copy buttons, heading ids (kept unique), math and diagrams; their
         // source-line links are dropped because line numbers are only known for the start
@@ -1884,6 +1890,13 @@ window.addEventListener("dragover",function(e){e.preventDefault();});
 window.addEventListener("dragleave",function(e){e.preventDefault();dragN--;if(dragN<=0)dz.classList.remove("show");});
 // A document with no file behind it — dropped, picked from the dialog, or pasted.
 // Three callers used to inline the same eight steps and drift apart.
+// the same rule as the server's decodeText: a byte-order mark wins, valid UTF-8 is UTF-8,
+// anything else is Windows-1256, the encoding older Arabic Windows tools saved in
+function readFileText(file){return file.arrayBuffer().then(function(buf){var b=new Uint8Array(buf);
+  if(b[0]===0xef&&b[1]===0xbb&&b[2]===0xbf)return new TextDecoder("utf-8").decode(b.subarray(3));
+  if(b[0]===0xff&&b[1]===0xfe)return new TextDecoder("utf-16le").decode(b.subarray(2));
+  if(b[0]===0xfe&&b[1]===0xff)return new TextDecoder("utf-16be").decode(b.subarray(2));
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(b);}catch(e){return new TextDecoder("windows-1256").decode(b);}});}
 function readLoose(name,text){clearChangesNow();setDocButtons(true);if(shown)writeReaderState(shown,capturePosition());shown=null;
   loadSeq++;cur="loose:"+name;fileRels[cur]=cur;setViewMode("rendered");$("actionsbtn").disabled=true;
   workspaceOpen=false;$("quickbtn").style.display="none";closeQuick();
@@ -1892,7 +1905,7 @@ function readLoose(name,text){clearChangesNow();setDocButtons(true);if(shown)wri
   renderSafely(String(text));scroller.scrollTop=0;
   $("files-sec").style.display="none";syncSide();
 }
-window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!MARKDOWN_RE.test(f.name))return;var rd=new FileReader();rd.onload=function(){readLoose(f.name,rd.result);};rd.readAsText(f);});
+window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!MARKDOWN_RE.test(f.name))return;readFileText(f).then(function(text){readLoose(f.name,text);});});
 // Markdown arrives on the clipboard as often as it arrives as a file — an agent's
 // answer, a chunk of a chat. Undo restores whatever was open, since a stray Cmd+V
 // while reading should not cost you your place.
@@ -1981,15 +1994,19 @@ function exportFailed(){showToast(T("exportFailed"));}
 // stylesheet keeps code left to right and tables ruled in Apple Books and Thorium.
 function epubFiles(){
   var dir=$("doc").getAttribute("dir")||"rtl",lang=dir==="rtl"?"ar":"en",title=esc($("fname").textContent),html=docHTML();
-  var css=html.slice(html.indexOf("<style>")+7,html.indexOf("</style>")).replace(/body\{[^}]*\}/,"body{line-height:1.7}");
-  var body=toXhtmlBody(html.split("<body>")[1].replace("</body></html>",""));
+  // EPUB forbids `direction` and `unicode-bidi` in style sheets; code keeps its direction through dir="ltr" instead
+  var css=html.slice(html.indexOf("<style>")+7,html.indexOf("</style>")).replace(/body\{[^}]*\}/,"body{line-height:1.7}").replace(/(?:direction|unicode-bidi):[^;}]*;?/g,"");
+  var body=toXhtmlBody(html.split("<body>")[1].replace("</body></html>","")).replace(/<pre(?![^>]*\sdir=)/g,'<pre dir="ltr"')
+    // XHTML that epubcheck accepts: Mermaid's labels put <p> inside <span>, and KaTeX leaves spaces between MathML elements
+    .replace(/(<span class="nodeLabel"[^>]*>)<p>([\s\S]*?)<\/p>/g,"$1$2").replace(/<math[\s\S]*?<\/math>/g,function(m){return m.replace(/>\s+</g,"><");});
+  var props=(/<svg[\s>]/.test(body)?["svg"]:[]).concat(/<math[\s>]/.test(body)?["mathml"]:[]).join(" ");
   var heads=[];$("doc").querySelectorAll("h1[id],h2[id]").forEach(function(h){var text=(h.dataset.title||h.textContent).trim();if(text)heads.push({level:h.tagName==="H1"?1:2,id:h.id,text:text});});
   var items="",open=false;heads.forEach(function(h,k){var li='<li><a href="doc.xhtml#'+esc(h.id)+'">'+esc(h.text)+'</a>';if(h.level===1||k===0){if(open)items+="</ol></li>";items+=li;open=false;var next=heads[k+1];if(next&&next.level===2){items+="<ol>";open=true;}else items+="</li>";}else items+=li+"</li>";});if(open)items+="</ol></li>";
   if(!items)items='<li><a href="doc.xhtml">'+title+'</a></li>';
   var head='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="'+lang+'" lang="'+lang+'" dir="'+dir+'"><head><meta charset="utf-8"/><title>'+title+'</title><link rel="stylesheet" type="text/css" href="style.css"/></head>';
   return {
     "META-INF/container.xml":'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
-    "OEBPS/content.opf":'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'" xml:lang="'+lang+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:matn-'+Date.now()+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+lang+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>',
+    "OEBPS/content.opf":'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'" xml:lang="'+lang+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():"00000000-0000-4000-8000-"+("000000000000"+Date.now().toString(16)).slice(-12))+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+lang+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"'+(props?' properties="'+props+'"':'')+'/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>',
     "OEBPS/nav.xhtml":head+'<body><nav epub:type="toc" id="toc"><h1>'+esc(T("contents"))+'</h1><ol>'+items+'</ol></nav></body></html>',
     "OEBPS/style.css":css,
     "OEBPS/doc.xhtml":head+"<body>"+body+"</body></html>"
@@ -2014,7 +2031,7 @@ exportbtn.onclick=function(e){e.stopPropagation();var o=exportmenu.classList.tog
 document.addEventListener("click",function(e){if(!exportmenu.contains(e.target)&&e.target!==exportbtn){exportmenu.classList.remove("open");exportbtn.setAttribute("aria-expanded","false");}});
 exportmenu.addEventListener("click",function(e){var b=e.target.closest("[data-export]");if(!b)return;exportmenu.classList.remove("open");doExport(b.getAttribute("data-export"));});
 var fi2=$("fileinput");
-if(fi2)fi2.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){readLoose(f.name,rd.result);};rd.readAsText(f);e.target.value="";});
+if(fi2)fi2.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;readFileText(f).then(function(text){readLoose(f.name,text);});e.target.value="";});
 
 document.addEventListener("keydown",function(e){
   var mod=e.metaKey||e.ctrlKey,key=e.key.toLowerCase();

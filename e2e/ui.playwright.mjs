@@ -66,7 +66,7 @@ try {
   assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
   assert.equal(await page.locator("aside#side").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
   assert.equal(await page.locator("#fname").getAttribute("dir"), "auto");
-  assert.match(await page.locator("#rtime").innerText(), /^\d+ \S+ · \d+ \S+$/);
+  assert.match(await page.locator("#rtime").innerText(), /^[\d,]+ \S+ · \S+/);
   assert.equal(await page.locator("#live").evaluate((el) => getComputedStyle(el).position), "static");
   assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("ui-ready")), true);
   await page.locator("#gearbtn").dispatchEvent("pointerdown", { pointerId: 1, clientX: 10, clientY: 10 });
@@ -444,7 +444,9 @@ try {
   for (const id of headingIds) assert.ok(epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id}`) || epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id.replace(/&/g, "&amp;")}`), `contents miss #${id}`);
   assert.match(epub["OEBPS/content.opf"], /href="style.css" media-type="text\/css"/);
   assert.match(chapter, /<link rel="stylesheet"[^>]*href="style.css"/);
-  assert.match(epub["OEBPS/style.css"], /pre\{direction:ltr/);
+  // epubcheck: no direction in EPUB CSS (code takes dir="ltr"), and a real UUID
+  assert.doesNotMatch(epub["OEBPS/style.css"], /direction|unicode-bidi/);
+  assert.match(epub["OEBPS/content.opf"], /urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</);
   assert.match(chapter, /<hr\s*\/>/);
   assert.match(chapter, /<br\s*\/>/);
   assert.match(chapter, /<img[^>]*\/>/);
@@ -681,6 +683,9 @@ try {
   assert.ok(group > 0 && quick[group + 1]?.startsWith("quick-item:"), quick.join(" | "));
   assert.doesNotMatch(await start.locator("#quickresults .quick-snippet").first().innerText(), /\]\(|^#/);
   await start.keyboard.press("Escape");
+  // a file saved by an older Arabic Windows tool (Windows-1256) opens as Arabic, not garbage
+  await start.setInputFiles("#fileinput", { name: "legacy.md", mimeType: "text/markdown", buffer: Buffer.from([0x23, 0x20, 0xc7, 0xe1, 0xda, 0xd1, 0xc8, 0xed, 0xc9]) });
+  await start.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("العربية"));
   await startContext.close();
 
   // On touch the system's own selection menu sits above the selection, so Matn's goes below.
@@ -714,7 +719,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

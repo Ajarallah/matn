@@ -3,6 +3,8 @@
 // agent falls back to its own behaviour and is never blocked by Matn.
 
 import { createRequire } from "node:module";
+import MarkdownFiles from "./markdown-files.cjs";
+const { decodeText } = MarkdownFiles;
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
@@ -231,7 +233,7 @@ export async function changes(file, { reader = "agent", mark = false } = {}) {
   const real = realpathSync(resolve(file));
   if (statSync(real).size > 16 * 1024 * 1024) throw new Error("file too large");
   const store = createStateStore({ dataDir: dataDir() });
-  const now = readFileSync(real, "utf8");
+  const now = decodeText(readFileSync(real));
   const report = changesReport(basename(real), reader, await store.readSeen(readerKey(real, reader)), now);
   if (mark) await store.writeSeen(readerKey(real, reader), now);
   return report;

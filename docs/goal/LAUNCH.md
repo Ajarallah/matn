@@ -1,18 +1,16 @@
 # ما يحتاج يدك
 
-كل ما عدا هذا نُشر أو دُمج. الأوامر جاهزة للنسخ.
+دُمج #33 في 7 نوفمبر، فنُشرت النسخة على الويب والإضافة. وكل ما عدا هذا نُشر. الأوامر جاهزة للنسخ.
 
-## 0. دمج جولة الأقسام (#33)، وبه يُنشر الويب والإضافة
+## 0. دمج جولة القراءة (#34)
 
-إذن الدمج في التكليف كان ليوم 6 نوفمبر، فلم أدمج بعد انتهائه. بعد أن تنجح فحوص CI كلها:
+بعد أن تنجح فحوص CI:
 
 ```bash
-cd ~/Developer/experiments/matn && gh pr checks 33 --repo Ajarallah/matn && gh pr merge 33 --repo Ajarallah/matn --merge
+gh pr checks 34 --repo Ajarallah/matn && gh pr merge 34 --repo Ajarallah/matn --merge
 ```
 
-ثم تحقّق من النسخة على الويب: https://ajarallah.github.io/matn/?gh=Ajarallah/matn
-
-## 1. نشر npm (بعد الدمج)
+## 1. نشر npm
 
 لم يكن على الجهاز تسجيل دخول لـ npm (`npm whoami` أعاد 401).
 
@@ -28,12 +26,4 @@ cd ~/Developer/experiments/matn && git switch main && git pull && npm test && np
 
 ```text
 /plugin install matn --marketplace Ajarallah/matn
-```
-
-## 3. فحص EPUB بأداة epubcheck (اختياري)
-
-الأداة تحتاج Java، وهي غير مثبّتة على جهازك. صدّر أي ملف إلى EPUB من قائمة «حفظ»، ثم:
-
-```bash
-brew install epubcheck && epubcheck ~/Downloads/PLAN.epub
 ```

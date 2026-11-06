@@ -30,7 +30,7 @@ const MAX_INDEX_BYTES = 2 * 1024 * 1024;
 const REVIEW_ID = /^[a-f0-9]{32}$/;
 let MERMAID = null; // large (~3.5 MB) — loaded on first request only
 
-const { isMarkdownPath: isMd } = MarkdownFiles;
+const { isMarkdownPath: isMd, decodeText } = MarkdownFiles;
 const imageTypes = new Map([
   [".avif", "image/avif"],
   [".gif", "image/gif"],
@@ -142,7 +142,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   }
   function makeSearchRecord(abs, rel, reason = "incremental") {
     const stat = statSync(abs);
-    const content = stat.size <= MAX_INDEX_BYTES ? readFileSync(abs, "utf8") : "";
+    const content = stat.size <= MAX_INDEX_BYTES ? decodeText(readFileSync(abs)) : "";
     if (reason === "full") diagnostics.fullRecords++;
     else diagnostics.incrementalRecords++;
     return SearchCore.createRecord({ path: abs, rel, mtimeMs: stat.mtimeMs, content });
@@ -160,6 +160,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const abs = resolve(absFile), existing = workspaceRecords.get(abs);
     if (!workspaceDir || (abs !== workspaceDir && !abs.startsWith(workspaceDir + sep))) return;
     if (!safeMd(abs)) { workspaceRecords.delete(abs); return; }
+    // macOS reports one save as several events; a record already read at this mtime is current
+    try { if (existing && statSync(abs).mtimeMs === existing.mtimeMs) return; } catch {}
     try { workspaceRecords.set(abs, makeSearchRecord(abs, existing ? existing.rel : relative(workspaceDir, abs).split(sep).join("/"))); }
     catch { workspaceRecords.delete(abs); }
   }
@@ -645,7 +647,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       if (reviewed) {
         try {
           const real = realpathSync(reviewed);
-          if (statSync(real).size <= MAX_INDEX_BYTES) await stateStore.writeSeen(real, readFileSync(real, "utf8"));
+          if (statSync(real).size <= MAX_INDEX_BYTES) await stateStore.writeSeen(real, decodeText(readFileSync(real)));
           // the notes just sent are never sent again; stamped here, because the agent's
           // `matn review` may exit (and take this server with it) the moment it has them
           const rel = relative(rootReal, real).split(sep).join("/"), at = Date.now();
@@ -665,7 +667,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         // The server records what is on disk, never what the page claims it showed.
         try {
           if (statSync(real).size > MAX_INDEX_BYTES) return send(413, "text/plain", "too large");
-          await stateStore.writeSeen(real, readFileSync(real, "utf8"));
+          await stateStore.writeSeen(real, decodeText(readFileSync(real)));
           return send(204, "text/plain", "");
         } catch { return send(500, "text/plain", "seen unavailable"); }
       }
@@ -677,7 +679,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       if (!abs) return send(400, "text/plain", "bad file");
       ensureWatch(dirname(abs));
       try {
-        const raw = readFileSync(abs, "utf8");
+        const raw = decodeText(readFileSync(abs));
         const rel = relative(rootReal, realpathSync(abs)).split(sep).join("/");
         return send(200, "text/plain; charset=utf-8", raw, { "x-matn-file-size": String(Buffer.byteLength(raw)), "x-matn-file-rel": encodeURIComponent(rel) });
       }
@@ -687,6 +689,14 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       res.writeHead(200, Object.assign({ "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }, securityHeaders));
       res.write("retry: 2000\n\n");
       clients.add(res);
+      // A page showing a review names it on its live-reload stream. Closing the tab drops the
+      // connection at once, which unload events cannot promise: that is the reliable "gone".
+      const review = u.searchParams.get("review") || "";
+      if (REVIEW_ID.test(review)) {
+        const entry = reviewPresence.get(review) || { seen: 0, gone: 0 };
+        entry.open = (entry.open || 0) + 1; entry.seen = Date.now(); reviewPresence.set(review, entry);
+        req.on("close", () => { entry.open--; if (entry.open <= 0) entry.gone = Date.now(); });
+      }
       req.on("close", () => clients.delete(res));
       return;
     }
