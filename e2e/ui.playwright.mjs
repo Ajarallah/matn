@@ -18,6 +18,7 @@ await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# م�
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
 await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
+await writeFile(join(root, "ayah.md"), "# آية\n\nقال تعالى: {إِنَّ مَعَ الْعُسْرِ يُسْرًا} وقوله {config} و`{\"a\": 1}`.\n");
 await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n\n## الفصل الأول\n\nنص.\n\n## الفصل الثاني & ما بعده\n\nنص.\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
@@ -480,11 +481,12 @@ try {
   const scrollBefore = await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop));
   await writeFile(join(root, "change.md"), (await readFile(join(root, "change.md"), "utf8")).replace("## قسم 9", "## قسم 9\n\nسطر أضافه الوكيل.\n"));
   await reading.waitForSelector(".toast-undo");
-  assert.equal(await reading.locator("#toast span").first().innerText(), "تغيّر الملف");
-  assert.equal(await reading.locator(".toast-undo").innerText(), "اذهب إلى التغيير");
-  assert.ok(Math.abs(await reading.evaluate(() => Math.round(document.querySelector("main").scrollTop)) - scrollBefore) < 24,
-    "a live reload moved the reader without being asked");
+  // read the toast and the position in one step, then press at once: the toast lives six seconds
+  const changed = await reading.evaluate(() => ({ message: document.querySelector("#toast span").textContent, action: document.querySelector(".toast-undo").textContent, top: Math.round(document.querySelector("main").scrollTop) }));
   await reading.locator(".toast-undo").click();
+  assert.equal(changed.message, "تغيّر الملف");
+  assert.equal(changed.action, "اذهب إلى التغيير");
+  assert.ok(Math.abs(changed.top - scrollBefore) < 24, "a live reload moved the reader without being asked");
   await reading.waitForFunction(() => document.querySelector("main").scrollTop > 800);
   assert.match(await reading.locator("#doc .source-target").innerText(), /قسم 9/);
 
@@ -683,6 +685,13 @@ try {
   assert.ok(group > 0 && quick[group + 1]?.startsWith("quick-item:"), quick.join(" | "));
   assert.doesNotMatch(await start.locator("#quickresults .quick-snippet").first().innerText(), /\]\(|^#/);
   await start.keyboard.press("Escape");
+  // verses quoted between braces are set in ornate brackets; the text keeps its braces
+  await start.goto(`${base}/?path=${encodeURIComponent(join(root, "ayah.md"))}`);
+  await start.waitForSelector("#doc .ayah");
+  const ayah = await start.evaluate(() => ({ count: document.querySelectorAll("#doc .ayah").length, text: document.querySelector("#doc p").textContent, before: getComputedStyle(document.querySelector("#doc .ayah"), "::before").content }));
+  assert.equal(ayah.count, 1, "only all-Arabic text in braces is a verse");
+  assert.match(ayah.text, /\{إِنَّ مَعَ الْعُسْرِ يُسْرًا\} وقوله \{config\}/);
+  assert.equal(ayah.before, '"\uFD3F"');
   // a file saved by an older Arabic Windows tool (Windows-1256) opens as Arabic, not garbage
   await start.setInputFiles("#fileinput", { name: "legacy.md", mimeType: "text/markdown", buffer: Buffer.from([0x23, 0x20, 0xc7, 0xe1, 0xda, 0xd1, 0xc8, 0xed, 0xc9]) });
   await start.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("العربية"));
@@ -726,7 +735,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: verse brackets, all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
