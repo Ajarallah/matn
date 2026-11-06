@@ -263,3 +263,12 @@ test("front matter can state the document's direction", () => {
   assert.equal(core.frontmatterDir([["title", "x"]]), null);
   assert.equal(core.frontmatterDir([["lang", "not a code"]]), null);
 });
+
+test("wikilinks to a section read as words, not addresses", () => {
+  const render = obsidianMarked();
+  assert.match(render("[[ملاحظة#قسم]]"), />ملاحظة › قسم<\/a>/);
+  assert.match(render("[[#قسم]]"), />قسم<\/a>/);
+  assert.match(render("[[ملاحظة#^abc1]]"), />ملاحظة › abc1<\/a>/);
+  assert.match(render("[[ملاحظة#قسم|بديل]]"), />بديل<\/a>/);
+  assert.match(render("[[ملاحظة]]"), /data-wiki="ملاحظة"[^>]*>ملاحظة<\/a>/);
+});

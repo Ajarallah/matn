@@ -134,6 +134,9 @@
     var parts=target.split("#"),label=alias||(parts[0]+(parts[1]&&parts[1][0]!=="^"?" › "+parts[1]:""));
     return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'"><svg class="md-embed-ico pi" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12.5a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-4Z"/><path fill-rule="evenodd" d="M6.75 2.5a2.75 2.75 0 0 0-2.75 2.75v9.5a2.75 2.75 0 0 0 2.75 2.75h6.5a2.75 2.75 0 0 0 2.75-2.75v-6a.75.75 0 0 0-.22-.53l-5.5-5.5a.75.75 0 0 0-.53-.22h-3Zm-1.25 2.75c0-.69.56-1.25 1.25-1.25h2.25v3.75c0 .966.784 1.75 1.75 1.75h3.75v5.25c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-9.5Zm7.94 2.75-2.94-2.94v2.69c0 .138.112.25.25.25h2.69Z"/></svg>'+esc(label)+'</a><div class="md-embed-body"></div></div>';
   }
+  // [[note#Heading]] reads "note › Heading" and [[#Heading]] reads "Heading", as in Obsidian;
+  // the raw "#" and "^" are addressing, not words
+  function wikiLabel(target){var at=target.indexOf("#");if(at<0)return target;var note=target.slice(0,at).trim(),sub=target.slice(at+1).replace(/^\^/,"").trim();return note?(sub?note+" › "+sub:note):sub;}
   function obsidianExtensions(){
     return [
       {name:"embed",level:"block",
@@ -146,7 +149,7 @@
         renderer:function(t){return embedHTML(t.target,t.alias,true);}},
       {name:"wikilink",level:"inline",
         start:function(s){var i=s.indexOf("[[");return i<0?undefined:i;},
-        tokenizer:function(s){var m=new RegExp("^\\[\\["+WIKI_RE).exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},
+        tokenizer:function(s){var m=new RegExp("^\\[\\["+WIKI_RE).exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:m[2]?m[2].trim():wikiLabel(m[1].trim())};},
         renderer:function(t){return '<a class="wikilink internal-link" href="#" data-wiki="'+esc(t.target)+'" title="'+esc(t.target)+'">'+esc(t.text)+"</a>";}},
       {name:"mdmark",level:"inline",
         start:function(s){var i=s.indexOf("==");return i<0?undefined:i;},

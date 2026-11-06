@@ -215,6 +215,7 @@ html[dir="rtl"] .findbar{padding:4px 12px 4px 4px}
 .quick-item.active .quick-path,.quick-item.active .quick-snippet,.quick-item.active .quick-alias{color:rgb(255 255 255/.82)}
 .quick-item mark{background:transparent;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .quick-empty{padding:28px 16px;text-align:center;color:var(--ink-3)}
+#doc li[data-task="-"]{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-4)}
 .quick-group{padding:12px 12px 4px;font-size:var(--t-xs);font-weight:600;color:var(--ink-3)}
 .quick-status{padding:6px 14px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--ink-3)}
 
@@ -470,7 +471,9 @@ html[dir="ltr"] #doc .callout-folded .callout-chevron{transform:rotate(-45deg)}
 
 /* math and diagrams */
 #doc .katex-block{display:block;margin:1em 0;overflow-x:auto;overflow-y:hidden;direction:ltr;text-align:center}
-#doc .katex-display{direction:ltr;overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:.4em 0}
+#doc .katex-display{direction:ltr;overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:.4em 0;text-align:center}#doc .katex-display>.katex{display:block;text-align:center}
+/* task items carry their checkbox; the bullet beside it is noise */
+#doc li.task{list-style:none}#doc li.task>input[type=checkbox],#doc li.task>p>input[type=checkbox]{margin-inline:-1.5em .5em;accent-color:var(--accent)}
 #doc .katex{direction:ltr;text-align:left}
 #doc .katex-inline{direction:ltr;display:inline-block}
 #doc .mermaid{direction:ltr;text-align:center;margin:1.4em 0;overflow-x:auto}
@@ -1073,7 +1076,11 @@ function installFolds(doc,headings){
 // Remote images never load (privacy: the page's CSP allows local images only), so
 // instead of a broken-image icon each one becomes a quiet link to where it lives.
 function swapRemoteImages(doc){doc.querySelectorAll('img[src^="http://"],img[src^="https://"]').forEach(function(img){var a=document.createElement("a");a.className="remote-image";a.href=img.getAttribute("src");a.target="_blank";a.rel="noopener noreferrer";a.title=T("remoteImage");a.dataset.alt=img.getAttribute("alt")||"";a.innerHTML='<svg class="pi" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M4.5 4a2.5 2.5 0 0 0-2.5 2.5v7a2.5 2.5 0 0 0 2.5 2.5h11a2.5 2.5 0 0 0 2.5-2.5v-7a2.5 2.5 0 0 0-2.5-2.5h-11Zm-1 2.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v5.19l-2.72-2.72a.75.75 0 0 0-1.06 0l-2.47 2.47-1.47-1.47a.75.75 0 0 0-1.06 0l-3.22 3.22v-6.69Zm8.25 1.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"/></svg>';var label=document.createElement("span");label.textContent=img.getAttribute("alt")||a.hostname;a.appendChild(label);img.replaceWith(a);});}
-function enhance(doc,options){swapRemoteImages(doc);
+// Obsidian reads any single character in a task's brackets as a status ("/" in progress,
+// "-" cancelled, "?" question...); GFM knows only " " and "x". Give the rest a checkbox and
+// keep the character as data-task, as Obsidian does, so the state shows.
+function taskStatuses(doc){doc.querySelectorAll("li").forEach(function(li){if(li.querySelector(":scope>input[type=checkbox],:scope>p>input[type=checkbox]")){li.classList.add("task");return;}var host=li.firstElementChild&&li.firstElementChild.tagName==="P"&&!li.firstChild.textContent.trim()?li.firstElementChild:li,text=host.firstChild;if(!text||text.nodeType!==3)return;var m=/^\s*\[([^\s\]xX])\][ \t]+/.exec(text.textContent);if(!m)return;text.textContent=text.textContent.slice(m[0].length);var box=document.createElement("input");box.type="checkbox";box.disabled=true;box.checked=m[1]!=="/"&&m[1]!=="?";if(m[1]==="/")box.indeterminate=true;host.insertBefore(box,text);host.insertBefore(document.createTextNode(" "),text);li.setAttribute("data-task",m[1]);li.classList.add("task","task-status");});}
+function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);
   options=options||{};
   // pull ```mermaid fences out before highlighting
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");
