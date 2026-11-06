@@ -574,7 +574,7 @@ body.has-side:not(.library-hidden) .document-map{inset-inline-start:260px}
 #maplist button{display:block;width:100%;padding:5px 8px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink-2);text-align:start;font-size:12.5px;unicode-bidi:plaintext}
 #maplist button:hover{background:var(--fill)}
 #maplist button.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
-@media (max-width:1100px){.document-map{top:auto;bottom:max(16px,env(safe-area-inset-bottom));transform:none}.map-rail,.map-peek{display:none}.map-toggle{width:44px;height:44px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow);color:var(--ink-2)}.map-card{top:auto;bottom:54px;transform:none;max-height:60vh}}
+@media (max-width:1100px){.document-map{top:auto;bottom:max(16px,env(safe-area-inset-bottom));transform:none}.map-rail,.map-peek{display:none}.map-toggle{width:44px;height:44px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow);color:var(--ink-2)}.map-card{top:auto;bottom:54px;transform:none;max-height:60vh}.document-map{transition:opacity 180ms,transform 220ms var(--ease)}body.map-tucked .document-map:not(.open){opacity:0;transform:translateY(24px);pointer-events:none}}
 
 /* ---------- views ---------- */
 .source-view{display:none;direction:ltr;text-align:left;max-width:min(1040px,100%);margin:0 auto;padding:32px 0 40vh;color:var(--code-ink);font:12.5px/1.75 var(--mono)}
@@ -1399,6 +1399,9 @@ function writeReaderState(file,position){
 }
 function scheduleStateSave(delay){clearTimeout(stateTimer);if(!cur)return;var file=cur;stateTimer=setTimeout(function(){if(file===cur)writeReaderState(file,capturePosition());},delay==null?250:delay);}
 scroller.addEventListener("scroll",function(){progress();scheduleStateSave(280);},{passive:true});
+// small screens: the round map button would sit on the ends of lines while reading down, so it
+// steps aside on the way down and comes back on the way up or at the end, like Safari's bar
+var lastScrollTop=0;scroller.addEventListener("scroll",function(){var y=scroller.scrollTop,down=y>lastScrollTop+4,up=y<lastScrollTop-4,atEnd=y+scroller.clientHeight>=scroller.scrollHeight-24;if(down&&y>80&&!atEnd)document.body.classList.add("map-tucked");else if(up||atEnd||y<=80)document.body.classList.remove("map-tucked");if(down||up)lastScrollTop=y;},{passive:true});
 scroller.addEventListener("wheel",function(){userMovedDuringRestore=restoreVersion;},{passive:true});
 scroller.addEventListener("touchstart",function(){userMovedDuringRestore=restoreVersion;},{passive:true});
 window.addEventListener("pagehide",function(){if(cur)writeReaderState(cur,capturePosition());});
