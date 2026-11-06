@@ -28,6 +28,8 @@
     "src",
     "vendor",
     "scripts",
+    "assets/Matn.icns",
+    "assets/icon.svg",
     "skills",
     "ARCHITECTURE.md",
     "SECURITY.md",

@@ -7,12 +7,20 @@ import { resolve, dirname, join, basename } from "node:path";
 import MarkdownFiles from "../src/markdown-files.cjs";
 const { isMarkdownPath } = MarkdownFiles;
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { createStateStore } from "../src/state-store.mjs";
 import { launch, follow, openBrowser, targetUrl } from "../src/launch.mjs";
 import { runReview, runHook, changes, readOptions, setOptions, replyFile, setupCodex } from "../src/agent.mjs";
 import { cleanupStdinSessions, createStdinSession, readStdin } from "../src/stdin-session.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const VERSION = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).version;
+
+async function lastFolder() {
+  const { recent } = await createStateStore().snapshot("").catch(() => ({ recent: [] }));
+  const found = recent.map((entry) => entry.root).find((root) => { try { return statSync(root).isDirectory(); } catch { return false; } });
+  return found || homedir();
+}
 
 function parseArgs(argv) {
   const o = { port: 4711, host: "127.0.0.1", open: true, target: null, editor: process.env.MATN_EDITOR || "", allowFileActions: false };
@@ -156,6 +164,10 @@ if (o.target && o.target !== "-" && !o.command) {
   }
   if (statSync(abs).isFile() && !isMarkdownPath(abs)) fail(`not a Markdown file: ${o.target} (Matn reads .md, .markdown, .mdc, .mdx and similar)`, 2);
 }
+
+// Opened from Finder with no file (the Matn.app icon), the working directory is "/". Serving
+// the whole disk is never what was meant: reopen the last folder read, or the home folder.
+if (!o.target && !o.command && process.cwd() === "/") o.target = await lastFolder();
 
 const { base, reused, defaultArg } = await launch({ target: o.target, port: o.port, host: o.host, editor: o.editor, allowFileActions: o.allowFileActions });
 const url = targetUrl(base, o.target);

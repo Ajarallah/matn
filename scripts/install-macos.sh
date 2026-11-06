@@ -54,6 +54,9 @@ APPLE
 [ -e "$APP" ] && /bin/mv "$APP" "$HOME/.Trash/Matn.app.$$" 2>/dev/null || true
 osacompile -o "$APP" "$DROPLET"
 
+# The droplet icon osacompile names "droplet"; replace it with Matn's own.
+[ -f "$PKG/assets/Matn.icns" ] && /bin/cp "$PKG/assets/Matn.icns" "$APP/Contents/Resources/droplet.icns"
+
 # Declare a stable identity and every Markdown extension the reader opens.
 PL="$APP/Contents/Info.plist"
 $PB -c "Add :CFBundleIdentifier string $BID" "$PL" 2>/dev/null || $PB -c "Set :CFBundleIdentifier $BID" "$PL"
@@ -72,6 +75,10 @@ for ext in "${EXTENSIONS[@]}"; do
 done
 $PB -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes array" "$PL"
 $PB -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes:0 string $UTI" "$PL"
+# CFBundleIconName points at the stock droplet in Assets.car and wins over the .icns
+$PB -c "Delete :CFBundleIconName" "$PL" 2>/dev/null || true
+# every edit above invalidates osacompile's ad-hoc signature; sign again so macOS trusts it
+codesign --force --sign - "$APP" >/dev/null 2>&1 || say "could not re-sign $APP; it still opens, but macOS may warn"
 
 "$LSREGISTER" -f "$APP"
 say "registered — right-click any .md → Open With → Matn"
