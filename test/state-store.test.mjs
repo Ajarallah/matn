@@ -38,3 +38,22 @@ test("a corrupt state file recovers as empty state on the next write", async (t)
   await store.updateWorkspace("/vault", { lastFile: "guide.md" });
   assert.equal((await store.snapshot("/vault")).workspace.lastFile, "guide.md");
 });
+
+test("last-read copies are capped: the least recently written go first", async (t) => {
+  const { mkdtemp, rm, readdir, utimes } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { createStateStore } = await import("../src/state-store.mjs");
+  const dataDir = await mkdtemp(join(tmpdir(), "matn-seen-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const store = createStateStore({ dataDir, seenKeep: 3 });
+  for (let i = 0; i < 5; i++) {
+    await store.writeSeen(`/f${i}.md`, `# ${i}`);
+    const names = await readdir(join(dataDir, "seen"));
+    for (const n of names) await utimes(join(dataDir, "seen", n), new Date(), new Date(Date.now() - (5 - i) * 1000));
+  }
+  await store.writeSeen("/f5.md", "# 5");
+  await store.pruneSeen();
+  assert.equal((await readdir(join(dataDir, "seen"))).filter((n) => n.endsWith(".md")).length, 3);
+  assert.equal(await store.readSeen("/f5.md"), "# 5", "the newest copy survives");
+});
