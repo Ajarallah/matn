@@ -697,7 +697,8 @@ try {
   // text written before the switch (reading time, relative times) all follow the language.
   await reading.locator("#gearbtn").click();
   await reading.locator('[data-lang-val="en"]').click();
-  const arabicLeft = await reading.evaluate(() => {
+  // some text (link health) is fetched again after the switch, so give it a moment to settle
+  const scanArabic = () => reading.evaluate(() => {
     const out = [], ar = /[\u0600-\u06FF]/;
     document.querySelectorAll("body *").forEach((el) => {
       if (el.closest("#doc,#files,#recent,#toc,#backlinks,#annotations,#book,#notequote,.toast,.collection-body,script,.margin-notes,[data-lang-val],.sidebar-head strong,#fname") || el.matches("option[value=thmanyah]")) return;
@@ -706,6 +707,8 @@ try {
     });
     return out;
   });
+  let arabicLeft = await scanArabic();
+  for (let tries = 0; arabicLeft.length && tries < 25; tries++) { await reading.waitForTimeout(200); arabicLeft = await scanArabic(); }
   assert.deepEqual(arabicLeft, [], "Arabic text left in the English interface");
   await reading.locator('[data-lang-val="ar"]').click();
   await reading.keyboard.press("Escape");
