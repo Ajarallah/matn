@@ -407,7 +407,7 @@ try {
   // The shortcuts all worked already; none of them were written down anywhere.
   await reading.keyboard.press("?");
   await reading.waitForSelector("#shortcutdialog[open]");
-  assert.equal(await reading.locator("#shortcutlist dt").count(), 10);
+  assert.equal(await reading.locator("#shortcutlist dt").count(), 11);
   assert.equal(await reading.locator("#shortcutlist dd").last().innerText(), "هذه القائمة");
   // key pairs read left to right even in the Arabic interface, as macOS does
   assert.equal(await reading.locator("#shortcutlist dt").first().evaluate((el) => getComputedStyle(el).direction), "ltr");
@@ -587,6 +587,19 @@ try {
   await reading.locator("#findinput").fill("للفصل 12");
   assert.equal(await reading.locator("#doc mark.find-cur").innerText(), "للفصل ١٢");
   await reading.keyboard.press("Escape");
+
+  // j / k step through blocks with a reading focus; Escape lets go.
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await reading.evaluate(() => { document.getElementById("scroller").scrollTop = 0; });
+  await reading.keyboard.press("j");
+  const firstStep = await reading.locator("#doc [data-reading]").innerText();
+  await reading.keyboard.press("j");
+  assert.notEqual(await reading.locator("#doc [data-reading]").innerText(), firstStep);
+  await reading.keyboard.press("k");
+  assert.equal(await reading.locator("#doc [data-reading]").innerText(), firstStep);
+  await reading.keyboard.press("Escape");
+  assert.equal(await reading.locator("#doc [data-reading]").count(), 0);
 
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
