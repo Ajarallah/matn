@@ -65,3 +65,17 @@ test("CriticMarkup writes each note into the text where it belongs", () => {
   assert.match(out, /\{==نراقب الأخطاء==\}\{>>كم ساعة؟<<\}/);
   assert.match(out, /---\n\n- \{==نص \*\*منسق\*\* غير موجود حرفيًا==\}\{>>بعيد<<\}/);
 });
+
+test("notes from several files hand off as one review, one section per file", async () => {
+  const { default: core } = await import("../src/annotation-core.cjs");
+  const md = core.workspaceReview([
+    { rel: "plan.md", source: "# Plan\nDeploy everywhere.\n", annotations: [{ id: "a", quote: "Deploy everywhere.", note: "One region first." }] },
+    { rel: "empty.md", source: "# Empty\n", annotations: [] },
+    { rel: "docs/spec.md", source: "# Spec\nUse polling.\nRetry twice.\n", annotations: [{ id: "b", quote: "Use polling.", note: "Use LISTEN/NOTIFY." }, { id: "c", quote: "Retry twice.", note: "old", sentAt: 1 }] }
+  ]);
+  assert.match(md, /^# Review: 2 files\n\n2 notes\./);
+  assert.match(md, /\n## plan\.md\n/);
+  assert.match(md, /\n## docs\/spec\.md\n/);
+  assert.match(md, /### 1\. Line 2/);
+  assert.doesNotMatch(md, /empty\.md|old/);
+});

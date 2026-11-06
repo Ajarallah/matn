@@ -85,5 +85,15 @@ function criticMarkup({ source, annotations }) {
   return text;
 }
 
-return { createAnchor, reattach, reviewMarkdown, criticMarkup };
+// Notes from several files in one hand-off: each file's review as reviewMarkdown writes it,
+// one heading level down, under a line that says how many files and notes there are.
+function workspaceReview(files) {
+  const parts = (files || []).map((file) => ({ file, notes: (file.annotations || []).filter((item) => !item.sentAt) })).filter((part) => part.notes.length);
+  const total = parts.reduce((sum, part) => sum + part.notes.length, 0);
+  const out = [`# Review: ${parts.length} ${parts.length === 1 ? "file" : "files"}`, "", `${total} ${total === 1 ? "note" : "notes"}. Each file's notes quote the text they are about; line numbers are for the files as they are now.`];
+  for (const { file } of parts) out.push("", reviewMarkdown(file).trim().replace(/^(#+) /gm, "#$1 ").replace(/^## Review: /, "## "));
+  return out.join("\n") + "\n";
+}
+
+return { createAnchor, reattach, reviewMarkdown, criticMarkup, workspaceReview };
 });

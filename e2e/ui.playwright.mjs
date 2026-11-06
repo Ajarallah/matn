@@ -698,6 +698,13 @@ try {
   assert.ok(await touch.locator("#selectiontools").evaluate((el) => el.getBoundingClientRect().top) > selected, "touch toolbar sits below the selection");
   await touchContext.close();
 
+  // Notes on every file go to the agent in one hand-off, a section per file
+  await reading.evaluate(() => doExport("agentall"));
+  await reading.waitForFunction(() => document.querySelector(".toast.show")?.textContent.includes("الوكيل"));
+  const handoff = await reading.evaluate(() => navigator.clipboard.readText());
+  assert.match(handoff, /^# Review: \d+ files?\n\n\d+ notes?\./);
+  assert.match(handoff, /\n## [^\n]+\.md\n/);
+
   // The English interface carries no Arabic chrome: labels, tooltips, placeholders and
   // text written before the switch (reading time, relative times) all follow the language.
   await reading.locator("#gearbtn").click();
@@ -719,7 +726,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
