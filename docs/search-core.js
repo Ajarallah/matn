@@ -15,17 +15,19 @@
   }
   function normalizeMapped(input){
     input=String(input==null?"":input).normalize("NFKC");
-    var value="",map=[],pendingSpace=false,pendingIndex=0;
+    // Collect characters and join once: `value+=ch` leaves one rope node per character,
+    // which on a 10k-file folder ran the indexer out of a 4GB heap.
+    var out=[],map=[],pendingSpace=false,pendingIndex=0;
     for(var i=0;i<input.length;i++){
       var folded=foldChar(input[i]);
       for(var j=0;j<folded.length;j++){
         var ch=folded[j];
-        if(/\s/.test(ch)){if(value){pendingSpace=true;pendingIndex=i;}continue;}
-        if(pendingSpace){value+=" ";map.push(pendingIndex);pendingSpace=false;}
-        value+=ch;map.push(i);
+        if(/\s/.test(ch)){if(out.length){pendingSpace=true;pendingIndex=i;}continue;}
+        if(pendingSpace){out.push(" ");map.push(pendingIndex);pendingSpace=false;}
+        out.push(ch);map.push(i);
       }
     }
-    return {value:value,map:map};
+    return {value:out.join(""),map:map};
   }
   function normalizeSearch(input){return normalizeMapped(input).value;}
   function cleanScalar(value){return String(value||"").trim().replace(/^["']|["']$/g,"");}
@@ -57,18 +59,18 @@
     var fileName=(rel.split("/").pop()||"مستند").replace(/\.(?:md|markdown|mdown|mkdn|mkd|mdwn|mdtxt|mdtext|rmd|qmd)$/i,"");
     var heading=/^[ \t]{0,3}#[ \t]+(.+?)\s*#*[ \t]*$/m.exec(meta.body);
     var title=meta.title||(heading&&heading[1].trim())||fileName;
-    var mapped=normalizeMapped(content);
     return {
       path:String(input.path||""),rel:rel,title:title,aliases:meta.aliases,
       mtimeMs:Number(input.mtimeMs)||0,content:content,
       bodyStart:content.length-meta.body.length,
       titleNorm:normalizeSearch(title),aliasNorm:normalizeSearch(meta.aliases.join(" ")),
-      pathNorm:normalizeSearch(rel),contentNorm:mapped.value,contentMap:mapped.map
+      pathNorm:normalizeSearch(rel),contentNorm:normalizeSearch(content)
     };
   }
   function snippetFor(record,term){
     var at=term?record.contentNorm.indexOf(term):-1;
-    var originalAt=at>=0?(record.contentMap[at]||0):0;
+    // The index-to-source map costs ~8 bytes per character, so it is built only for a hit, never stored.
+    var originalAt=at>=0?(normalizeMapped(record.content).map[at]||0):0;
     if(originalAt<record.bodyStart)originalAt=record.bodyStart;
     var start=Math.max(0,originalAt-70),end=Math.min(record.content.length,originalAt+140);
     if(start<record.bodyStart)start=record.bodyStart;

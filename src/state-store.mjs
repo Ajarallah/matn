@@ -1,7 +1,7 @@
 // Persistent reader state. Data lives outside the opened workspace and every
 // update is an atomic replace so an interrupted write cannot truncate state.
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -154,5 +154,20 @@ export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.
     });
   }
 
-  return { file, snapshot, updateWorkspace };
+  // "Seen" copies: the text of a file as it stood when you last finished reading it, so the
+  // reader can show what changed since. One file per document, keyed by its real path.
+  // ponytail: never pruned; prune by age if the folder grows past a few hundred MB.
+  const seenDir = join(dataDir, "seen");
+  const seenFile = (absReal) => join(seenDir, createHash("sha256").update(absReal).digest("hex") + ".md");
+  async function readSeen(absReal) {
+    try { return await readFile(seenFile(absReal), "utf8"); } catch { return null; }
+  }
+  async function writeSeen(absReal, content) {
+    await mkdir(seenDir, { recursive: true, mode: 0o700 });
+    const target = seenFile(absReal), temp = target + "." + process.pid + "." + randomUUID() + ".tmp";
+    await writeFile(temp, content, { encoding: "utf8", mode: 0o600 });
+    await rename(temp, target);
+  }
+
+  return { file, snapshot, updateWorkspace, readSeen, writeSeen };
 }

@@ -3,6 +3,7 @@
 //   matn [file|dir] [--port N] [--host H] [--no-open]
 
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { readFileSync, existsSync, statSync, realpathSync, rmSync } from "node:fs";
 import { resolve, dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,7 @@ const VERSION = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).vers
 
 function parseArgs(argv) {
   const o = { port: 4711, host: "127.0.0.1", open: true, target: null, editor: process.env.MATN_EDITOR || "", allowFileActions: false };
+  if (argv[0] === "review") { o.review = true; argv = argv.slice(1); }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--port" || a === "-p") o.port = Number(argv[++i]) || o.port;
@@ -35,6 +37,8 @@ const HELP = `متن — Matn  ·  a right-to-left Markdown reader for Arabic
 Usage:
   matn [file|dir]          open a .md file, or a folder to browse
   command | matn -         read Markdown from stdin in a temporary session
+  matn review <file>       open a file for review; print your notes to stdout when
+                           you press "Send to agent" (for coding agents to call)
   matn                     open the current directory
 
 Options:
@@ -127,25 +131,44 @@ let port = o.port;
 // If the requested port is busy, reuse that instance only when it can serve the
 // target (same containment root). Otherwise open a fresh, contained instance on
 // the next free port — so you can read files from any folder.
+// In review mode stdout carries only the notes, so an agent can read them as-is.
+const log = o.review ? (line) => console.error(line) : (line) => console.log(line);
+if (o.review && (!o.target || o.target === "-" || !existsSync(o.target) || statSync(o.target).isDirectory())) {
+  console.error("[matn] review needs a Markdown file: matn review PLAN.md");
+  process.exit(2);
+}
+const reviewId = o.review ? randomBytes(16).toString("hex") : "";
+let reused = false;
 if (await portInUse(o.host, port)) {
   const root = await runningRoot(o.host, port);
-  if (root && withinRoot(root, defaultArg)) {
-    const base = `http://${hostForUrl(o.host)}:${port}`;
-    const url = targetUrl(base, o.target);
-    if (o.open) openBrowser(url);
-    console.log("[matn] reusing instance on " + base);
-    console.log("[matn] " + url);
-    process.exit(0);
+  if (root && withinRoot(root, defaultArg)) reused = true;
+  else {
+    let p = port + 1;
+    while (p < port + 64 && (await portInUse(o.host, p))) p++;
+    port = p;
   }
-  let p = port + 1;
-  while (p < port + 64 && (await portInUse(o.host, p))) p++;
-  port = p;
 }
 
 const base = `http://${hostForUrl(o.host)}:${port}`;
-const url = targetUrl(base, o.target);
-await startServer({ port, host: o.host, defaultArg, editor: o.editor, allowFileActions: o.allowFileActions });
-console.log("متن — Matn  ·  " + base);
-if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
-console.log("[matn] Ctrl+C to stop");
+const url = targetUrl(base, o.target) + (reviewId ? "&review=" + reviewId : "");
+if (reused) {
+  log("[matn] reusing instance on " + base);
+  log("[matn] " + url);
+} else {
+  await startServer({ port, host: o.host, defaultArg, editor: o.editor, allowFileActions: o.allowFileActions });
+  log("متن — Matn  ·  " + base);
+  if (existsSync(defaultArg)) log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
+  log("[matn] Ctrl+C to stop");
+}
 if (o.open) openBrowser(url);
+if (o.review) {
+  if (!reused) log("[matn] " + url);
+  log("[matn] waiting for your review — press “Send to agent” in the reader");
+  for (;;) {
+    let response = null;
+    try { response = await fetch(`${base}/api/review-wait?id=${reviewId}`); } catch { await new Promise((r) => setTimeout(r, 1000)); continue; }
+    if (response.status === 200) { process.stdout.write(await response.text()); process.exit(0); }
+    if (response.status !== 204) { console.error("[matn] review failed: HTTP " + response.status); process.exit(1); }
+  }
+}
+if (reused) process.exit(0);

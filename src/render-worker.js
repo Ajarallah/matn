@@ -4,18 +4,7 @@ importScripts("/marked.js", "/marked-footnote.js", "/render-core.js");
 
 if (self.marked && marked.use) {
   try {
-    marked.use({ extensions: [{
-      name: "wikilink",
-      level: "inline",
-      start(source) { return source.indexOf("[["); },
-      tokenizer(source) {
-        const match = /^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(source);
-        if (match) return { type: "wikilink", raw: match[0], target: match[1].trim(), text: (match[2] || match[1]).trim() };
-      },
-      renderer(token) {
-        return `<a class="wikilink internal-link" href="#" data-wiki="${MatnCore.esc(token.target)}" title="${MatnCore.esc(token.target)}">${MatnCore.esc(token.text)}</a>`;
-      },
-    }] });
+    marked.use({ extensions: MatnCore.obsidianExtensions() });
   } catch {}
   try { if (self.markedFootnote) marked.use(markedFootnote({ description: new URL(self.location.href).searchParams.get("footnotes") || "Footnotes" })); } catch {}
 }

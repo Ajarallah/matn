@@ -61,3 +61,11 @@ test("snippets preserve ordinary horizontal rules", () => {
   assert.match(result.snippet, /بعد/);
   assert.match(result.snippet, /المطلوبة/);
 });
+
+test("records keep no per-character map, so large folders fit in memory", () => {
+  const pad = "سطر تمهيدي طويل. ".repeat(40);
+  const record = searchCore.createRecord({ path: "/a.md", rel: "a.md", content: pad + "الكلمةُ المَطلوبة هنا" });
+  assert.equal(record.contentMap, undefined);
+  const [hit] = searchCore.searchRecords([record], "المطلوبة");
+  assert.match(hit.snippet, /المَطلوبة/);
+});

@@ -45,3 +45,16 @@ test("extracts local images, external links, Unicode paths, and skips inline cod
     ["markdown", "https://example.com"],
   ]);
 });
+
+test("block references resolve to the block, and image embeds are not note links", () => {
+  const record = (rel, content) => SearchCore.createRecord({ path: "/vault/" + rel, rel, content });
+  const records = [
+    record("notes/a.md", "# A\nفقرة مهمة ^key\n\n![[diagram.png]] و ![[b]]"),
+    record("notes/b.md", "# B")
+  ];
+  const hit = LinkCore.resolve(records, records[0].path, "a#^key");
+  assert.deepEqual(hit.heading, { level: 0, text: "^key", id: "^key" });
+  assert.equal(LinkCore.resolve(records, records[0].path, "a#^missing").heading, null);
+  assert.deepEqual(LinkCore.references(records[0]).map((item) => [item.kind, item.target]), [["embed-image", "diagram.png"], ["wiki", "b"]]);
+  assert.deepEqual(LinkCore.outgoing(records[0]).map((item) => item.target), ["b"]);
+});

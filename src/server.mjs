@@ -27,6 +27,7 @@ const ANNOTATION_CORE = readFileSync(join(HERE, "annotation-core.cjs"), "utf8");
 const RENDER_WORKER = readFileSync(join(HERE, "render-worker.js"), "utf8");
 const HLJS = readFileSync(join(VENDOR, "highlight.min.js"), "utf8");
 const MAX_INDEX_BYTES = 2 * 1024 * 1024;
+const REVIEW_ID = /^[a-f0-9]{32}$/;
 let MERMAID = null; // large (~3.5 MB) — loaded on first request only
 
 const { isMarkdownPath: isMd } = MarkdownFiles;
@@ -47,6 +48,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   let indexing = false;
   let workspaceDir = null;
   const diagnostics = { fullIndexes: 0, fullRecords: 0, incrementalRecords: 0 };
+  const reviews = new Map(), reviewWaiters = new Map();
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
   const sessionToken = randomBytes(32).toString("hex");
@@ -166,6 +168,19 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       catch { workspaceRecords.delete(path); }
     }
   }
+  // A single opened file has no folder index; a link to a sibling note should still work.
+  function resolveNearby(from, target) {
+    const file = LinkCore.splitTarget(target).file;
+    if (!file || LinkCore.isExternal(file)) return null;
+    const records = [from];
+    for (const base of [dirname(from), root]) for (const name of [file, file + ".md"]) {
+      const abs = safeMd(resolve(base, name));
+      if (abs && !records.includes(abs)) records.push(abs);
+    }
+    try {
+      return LinkCore.resolve(records.map((abs) => makeSearchRecord(abs, relative(root, abs).split(sep).join("/"))), from, target);
+    } catch { return null; }
+  }
   function resolvedPayload(resolved) {
     if (!resolved) return null;
     const record = workspaceRecords.get(resolved.path);
@@ -213,6 +228,33 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     try { if (!withinRoot(abs) || !statSync(abs).isFile()) return null; }
     catch { return null; }
     return { abs, type };
+  }
+  // Obsidian embeds name an image, not a path: ![[diagram.png]] means "the one in this vault".
+  // Next to the note first, then from the root, then by name anywhere under the root.
+  let assetNames = null, assetNamesAt = 0;
+  function findAsset(fromAbs, name) {
+    const clean = String(name || "").replace(/\\/g, "/").split("#")[0].trim();
+    if (!clean || !imageTypes.has(extname(clean).toLowerCase())) return null;
+    const asUrl = (abs) => "/" + relative(root, abs).split(sep).map(encodeURIComponent).join("/");
+    for (const candidate of [resolve(dirname(fromAbs), clean), resolve(root, "." + "/" + clean.replace(/^\/+/, ""))]) {
+      if (safeImage("/" + relative(root, candidate).split(sep).join("/"))) return asUrl(candidate);
+    }
+    // ponytail: one walk cached for 5s; a watcher-driven index if vaults with 100k images show up
+    if (!assetNames || Date.now() - assetNamesAt > 5000) {
+      assetNames = new Map(); assetNamesAt = Date.now();
+      (function walk(d) {
+        let es = [];
+        try { es = readdirSync(d, { withFileTypes: true }); } catch { return; }
+        for (const e of es) {
+          if (e.name.startsWith(".") || e.name === "node_modules") continue;
+          const p = join(d, e.name);
+          if (e.isDirectory()) walk(p);
+          else if (imageTypes.has(extname(e.name).toLowerCase()) && !assetNames.has(e.name.toLowerCase())) assetNames.set(e.name.toLowerCase(), p);
+        }
+      })(root);
+    }
+    const found = assetNames.get(clean.split("/").pop().toLowerCase());
+    return found && withinRoot(found) ? asUrl(found) : null;
   }
   function validHostHeader(value) {
     if (host !== "127.0.0.1" && host !== "localhost" && host !== "::1") return true;
@@ -301,6 +343,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       const target = LinkCore.splitTarget(reference.target);
       const base = { ...reference, id: `health-${index + 1}`, status: "ok", resolved: null };
       if (LinkCore.isExternal(target.file) || /^data:/i.test(target.file)) return { ...base, status: "external-unchecked" };
+      if (reference.kind === "embed-image") return findAsset(abs, target.file) ? base : { ...base, status: "missing" };
       const resolved = reference.kind !== "image" ? LinkCore.resolve(records, abs, reference.target) : null;
       if (resolved) {
         if (target.heading && !resolved.heading) return { ...base, status: "missing-heading", resolved };
@@ -353,8 +396,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       { res.writeHead(code, Object.assign({ "content-type": type }, securityHeaders, extra)); res.end(body); };
 
     if (!validHostHeader(req.headers.host || "")) return send(421, "text/plain", "misdirected request");
-    const stateWrite = u.pathname === "/api/state" && req.method === "PUT";
-    const actionWrite = ["/api/open-editor", "/api/reveal", "/api/trash"].includes(u.pathname) && req.method === "POST";
+    const stateWrite = (u.pathname === "/api/state" || u.pathname === "/api/seen") && req.method === "PUT";
+    const actionWrite = ["/api/open-editor", "/api/reveal", "/api/trash", "/api/review"].includes(u.pathname) && req.method === "POST";
     if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
     // Every /api route is for this page only. A page on another origin cannot read the
@@ -425,7 +468,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         return send(500, "application/json", JSON.stringify({ error: "state unavailable" }));
       }
     }
-    if (stateWrite) {
+    if (stateWrite && u.pathname === "/api/state") {
       try {
         const body = await readJson(req);
         const abs = safeMd(body.currentFile);
@@ -484,8 +527,13 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       const target = (u.searchParams.get("target") || "").slice(0, 2000);
       if (!from || !target) return send(400, "application/json", JSON.stringify({ error: "invalid link" }));
       refreshStaleRecords();
-      const resolved = resolvedPayload(LinkCore.resolve(Array.from(workspaceRecords.values()), from, target));
+      const resolved = resolvedPayload(LinkCore.resolve(Array.from(workspaceRecords.values()), from, target) || resolveNearby(from, target));
       return resolved ? send(200, "application/json", JSON.stringify(resolved)) : send(404, "application/json", JSON.stringify({ error: "unresolved link", indexing }));
+    }
+    if (u.pathname === "/api/asset") {
+      const from = safeMd(u.searchParams.get("from"));
+      const url = from && findAsset(from, (u.searchParams.get("name") || "").slice(0, 500));
+      return url ? send(200, "application/json", JSON.stringify({ url })) : send(404, "application/json", JSON.stringify({ error: "no such image" }));
     }
     if (u.pathname === "/api/context") {
       const path = safeMd(u.searchParams.get("path"));
@@ -517,7 +565,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       try { return send(200, "application/json", JSON.stringify(await fileInfo(path))); }
       catch { return send(500, "application/json", JSON.stringify({ error: "file information unavailable" })); }
     }
-    if (actionWrite) {
+    if (actionWrite && u.pathname !== "/api/review") {
       try {
         const body = await readJson(req, 32 * 1024);
         const path = safeMd(body.path);
@@ -538,6 +586,41 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
         const status = error && (error.code === "ENOENT" || error.code === "ENOEDITOR") ? 501 : error && error.statusCode ? error.statusCode : 500;
         return send(status, "application/json", JSON.stringify({ error: error && error.message ? error.message : "file action failed" }));
       }
+    }
+    // `matn review` hands the reader a random id and waits here; "Send to agent" in the page
+    // posts the notes under that id. Polls end after 50s so no client timeout ever fires.
+    if (u.pathname === "/api/review-wait") {
+      const id = u.searchParams.get("id") || "";
+      if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");
+      if (reviews.has(id)) { const text = reviews.get(id); reviews.delete(id); return send(200, "text/markdown; charset=utf-8", text); }
+      const done = (text) => { clearTimeout(timer); reviewWaiters.delete(id); reviews.delete(id); send(200, "text/markdown; charset=utf-8", text); };
+      const timer = setTimeout(() => { reviewWaiters.delete(id); send(204, "text/plain", ""); }, 50000);
+      reviewWaiters.set(id, done);
+      req.on("close", () => { clearTimeout(timer); if (reviewWaiters.get(id) === done) reviewWaiters.delete(id); });
+      return;
+    }
+    if (u.pathname === "/api/review" && req.method === "POST") {
+      let body;
+      try { body = await readJson(req, 1024 * 1024); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid review" })); }
+      if (!body || !REVIEW_ID.test(String(body.id || "")) || typeof body.markdown !== "string") return send(400, "application/json", JSON.stringify({ error: "invalid review" }));
+      const waiter = reviewWaiters.get(body.id);
+      if (waiter) waiter(body.markdown); else reviews.set(body.id, body.markdown);
+      return send(200, "application/json", JSON.stringify({ delivered: Boolean(waiter) }));
+    }
+    if (u.pathname === "/api/seen") {
+      const abs = safeMd(u.searchParams.get("path"));
+      if (!abs) return send(400, "text/plain", "bad file");
+      const real = realpathSync(abs);
+      if (req.method === "PUT") {
+        // The server records what is on disk, never what the page claims it showed.
+        try {
+          if (statSync(real).size > MAX_INDEX_BYTES) return send(413, "text/plain", "too large");
+          await stateStore.writeSeen(real, readFileSync(real, "utf8"));
+          return send(204, "text/plain", "");
+        } catch { return send(500, "text/plain", "seen unavailable"); }
+      }
+      const seen = await stateStore.readSeen(real);
+      return seen == null ? send(204, "text/plain", "") : send(200, "text/plain; charset=utf-8", seen);
     }
     if (u.pathname === "/api/raw") {
       const abs = safeMd(u.searchParams.get("path"));

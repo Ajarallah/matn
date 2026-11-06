@@ -16,6 +16,8 @@ await writeFile(join(root, "README.md"), "# البداية\nفقرة عربية 
 await writeFile(join(root, "docs", "guide.md"), "# الدليل\n## التثبيت\nخطوات.\n");
 await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# مقدمة\n\n## Getting Started\nفقرة عربية.\n\n## Node.js والتشغيل المحلي\nفقرة أخرى.\n\nThis whole paragraph is English prose and nothing else, so it has to read from the left.\n\nانظر [الدليل](./docs/guide.md) للتفاصيل.\n\n```js\nconst مرحبا = \"أهلا\";\n```\n\n$$\\int_0^\\infty e^{-x}\\,dx = 1$$\n\nنص مع حاشية.[^1]\n\n## قسم أخير\nنهاية.\n\n[^1]: نص الحاشية.\n");
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
+await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
+await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
 await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
@@ -515,8 +517,32 @@ try {
     await rm(singleRoot, { recursive: true, force: true });
     await rm(singleDataDir, { recursive: true, force: true });
   }
+  // An Obsidian note reads as Obsidian shows it: embeds filled in, comments hidden, callouts folded.
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "vault.md"))}`);
+  await reading.waitForSelector('#doc .md-embed[data-state="ready"]');
+  assert.match(await reading.locator("#doc .md-embed .md-embed-body").innerText(), /خطوات/);
+  await reading.waitForFunction(() => document.querySelector("#doc img.md-embed-img")?.naturalWidth === 1);
+  assert.equal(await reading.locator("#doc mark.md-mark").innerText(), "مميَّز");
+  assert.equal(await reading.locator("#doc a.md-tag").innerText(), "#مشروع");
+  assert.doesNotMatch(await reading.locator("#doc").innerText(), /سر لا يظهر|%%/);
+  assert.equal(await reading.locator("#doc .callout-folded").count(), 1);
+  await reading.locator("#doc button.callout-head").click();
+  assert.equal(await reading.locator("#doc .callout-folded").count(), 0);
+
+  // Leave a file, let an agent edit it, come back: the edit is marked and nothing jumps.
+  await reading.locator("#files a", { hasText: "outline.md" }).first().click();
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("دليل طويل"));
+  await writeFile(join(root, "vault.md"), (await readFile(join(root, "vault.md"), "utf8")).replace("نص ==مميَّز== هنا.", "نص ==مميَّز== هنا وفيه زيادة.") + "\nفقرة جديدة من الوكيل.\n");
+  await reading.locator("#files a", { hasText: "vault.md" }).first().click();
+  await reading.waitForSelector("#changesbar");
+  assert.equal(await reading.locator("#doc .diff-changed").count(), 1);
+  assert.equal(await reading.locator("#doc .diff-added").count(), 1);
+  await reading.locator("#changesbar .changes-read").click();
+  assert.equal(await reading.locator("#changesbar").count(), 0);
+  assert.equal(await reading.locator("#doc .diff-added, #doc .diff-changed").count(), 0);
+
   await readingContext.close();
-  console.log("playwright: selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

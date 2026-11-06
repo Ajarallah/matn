@@ -29,3 +29,18 @@ test("context selects the correct repeated quote and missing quotes become orpha
   assert.equal(AnnotationCore.reattach(source, anchor).start, start);
   assert.equal(AnnotationCore.reattach("محتوى مختلف", anchor).status, "orphan");
 });
+
+test("reviewMarkdown orders notes by line and quotes what each one is about", () => {
+  const source = "# خطة\n\nنص أول.\n\n## التنفيذ\n\nنستخدم **قاعدة بيانات** واحدة.\n";
+  const md = AnnotationCore.reviewMarkdown({ rel: "docs/plan.md", source, annotations: [
+    { quote: "نستخدم قاعدة بيانات واحدة.", heading: "التنفيذ", note: "لماذا لا نستخدم ملفًا؟", status: "attached" },
+    { quote: "نص أول.", heading: "خطة", note: "", status: "attached" },
+    { quote: "جملة حُذفت", heading: "", note: "راجعها", status: "orphan" }
+  ] });
+  assert.match(md, /^# Review: docs\/plan\.md\n/);
+  assert.match(md, /3 notes on this file/);
+  assert.ok(md.indexOf("## 1. Line 3") < md.indexOf("## 2. Line 7, under \"التنفيذ\""));
+  assert.match(md, /> نستخدم قاعدة بيانات واحدة\.\n\nلماذا لا نستخدم ملفًا؟/);
+  assert.match(md, /> نص أول\.\n\n\(highlighted, no comment\)/);
+  assert.match(md, /## 3\.\n\n> جملة حُذفت\n\nراجعها\n\n_The quoted text is no longer in the file\._/);
+});
