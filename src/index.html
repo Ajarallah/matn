@@ -391,7 +391,9 @@ article#doc{position:relative;max-width:min(var(--measure),100%);margin:0 auto;p
 #doc kbd{font-size:.78em}
 #doc .copybtn{position:absolute;top:8px;right:8px;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--raised);color:var(--ink-2);font:500 11px var(--ui);opacity:0;transition:opacity var(--dur)}
 #doc pre:hover .copybtn,#doc .copybtn:focus-visible{opacity:1}
-#doc .tablewrap{margin:1.2em 0;overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+#doc .tablewrap{margin:1.2em 0;overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);
+  /* a soft shade at an edge that still hides columns, in either direction; the covers scroll with the table, the shades stay put */
+  background:linear-gradient(to right,var(--canvas) 30%,transparent) left center/40px 100% no-repeat local,linear-gradient(to left,var(--canvas) 30%,transparent) right center/40px 100% no-repeat local,radial-gradient(farthest-side at 0 50%,rgb(0 0 0/.16),transparent) left center/14px 100% no-repeat scroll,radial-gradient(farthest-side at 100% 50%,rgb(0 0 0/.16),transparent) right center/14px 100% no-repeat scroll;background-color:var(--canvas)}
 #doc table{border-collapse:collapse;width:100%;font-size:.9em;line-height:1.55}
 #doc th,#doc td{padding:.55em .8em;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
 #doc th{font-weight:650;background:var(--fill);border-bottom-color:var(--line-strong);white-space:nowrap}
