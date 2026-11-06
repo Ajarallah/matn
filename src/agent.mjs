@@ -16,7 +16,7 @@ import { launch, openBrowser, targetUrl } from "./launch.mjs";
 const require = createRequire(import.meta.url);
 const RenderCore = require("./render-core.cjs");
 const MATN_BIN = join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "matn.mjs");
-const MD_FILE = /\.(md|markdown|mdown|mkdn|mkd|mdwn|mdtxt|mdtext|rmd|qmd)$/i;
+const MD_FILE = /\.(md|markdown|mdown|mkdn|mkd|mdwn|mdtxt|mdtext|rmd|qmd|mdc|mdx)$/i;
 
 export const dataDir = () => process.env.MATN_DATA_DIR || defaultDataDir();
 

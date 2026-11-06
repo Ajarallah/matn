@@ -238,3 +238,12 @@ test("image alt text is escaped exactly once", () => {
   const html = exports.parse("![node >=18](x.png)", { renderer: core.safeRenderer(exports) });
   assert.match(html, /alt="node &gt;=18"/);
 });
+
+test("tags agents write around reasoning become labelled blocks, attributes dropped", () => {
+  const exports = {};
+  runInNewContext(readFileSync(new URL("../vendor/marked.min.js", import.meta.url), "utf8"), { exports, module: { exports } });
+  const html = exports.parse('<thinking onclick="x">\nFirst I check the plan.\n</thinking>\n\n<example>\n\n**bold** inside\n\n</example>', { renderer: core.safeRenderer(exports) });
+  assert.match(html, /<section class="agent-block" data-agent-tag="thinking">\s*First I check the plan\.\s*<\/section>/);
+  assert.match(html, /data-agent-tag="example">[\s\S]*<strong>bold<\/strong>[\s\S]*<\/section>/);
+  assert.doesNotMatch(html, /onclick/);
+});

@@ -50,6 +50,8 @@ async function selectText(page, text) {
 
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  // the details panel starts closed; these checks read the outline inside it
+  await context.addInitScript(() => { try { if (!localStorage.getItem("matn.inspector")) localStorage.setItem("matn.inspector", "1"); } catch {} });
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
   const page = await context.newPage();
   await page.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "README.md"))}`);
@@ -143,12 +145,12 @@ try {
   await page.locator('[data-theme-val="dark"]').click();
   await page.waitForSelector('.mermaid[data-mermaid-theme="dark"]');
   assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(255, 255, 255)");
-  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(255, 255, 255)");
+  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(242, 242, 244)");
+  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(242, 242, 244)");
   await page.locator('[data-theme-val="light"]').click();
   await page.waitForSelector('.mermaid[data-mermaid-theme="default"]');
-  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(0, 0, 0)");
-  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(0, 0, 0)");
+  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(29, 29, 31)");
+  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(29, 29, 31)");
   await page.locator('[data-theme-val="system"]').click();
   await page.waitForFunction(() => JSON.parse(localStorage.getItem("matn.reading")).theme === "system");
   assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
@@ -310,6 +312,8 @@ try {
   // The reading surface itself: direction, target sizes, and whether a save from an
   // editor throws away where the reader was.
   const readingContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  // the details panel starts closed; these checks read the outline inside it
+  await readingContext.addInitScript(() => { try { if (!localStorage.getItem("matn.inspector")) localStorage.setItem("matn.inspector", "1"); } catch {} });
   const reading = await readingContext.newPage();
   await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
   await reading.waitForSelector("#doc .katex-display .katex");
@@ -329,7 +333,7 @@ try {
   // content, not by whichever direction the document happens to vote for
   assert.equal(await reading.locator("#doc .frontmatter summary").getAttribute("dir"), "auto");
   assert.equal(await reading.locator("#doc .frontmatter dt").first().getAttribute("dir"), "auto");
-  assert.equal(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth), 0);
+  assert.ok(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth) <= 0, "frontmatter values do not overflow the card");
 
   // the footnote section heading is screen-reader-only and localised, so it belongs
   // to assistive tech — not to the visible outline
@@ -540,6 +544,37 @@ try {
   await reading.locator("#changesbar .changes-read").click();
   assert.equal(await reading.locator("#changesbar").count(), 0);
   assert.equal(await reading.locator("#doc .diff-added, #doc .diff-changed").count(), 0);
+
+  // Data the reader made survives a theme switch, stays off exports, and the changes bar
+  // never outlives its file.
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "vault.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await selectText(reading, "هنا وفيه");
+  await reading.locator('#selectiontools [data-selection-color="green"]').click();
+  await reading.waitForSelector("#doc mark.annotation-mark");
+  const marksBefore = await reading.locator("#doc mark.annotation-mark").count();
+  await reading.locator("#gearbtn").click();
+  await reading.locator('#themes [data-theme-val="dark"]').click();
+  await reading.waitForTimeout(400);
+  assert.equal(await reading.locator("#doc mark.annotation-mark").count(), marksBefore, "a theme switch keeps highlights");
+  await reading.keyboard.press("Escape");
+  const exported = await reading.evaluate(() => exportableDoc());
+  assert.doesNotMatch(exported, /annotation-mark|foldbtn|source-link/, "exports carry no notes or controls");
+  await reading.locator("#files a", { hasText: "outline.md" }).first().click();
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("دليل طويل"));
+  await writeFile(join(root, "vault.md"), (await readFile(join(root, "vault.md"), "utf8")) + "\nسطر أخير.\n");
+  await reading.locator("#files a", { hasText: "vault.md" }).first().click();
+  await reading.waitForSelector("#changesbar");
+  await writeFile(join(root, "fresh.md"), "# جديد\n\nملف لم يُفتح قبل.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "fresh.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("جديد"));
+  assert.equal(await reading.locator("#changesbar").count(), 0, "the changes bar does not follow you to another file");
+
+  // A share link carries the document in its #fragment and opens it intact.
+  const shared = await reading.evaluate(async () => { const link = await shareLinkFor("مشاركة.md", "# مشاركة\n\nنص عربي مع English و`code`.\n"); history.replaceState(null, "", location.pathname + link.slice(link.indexOf("#"))); openSharedFromHash(); return link; });
+  assert.match(shared, /^https:\/\/ajarallah\.github\.io\/matn\/#s=[A-Za-z0-9_-]+&n=/);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("مشاركة"));
+  assert.equal(await reading.locator("#fname").innerText(), "مشاركة.md");
 
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
