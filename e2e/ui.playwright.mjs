@@ -50,6 +50,8 @@ async function selectText(page, text) {
 
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  // the details panel starts closed; these checks read the outline inside it
+  await context.addInitScript(() => { try { if (!localStorage.getItem("matn.inspector")) localStorage.setItem("matn.inspector", "1"); } catch {} });
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
   const page = await context.newPage();
   await page.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "README.md"))}`);
@@ -143,12 +145,12 @@ try {
   await page.locator('[data-theme-val="dark"]').click();
   await page.waitForSelector('.mermaid[data-mermaid-theme="dark"]');
   assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(255, 255, 255)");
-  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(255, 255, 255)");
+  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(242, 242, 244)");
+  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(242, 242, 244)");
   await page.locator('[data-theme-val="light"]').click();
   await page.waitForSelector('.mermaid[data-mermaid-theme="default"]');
-  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(0, 0, 0)");
-  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(0, 0, 0)");
+  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).color === "rgb(29, 29, 31)");
+  assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).color), "rgb(29, 29, 31)");
   await page.locator('[data-theme-val="system"]').click();
   await page.waitForFunction(() => JSON.parse(localStorage.getItem("matn.reading")).theme === "system");
   assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
@@ -310,6 +312,8 @@ try {
   // The reading surface itself: direction, target sizes, and whether a save from an
   // editor throws away where the reader was.
   const readingContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  // the details panel starts closed; these checks read the outline inside it
+  await readingContext.addInitScript(() => { try { if (!localStorage.getItem("matn.inspector")) localStorage.setItem("matn.inspector", "1"); } catch {} });
   const reading = await readingContext.newPage();
   await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "typography.md"))}`);
   await reading.waitForSelector("#doc .katex-display .katex");
@@ -329,7 +333,7 @@ try {
   // content, not by whichever direction the document happens to vote for
   assert.equal(await reading.locator("#doc .frontmatter summary").getAttribute("dir"), "auto");
   assert.equal(await reading.locator("#doc .frontmatter dt").first().getAttribute("dir"), "auto");
-  assert.equal(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth), 0);
+  assert.ok(await reading.locator("#doc .frontmatter dl").evaluate((el) => el.scrollWidth - el.clientWidth) <= 0, "frontmatter values do not overflow the card");
 
   // the footnote section heading is screen-reader-only and localised, so it belongs
   // to assistive tech — not to the visible outline
