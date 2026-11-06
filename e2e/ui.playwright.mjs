@@ -66,7 +66,7 @@ try {
   assert.equal(await page.locator("main").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
   assert.equal(await page.locator("aside#side").evaluate((el) => getComputedStyle(el).overflowX), "hidden");
   assert.equal(await page.locator("#fname").getAttribute("dir"), "auto");
-  assert.match(await page.locator("#rtime").innerText(), /^\d+ \S+ · \d+ \S+$/);
+  assert.match(await page.locator("#rtime").innerText(), /^[\d,]+ \S+ · \S+/);
   assert.equal(await page.locator("#live").evaluate((el) => getComputedStyle(el).position), "static");
   assert.equal(await page.locator("body").evaluate((el) => el.classList.contains("ui-ready")), true);
   await page.locator("#gearbtn").dispatchEvent("pointerdown", { pointerId: 1, clientX: 10, clientY: 10 });
