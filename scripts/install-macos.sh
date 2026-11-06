@@ -33,7 +33,7 @@ fi
 
 [ "$(uname -s)" = "Darwin" ] || die "this installer is macOS-only; use install-linux.sh"
 [ -f "$PKG/scripts/matn-open.sh" ] || die "matn-open.sh is missing next to this script — incomplete install?"
-command -v node >/dev/null 2>&1 || die "Node.js 18 or newer is required: https://nodejs.org"
+command -v node >/dev/null 2>&1 || die "Node.js 22 or newer is required: https://nodejs.org"
 
 say "building $APP"
 mkdir -p "$HOME/Applications"

@@ -13,7 +13,7 @@ matn README.md
 ```
 
 `npm install` only fetches Playwright, used by the browser tests. The reader itself
-runs on Node 18+ with nothing else.
+runs on Node 22+ with nothing else.
 
 ## Before you open a pull request
 

@@ -17,7 +17,7 @@
 
 [![الرخصة: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
 [![الإصدار](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![Node: 18 فأحدث](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
+![Node: 22 فأحدث](https://img.shields.io/badge/node-%3E%3D22-0f6d63.svg)
 ![بلا تبعيات](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
 </div>
@@ -42,7 +42,7 @@ npm install -g @ajarallah/matn
 matn README.md
 ```
 
-> يحتاج Node.js إصدار 18 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء، فالتثبيت ثانية واحدة.
+> يحتاج Node.js إصدار 22 فأحدث. لا شيء غيره — بلا تبعيات تشغيل وبلا خطوة بناء، فالتثبيت ثانية واحدة.
 
 **تشغيل بلا تثبيت:**
 ```bash
