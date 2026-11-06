@@ -397,6 +397,10 @@ article#doc{position:relative;max-width:min(var(--measure),100%);margin:0 auto;p
 #doc img{max-width:100%;height:auto;border-radius:var(--r-sm)}
 #doc code{font-family:var(--mono);font-size:.84em;padding:.12em .36em;border-radius:var(--r-xs);background:var(--fill-2);direction:ltr;unicode-bidi:isolate}
 #doc pre{position:relative;margin:1.2em 0;padding:14px 16px;border-radius:var(--r);background:var(--code-bg);border:1px solid var(--line);color:var(--code-ink);overflow-x:auto;direction:ltr;text-align:left;font-size:.8em;line-height:1.65}
+/* code that runs past the edge says so: a shade where lines continue, as on wide tables */
+#doc pre{background:linear-gradient(to right,var(--code-bg) 30%,transparent) left center/40px 100% no-repeat local,linear-gradient(to left,var(--code-bg) 30%,transparent) right center/40px 100% no-repeat local,radial-gradient(farthest-side at 0 50%,rgb(0 0 0/.14),transparent) left center/14px 100% no-repeat scroll,radial-gradient(farthest-side at 100% 50%,rgb(0 0 0/.14),transparent) right center/14px 100% no-repeat scroll;background-color:var(--code-bg)}
+#doc pre .ar-comment{white-space:pre-wrap}
+@media (max-width:600px){#doc pre{font-size:.72em;padding:12px 14px}}
 #doc pre code{padding:0;background:none;font-size:1em;unicode-bidi:normal}
 #doc kbd{font-size:.78em}
 #doc .copybtn{position:absolute;top:8px;right:8px;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--raised);color:var(--ink-2);font:500 11px var(--ui);opacity:0;transition:opacity var(--dur)}
@@ -591,7 +595,9 @@ body.has-side:not(.library-hidden) .document-map{inset-inline-start:260px}
 #maplist button{display:block;width:100%;padding:5px 8px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink-2);text-align:start;font-size:12.5px;unicode-bidi:plaintext}
 #maplist button:hover{background:var(--fill)}
 #maplist button.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
-@media (max-width:1100px){.document-map{top:auto;bottom:max(16px,env(safe-area-inset-bottom));transform:none}.map-rail,.map-peek{display:none}.map-toggle{width:44px;height:44px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow);color:var(--ink-2)}.map-card{top:auto;bottom:54px;transform:none;max-height:60vh}.document-map{transition:opacity 180ms,transform 220ms var(--ease)}body.map-tucked .document-map:not(.open){opacity:0;transform:translateY(24px);pointer-events:none}}
+@media (max-width:1100px){.document-map{top:auto;bottom:max(16px,env(safe-area-inset-bottom));transform:none}
+  /* the round button sits where lines end (left in Arabic, right in English), clear of where they start */
+  #documentmap{inset-inline:auto;left:12px;right:auto;align-items:flex-start}body.doc-ltr #documentmap{left:auto;right:12px;align-items:flex-end}.map-rail,.map-peek{display:none}.map-toggle{width:44px;height:44px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow);color:var(--ink-2)}.map-card{top:auto;bottom:54px;transform:none;max-height:60vh}.document-map{transition:opacity 180ms,transform 220ms var(--ease)}body.map-tucked .document-map:not(.open){opacity:0;transform:translateY(24px);pointer-events:none}}
 
 /* ---------- views ---------- */
 .source-view{display:none;direction:ltr;text-align:left;max-width:min(1040px,100%);margin:0 auto;padding:32px 0 40vh;color:var(--code-ink);font:12.5px/1.75 var(--mono)}
@@ -1129,6 +1135,9 @@ function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColum
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");
   for(var i=0;i<mcodes.length;i++){var mc=mcodes[i],mpre=mc.closest("pre");if(!mpre||!mpre.parentNode)continue;var mdv=document.createElement("div");mdv.className="mermaid";mdv.textContent=mc.textContent;mdv.dataset.src=mc.textContent;mpre.parentNode.replaceChild(mdv,mpre);mnodes.push(mdv);}
   if(window.hljs){var pc=doc.querySelectorAll("pre code");for(var j=0;j<pc.length;j++){try{hljs.highlightElement(pc[j]);}catch(e){}}}
+  // An Arabic comment in left-to-right code reads right to left; run past the edge, its first
+  // words are the ones cut off. It wraps at the edge instead, so the sentence is read whole.
+  doc.querySelectorAll("pre .hljs-comment").forEach(function(c){if(/[\u0600-\u06FF]/.test(c.textContent))c.classList.add("ar-comment");});
   var fnh=doc.querySelector("[data-footnotes] h2");if(fnh)fnh.textContent=T("footnotes");
   var codes=doc.querySelectorAll("pre code, code");for(var ci=0;ci<codes.length;ci++)isolateRTLIn(codes[ci]);
 	  var blocks=doc.querySelectorAll("pre");for(var k=0;k<blocks.length;k++){(function(pre){var b=document.createElement("button");b.className="copybtn";b.type="button";b.textContent=T("copy");b.onclick=function(){var c=pre.querySelector("code");copyText(c?c.innerText:pre.innerText).then(function(){b.textContent=T("copied");setTimeout(function(){b.textContent=T("copy");},1400);}).catch(function(){showToast(T("copyFailed"));});};pre.appendChild(b);})(blocks[k]);}
@@ -1295,7 +1304,7 @@ function docDir(doc){
   return MatnCore.voteDir(texts);
 }
 var autoDir="rtl";
-function setDocDir(){var d=$("doc");d.setAttribute("dir",S.docdir==="ltr"||S.docdir==="rtl"?S.docdir:autoDir);}
+function setDocDir(){var d=$("doc");d.setAttribute("dir",S.docdir==="ltr"||S.docdir==="rtl"?S.docdir:autoDir);document.body.classList.toggle("doc-ltr",d.getAttribute("dir")==="ltr");}
 function zoomify(doc){
   var targets=doc.querySelectorAll(".mermaid, img");
   for(var i=0;i<targets.length;i++){(function(el){
