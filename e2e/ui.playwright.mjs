@@ -541,6 +541,31 @@ try {
   assert.equal(await reading.locator("#changesbar").count(), 0);
   assert.equal(await reading.locator("#doc .diff-added, #doc .diff-changed").count(), 0);
 
+  // Data the reader made survives a theme switch, stays off exports, and the changes bar
+  // never outlives its file.
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "vault.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await selectText(reading, "هنا وفيه");
+  await reading.locator('#selectiontools [data-selection-color="green"]').click();
+  await reading.waitForSelector("#doc mark.annotation-mark");
+  const marksBefore = await reading.locator("#doc mark.annotation-mark").count();
+  await reading.locator("#gearbtn").click();
+  await reading.locator('#themes [data-theme-val="dark"]').click();
+  await reading.waitForTimeout(400);
+  assert.equal(await reading.locator("#doc mark.annotation-mark").count(), marksBefore, "a theme switch keeps highlights");
+  await reading.keyboard.press("Escape");
+  const exported = await reading.evaluate(() => exportableDoc());
+  assert.doesNotMatch(exported, /annotation-mark|foldbtn|source-link/, "exports carry no notes or controls");
+  await reading.locator("#files a", { hasText: "outline.md" }).first().click();
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("دليل طويل"));
+  await writeFile(join(root, "vault.md"), (await readFile(join(root, "vault.md"), "utf8")) + "\nسطر أخير.\n");
+  await reading.locator("#files a", { hasText: "vault.md" }).first().click();
+  await reading.waitForSelector("#changesbar");
+  await writeFile(join(root, "fresh.md"), "# جديد\n\nملف لم يُفتح قبل.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "fresh.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("جديد"));
+  assert.equal(await reading.locator("#changesbar").count(), 0, "the changes bar does not follow you to another file");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");
