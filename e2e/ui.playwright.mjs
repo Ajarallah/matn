@@ -652,6 +652,19 @@ try {
   assert.ok(followed.delivered >= 1);
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("خزنة"));
 
+  // The start screen names what it opens, lists the folder's newest files (the only file
+  // list in view on a phone), and greys the buttons that need a document.
+  const startContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const start = await startContext.newPage();
+  await start.goto(`${base}/`);
+  await start.waitForSelector("#doc.start .start-list .start-item");
+  assert.equal(await start.locator("#printbtn").isDisabled(), true, "print needs a document");
+  assert.match(await start.locator(".start-actions button:not([hidden])").first().innerText(), /\.md/);
+  await start.locator(".start-list .start-item").first().click();
+  await start.waitForSelector("#doc:not(.start) h1");
+  assert.equal(await start.locator("#printbtn").isDisabled(), false);
+  await startContext.close();
+
   // The English interface carries no Arabic chrome: labels, tooltips, placeholders and
   // text written before the switch (reading time, relative times) all follow the language.
   await reading.locator("#gearbtn").click();
@@ -670,7 +683,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: start screen, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
