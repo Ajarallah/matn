@@ -18,7 +18,7 @@ await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# م�
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
 await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
-await writeFile(join(root, "ayah.md"), "# آية\n\nقال تعالى: {إِنَّ مَعَ الْعُسْرِ يُسْرًا} وقوله {config} و`{\"a\": 1}`.\n");
+await writeFile(join(root, "ayah.md"), "# آية\n\nقال تعالى: {إِنَّ مَعَ الْعُسْرِ يُسْرًا} وقوله {config} و`{\"a\": 1}`.\n\nفائدة سلوكية (زبدة ص٢٦٢) وملاحظة (بلا صفحة).\n");
 await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n\n## الفصل الأول\n\nنص.\n\n## الفصل الثاني & ما بعده\n\nنص.\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
@@ -692,6 +692,8 @@ try {
   assert.equal(ayah.count, 1, "only all-Arabic text in braces is a verse");
   assert.match(ayah.text, /\{إِنَّ مَعَ الْعُسْرِ يُسْرًا\} وقوله \{config\}/);
   assert.equal(ayah.before, '"\uFD3F"');
+  // a page citation reads quieter; a parenthesis that cites no page does not
+  assert.deepEqual(await start.evaluate(() => [...document.querySelectorAll("#doc .cite")].map((el) => el.textContent)), ["(زبدة ص٢٦٢)"]);
   // a file saved by an older Arabic Windows tool (Windows-1256) opens as Arabic, not garbage
   await start.setInputFiles("#fileinput", { name: "legacy.md", mimeType: "text/markdown", buffer: Buffer.from([0x23, 0x20, 0xc7, 0xe1, 0xda, 0xd1, 0xc8, 0xed, 0xc9]) });
   await start.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("العربية"));
