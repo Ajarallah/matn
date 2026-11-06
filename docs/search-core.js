@@ -7,10 +7,16 @@
   "use strict";
 
   var DIACRITICS = /[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]/;
+  // Search-only folding (the original text is kept for display), so the folds that would
+  // change meaning in prose are safe here — as in Lucene's ArabicNormalizer: hamza seats,
+  // taa marbuta, alef maksura, Persian yeh/kaf, and Arabic-Indic digits.
+  var FOLD={"أ":"ا","إ":"ا","آ":"ا","ٱ":"ا","ى":"ي","ی":"ي","ئ":"ي","ؤ":"و","ة":"ه","ک":"ك","ء":""};
   function foldChar(ch){
     if(ch==="ـ"||DIACRITICS.test(ch))return "";
-    if(ch==="أ"||ch==="إ"||ch==="آ"||ch==="ٱ")return "ا";
-    if(ch==="ى")return "ي";
+    if(Object.prototype.hasOwnProperty.call(FOLD,ch))return FOLD[ch];
+    var code=ch.charCodeAt(0);
+    if(code>=0x660&&code<=0x669)return String(code-0x660);
+    if(code>=0x6f0&&code<=0x6f9)return String(code-0x6f0);
     return ch.toLowerCase();
   }
   function normalizeMapped(input){
@@ -103,5 +109,5 @@
     return found.slice(0,limit).map(function(r){delete r.mtimeMs;return r;});
   }
 
-  return {normalizeSearch:normalizeSearch,createRecord:createRecord,searchRecords:searchRecords};
+  return {normalizeSearch:normalizeSearch,normalizeMapped:normalizeMapped,createRecord:createRecord,searchRecords:searchRecords};
 });

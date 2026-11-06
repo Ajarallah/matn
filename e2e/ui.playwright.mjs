@@ -576,6 +576,18 @@ try {
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("مشاركة"));
   assert.equal(await reading.locator("#fname").innerText(), "مشاركة.md");
 
+  // Find inside the document folds Arabic the way search does: no diacritics needed,
+  // taa marbuta and Arabic-Indic digits match, and the hit covers the original letters.
+  await writeFile(join(root, "arabic-find.md"), "# بحث\n\nهذه خُطَّةٌ للفصل ١٢ من الكتاب.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "arabic-find.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("بحث"));
+  await reading.keyboard.press("/");
+  await reading.locator("#findinput").fill("خطه");
+  assert.equal(await reading.locator("#doc mark.find-cur").innerText(), "خُطَّةٌ");
+  await reading.locator("#findinput").fill("للفصل 12");
+  assert.equal(await reading.locator("#doc mark.find-cur").innerText(), "للفصل ١٢");
+  await reading.keyboard.press("Escape");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");

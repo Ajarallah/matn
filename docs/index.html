@@ -1838,16 +1838,22 @@ function findMark(){for(var i=0;i<hits.length;i++)hits[i].className=(i===hitIdx?
 function doFind(q){
   unwrapFind();
   if(!q){findCount();return;}
-  var lc=q.toLowerCase(),doc=viewMode==="source"?$("sourceview"):$("doc");
+  // Arabic-aware: the query and each text node are folded the same way search folds them
+  // (diacritics, tatweel, hamza seats, taa marbuta, Arabic-Indic digits), and every match is
+  // mapped back to the original letters, trailing diacritics included.
+  var S2=window.MatnSearch,fold=function(t){return S2?S2.normalizeSearch(t):String(t).toLowerCase();},nq=fold(q),doc=viewMode==="source"?$("sourceview"):$("doc");
+  if(!nq){findCount();return;}
   var w=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
-    if(!n.nodeValue||n.nodeValue.toLowerCase().indexOf(lc)<0)return NodeFilter.FILTER_REJECT;
+    if(!n.nodeValue||fold(n.nodeValue).indexOf(nq)<0)return NodeFilter.FILTER_REJECT;
     var p=n.parentNode;while(p&&p!==doc){var t=p.nodeName.toLowerCase();if((t==="mark"&&/find-(hit|cur)/.test(p.className))||t==="svg"||t==="script"||t==="style")return NodeFilter.FILTER_REJECT;p=p.parentNode;}
     return NodeFilter.FILTER_ACCEPT;}});
   var nodes=[],n;while(n=w.nextNode())nodes.push(n);
-  for(var j=0;j<nodes.length;j++){var node=nodes[j],text=node.nodeValue,low=text.toLowerCase(),frag=document.createDocumentFragment(),last=0,pos,idx=0;
-    while((pos=low.indexOf(lc,idx))>=0){if(pos>last)frag.appendChild(document.createTextNode(text.slice(last,pos)));var mk=document.createElement("mark");mk.className="find-hit";mk.textContent=text.slice(pos,pos+q.length);frag.appendChild(mk);hits.push(mk);last=pos+q.length;idx=last;}
+  for(var j=0;j<nodes.length;j++){var node=nodes[j],text=node.nodeValue,frag=document.createDocumentFragment(),last=0,ranges=[];
+    if(S2&&text.normalize("NFKC")===text){var m=S2.normalizeMapped(text),pos=0;while((pos=m.value.indexOf(nq,pos))>=0){var st=m.map[pos],en=m.map[pos+nq.length-1]+1;while(en<text.length&&/\p{M}/u.test(text[en]))en++;if(st>=last){ranges.push([st,en]);last=en;}pos+=nq.length;}last=0;}
+    else{var low=text.toLowerCase(),lq=q.toLowerCase(),p2=0;while((p2=low.indexOf(lq,p2))>=0){ranges.push([p2,p2+lq.length]);p2+=lq.length;}}
+    ranges.forEach(function(r){if(r[0]>last)frag.appendChild(document.createTextNode(text.slice(last,r[0])));var mk=document.createElement("mark");mk.className="find-hit";mk.textContent=text.slice(r[0],r[1]);frag.appendChild(mk);hits.push(mk);last=r[1];});
     if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));
-    if(last>0)node.parentNode.replaceChild(frag,node);}
+    if(ranges.length)node.parentNode.replaceChild(frag,node);}
   if(hits.length){hitIdx=0;findMark();}findCount();
 }
 function findNav(d){if(!hits.length)return;hitIdx=(hitIdx+d+hits.length)%hits.length;findMark();findCount();}
