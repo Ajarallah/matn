@@ -391,7 +391,13 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const securityHeaders = {
       "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
       "referrer-policy": "no-referrer",
-      "x-content-type-options": "nosniff"
+      "x-content-type-options": "nosniff",
+      // OWASP Secure Headers: no other site may load these responses (not even as an image
+      // or a script through no-cors), open this page in a shared browsing group, or ask for
+      // devices it never needs.
+      "cross-origin-resource-policy": "same-origin",
+      "cross-origin-opener-policy": "same-origin",
+      "permissions-policy": "camera=(), microphone=(), geolocation=(), usb=(), payment=()"
     };
     const send = (code, type, body, extra) =>
       { res.writeHead(code, Object.assign({ "content-type": type }, securityHeaders, extra)); res.end(body); };

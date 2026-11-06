@@ -168,6 +168,7 @@ if (reused) {
   process.exit(0);
 }
 console.log("متن — Matn  ·  " + base);
+if (!["127.0.0.1", "localhost", "::1"].includes(o.host)) console.error(`[matn] warning: --host ${o.host} makes this reader reachable from your network, with no sign-in. Anyone on it can read ${defaultArg}`);
 if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
 console.log("[matn] Ctrl+C to stop");
 if (o.open) openBrowser(url);

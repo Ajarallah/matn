@@ -184,6 +184,10 @@ test("rejects forged Host headers and emits browser security headers", async (t)
   });
   assert.equal(forgedStatus, 421);
   assert.equal((await fetch(base, { method: "POST" })).status, 405);
+  const headers = (await fetch(`http://127.0.0.1:${server.address().port}/`)).headers;
+  assert.equal(headers.get("cross-origin-resource-policy"), "same-origin");
+  assert.equal(headers.get("cross-origin-opener-policy"), "same-origin");
+  assert.match(headers.get("permissions-policy"), /camera=\(\)/);
 });
 
 test("Host validation rejects malformed authorities and accepts loopback names", async (t) => {
