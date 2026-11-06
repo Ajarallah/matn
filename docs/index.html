@@ -1303,7 +1303,7 @@ function finishRender(doc,card,direction,words,large){autoDir=direction||docDir(
   if(!suppressDocumentMotion&&!window.matchMedia("(prefers-reduced-motion:reduce)").matches){var pane=$("readingpane");pane.classList.remove("document-enter");void pane.offsetWidth;pane.classList.add("document-enter");setTimeout(function(){pane.classList.remove("document-enter");},420);}}
 function render(md){lastMD=md;var fm=parseFrontmatter(md);var mx=MatnCore.preprocess(fm.body);
   var doc=$("doc");doc.classList.remove("start");doc.innerHTML=restoreMath(marked.parse(mx.src,{renderer:safeRenderer()}),mx.store);
-  finishRender(doc,fm.card,null,null);}
+  finishRender(doc,fm.card,MatnCore.frontmatterDir(MatnCore.parseFrontmatter(md).pairs),null);}
 function renderSafely(md){try{render(md);return true;}catch(e){$("doc").innerHTML='<div class="empty">'+T("failed")+'</div>';return false;}}
 var LARGE_RENDER_BYTES=2*1024*1024;
 function renderLarge(md,seq){lastMD=md;var doc=$("doc");if(largeWorker){largeWorker.terminate();largeWorker=null;}doc.classList.remove("start");doc.innerHTML='<div class="empty" role="status" aria-live="polite">'+T("largeProcessing")+'</div>';var chunks=[];

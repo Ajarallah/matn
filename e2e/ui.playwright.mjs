@@ -604,6 +604,12 @@ try {
   await reading.keyboard.press("Escape");
   assert.equal(await reading.locator("#doc [data-reading]").count(), 0);
 
+  // Front matter states the direction; it beats counting letters.
+  await writeFile(join(root, "stated-dir.md"), "---\nlang: en\n---\n\n# عنوان عربي\n\nنص عربي قصير.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "stated-dir.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("عنوان"));
+  assert.equal(await reading.locator("#doc").getAttribute("dir"), "ltr");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");

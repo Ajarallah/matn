@@ -110,6 +110,17 @@
     return {body:body,pairs:pairs};
   }
 
+  // A document may state its own direction in front matter (dir/direction: rtl|ltr, or a
+  // lang code), which beats counting letters — short or mixed notes vote wrong.
+  var RTL_LANGS=/^(ar|fa|he|ur|ps|ku|ckb|sd|ug|yi|dv)(?:[-_]|$)/i;
+  function frontmatterDir(pairs){
+    for(var i=0;i<(pairs||[]).length;i++){var k=String(pairs[i][0]).toLowerCase(),v=String(pairs[i][1]).toLowerCase().trim();
+      if((k==="dir"||k==="direction")&&(v==="rtl"||v==="ltr"))return v;}
+    for(var j=0;j<(pairs||[]).length;j++){var key=String(pairs[j][0]).toLowerCase(),val=String(pairs[j][1]).trim();
+      if((key==="lang"||key==="language")&&/^[a-z]{2,3}(?:[-_][a-z0-9]+)?$/i.test(val))return RTL_LANGS.test(val)?"rtl":"ltr";}
+    return null;
+  }
+
   // ---- Obsidian-flavoured syntax ------------------------------------------------
   // One definition for the page and the large-file worker, so both read a vault alike.
   var IMAGE_RE=/\.(?:png|jpe?g|gif|webp|avif|svg)$/i;
@@ -239,6 +250,6 @@
     return {blocks:blocks,removed:removed,count:count};
   }
 
-  return {esc:esc,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
+  return {esc:esc,frontmatterDir:frontmatterDir,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
     extractMath:extractMath,preprocess:preprocess,restoreMath:restoreMath,voteDir:voteDir,parseFrontmatter:parseFrontmatter};
 });

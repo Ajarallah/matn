@@ -254,3 +254,12 @@ test("word diff names exactly the words an edit changed", () => {
   assert.deepEqual(parts.filter((p) => p.t === "ins").map((p) => p.w.trim()), ["منطقة", "أولًا"]);
   assert.equal(core.plainBlock("- **نص** مع [رابط](x.md) و`كود`"), "نص مع رابط وكود");
 });
+
+test("front matter can state the document's direction", () => {
+  assert.equal(core.frontmatterDir([["dir", "rtl"]]), "rtl");
+  assert.equal(core.frontmatterDir([["direction", "LTR"]]), "ltr");
+  assert.equal(core.frontmatterDir([["lang", "ar-SA"]]), "rtl");
+  assert.equal(core.frontmatterDir([["lang", "en"]]), "ltr");
+  assert.equal(core.frontmatterDir([["title", "x"]]), null);
+  assert.equal(core.frontmatterDir([["lang", "not a code"]]), null);
+});
