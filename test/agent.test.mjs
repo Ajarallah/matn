@@ -94,3 +94,16 @@ test("a review opens the file and returns the reader's decision", async (t) => {
   await fetch(page.origin + "/api/review", { method: "POST", headers: { "content-type": "application/json", origin: page.origin, "x-matn-session": token }, body: JSON.stringify({ id, markdown: REVIEW, decision: "approve", path: file }) });
   assert.deepEqual(await pending, { decision: "approve", markdown: REVIEW });
 });
+
+test("a review counts as abandoned only when nobody can still be looking at it", () => {
+  const t0 = 1_000_000;
+  // the tab closed and did not come back within the grace a reload needs
+  assert.equal(agent.abandoned({ seen: t0, gone: t0 + 1000, now: t0 + 10_000 }, t0), true);
+  assert.equal(agent.abandoned({ seen: t0, gone: t0 + 1000, now: t0 + 5000 }, t0), false, "a reload is not a close");
+  assert.equal(agent.abandoned({ seen: t0 + 2000, gone: t0 + 1000, now: t0 + 60_000 }, t0), false, "came back after a reload");
+  // a page that never arrived, and a background tab whose timers are throttled
+  assert.equal(agent.abandoned({ seen: 0, gone: 0, now: t0 + 60_000 }, t0), false);
+  assert.equal(agent.abandoned({ seen: 0, gone: 0, now: t0 + 91_000 }, t0), true);
+  assert.equal(agent.abandoned({ seen: t0, gone: 0, now: t0 + 120_000 }, t0), false);
+  assert.equal(agent.abandoned({ seen: t0, gone: 0, now: t0 + 301_000 }, t0), true);
+});

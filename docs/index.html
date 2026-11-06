@@ -1677,6 +1677,10 @@ return collectionButton(item.type==="file"?base(item.path):(item.quote||item.hea
 // review id, the notes panel still offers the same text on the clipboard.
 // The page rewrites its own URL as you navigate; carry the review id through those rewrites so a reload keeps the review.
 var reviewId=(/[?&]review=([a-f0-9]{32})(?:&|$)/.exec(location.search)||[])[1]||"",reviewGate=reviewId&&/[?&]gate=1(?:&|$)/.test(location.search),reviewSent=false,reviewSentDecision="";
+// tell `matn review` this review is on screen, and that it left when the tab closes, so the
+// agent stops waiting for a page nobody can see
+function reviewPresence(state){if(!reviewId||reviewSent||!sessionToken)return;var url="/api/review-presence?id="+reviewId+"&state="+state;try{if(state==="gone"&&navigator.sendBeacon&&navigator.sendBeacon(url))return;fetch(url,{keepalive:true,cache:"no-store"}).catch(function(){});}catch(e){}}
+if(reviewId){setTimeout(function(){reviewPresence("here");},0);setInterval(function(){reviewPresence("here");},10000);addEventListener("pagehide",function(){reviewPresence("gone");});addEventListener("pageshow",function(e){if(e.persisted)reviewPresence("here");});}
 if(reviewId){var replaceUrl=history.replaceState.bind(history);history.replaceState=function(state,title,url){if(url&&!reviewSent&&String(url).indexOf("review=")<0){var parts=String(url).split("#");parts[0]+=(parts[0].indexOf("?")<0?"?":"&")+"review="+reviewId+(reviewGate?"&gate=1":"");url=parts.join("#");}return replaceUrl(state,title,url);};}
 function fileAnnotations(all){var rel=relForFile(cur);return ((readerState.workspace||{}).annotations||[]).filter(function(item){return item.path===rel&&(all||!item.sentAt);});}
 // annotations keep the heading's anchor id; an agent needs the heading as written

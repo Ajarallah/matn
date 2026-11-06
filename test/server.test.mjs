@@ -684,6 +684,21 @@ test("a review waits for the page and hands the notes to whoever asked", async (
   assert.equal((await fetch(`${base}/api/review-wait?id=nope`)).status, 400);
 });
 
+test("the page reports whether it still shows a review, and other sites cannot", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-presence-"));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir: await mkdtemp(join(tmpdir(), "matn-presence-data-")) });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, id = "c".repeat(32), ask = async () => (await fetch(`${base}/api/review-presence?id=${id}`)).json();
+  assert.deepEqual(await ask().then(({ seen, gone }) => ({ seen, gone })), { seen: 0, gone: 0 });
+  assert.equal((await fetch(`${base}/api/review-presence?id=${id}&state=here`)).status, 204);
+  assert.ok((await ask()).seen > 0);
+  assert.equal((await fetch(`${base}/api/review-presence?id=${id}&state=gone`, { method: "POST", headers: { "sec-fetch-site": "cross-site" } })).status, 403);
+  assert.equal((await ask()).gone, 0, "another site cannot end a review");
+  await fetch(`${base}/api/review-presence?id=${id}&state=gone`, { method: "POST" });
+  assert.ok((await ask()).gone > 0, "sendBeacon's POST is accepted");
+  assert.equal((await fetch(`${base}/api/review-presence?id=x`)).status, 400);
+});
+
 test("links from a single opened file resolve to nearby notes without a folder index", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-nearby-"));
   await writeFile(join(root, "plan.md"), "![[ref#^key]]\n", "utf8");

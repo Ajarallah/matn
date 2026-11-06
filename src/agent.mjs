@@ -65,15 +65,31 @@ export async function runReview({ file, gate = false, timeoutMs = 0, open = true
   if (open && !shownInOpenPage) openBrowser(url);
   log("[matn] " + url);
   log("[matn] waiting for your review in the reader");
-  const deadline = timeoutMs ? Date.now() + timeoutMs : Infinity;
+  const started = Date.now(), deadline = timeoutMs ? started + timeoutMs : Infinity;
   while (Date.now() < deadline) {
     let response = null;
-    try { response = await fetch(`${base}/api/review-wait?id=${id}`, { signal: AbortSignal.timeout(Math.min(55000, Math.max(1000, deadline - Date.now()))) }); }
-    catch { if (Date.now() < deadline) await new Promise((r) => setTimeout(r, 1000)); continue; }
-    if (response.status === 200) return await response.json();
-    if (response.status !== 204) throw new Error("review failed: HTTP " + response.status);
+    try { response = await fetch(`${base}/api/review-wait?id=${id}`, { signal: AbortSignal.timeout(Math.min(15000, Math.max(1000, deadline - Date.now()))) }); }
+    catch { if (Date.now() < deadline) await new Promise((r) => setTimeout(r, 1000)); }
+    if (response && response.status === 200) return await response.json();
+    if (response && response.status !== 204) throw new Error("review failed: HTTP " + response.status);
+    if (await reviewAbandoned(base, id, started)) { log("[matn] the review page was closed; no answer was given"); return null; }
   }
   return null;
+}
+
+// Nobody is looking at the review: the page said it left and did not come back (a reload
+// comes back within seconds), or it never arrived, or it has been silent longer than a
+// background tab's throttled timers allow.
+export function abandoned({ seen, gone, now }, started, { arrive = 90000, silent = 300000, grace = 8000 } = {}) {
+  if (gone && gone >= seen && now - gone > grace) return true;
+  if (!seen) return now - started > arrive;
+  return now - seen > silent;
+}
+async function reviewAbandoned(base, id, started) {
+  try {
+    const response = await fetch(`${base}/api/review-presence?id=${id}`, { signal: AbortSignal.timeout(3000) });
+    return response.ok && abandoned(await response.json(), started);
+  } catch { return false; }
 }
 
 // ---- plan gate -------------------------------------------------------------

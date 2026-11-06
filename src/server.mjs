@@ -48,7 +48,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   let indexing = false;
   let workspaceDir = null;
   const diagnostics = { fullIndexes: 0, fullRecords: 0, incrementalRecords: 0 };
-  const reviews = new Map(), reviewWaiters = new Map();
+  const reviews = new Map(), reviewWaiters = new Map(), reviewPresence = new Map();
   const REVIEW_DECISIONS = new Set(["send", "approve", "changes"]);
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
@@ -418,7 +418,10 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       broadcastMessage(review ? { type: "follow", path: abs, review, gate: Boolean(body.gate) } : { type: "follow", path: abs });
       return send(200, "application/json", JSON.stringify({ delivered: clients.size }));
     }
-    if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
+    // the review page says it is leaving with navigator.sendBeacon, which can only POST and
+    // cannot carry the session header; it changes nothing but whether `matn review` keeps waiting
+    const presenceBeacon = u.pathname === "/api/review-presence" && req.method === "POST";
+    if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite && !presenceBeacon) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
     // Every /api route is for this page only. A page on another origin cannot read the
     // response anyway, but it can still make the reader index a folder, spawn git, or
@@ -609,6 +612,18 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     }
     // `matn review` hands the reader a random id and waits here; "Send to agent" in the page
     // posts the notes under that id. Polls end after 50s so no client timeout ever fires.
+    // Whether a page is still showing a review: the page reports "here" on load and every few
+    // seconds, and "gone" as it unloads; `matn review` asks, so a closed tab does not leave
+    // the agent (or Claude Code's plan prompt) waiting half an hour for an answer.
+    if (u.pathname === "/api/review-presence") {
+      const id = u.searchParams.get("id") || "", state = u.searchParams.get("state");
+      if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");
+      const entry = reviewPresence.get(id) || { seen: 0, gone: 0 };
+      if (state === "here") entry.seen = Date.now();
+      else if (state === "gone") entry.gone = Date.now();
+      if (state === "here" || state === "gone") { reviewPresence.set(id, entry); if (reviewPresence.size > 200) reviewPresence.delete(reviewPresence.keys().next().value); return send(204, "text/plain", ""); }
+      return send(200, "application/json", JSON.stringify({ seen: entry.seen, gone: entry.gone, now: Date.now() }));
+    }
     if (u.pathname === "/api/review-wait") {
       const id = u.searchParams.get("id") || "";
       if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");

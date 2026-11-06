@@ -196,6 +196,28 @@
   // ---- What changed since you last read --------------------------------------------
   // Blocks are what a reader sees as one unit: a paragraph, one list item, a heading,
   // a whole fence, a whole table. Rewrapping a paragraph is not a change.
+  // Large files render in chunks. A cut may fall only on a blank line outside a code fence
+  // or a $$ block: a fence split in two leaves its closing ``` to open a new fence, and
+  // everything after it renders as code. A block longer than `max` stays whole.
+  function renderChunks(body,max){
+    var source=String(body==null?"":body).split("\n"),half=Math.max(1,max>>1),lines=[],chunks=[],start=0,size=0,fence=null,math=false;
+    function cut(dropLast){chunks.push(lines.slice(start,dropLast?lines.length-1:lines.length).join("\n"));start=lines.length;size=0;}
+    for(var i=0;i<source.length;i++){
+      var line=source[i],marker=/^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
+      if(fence){lines.push(line);size+=line.length+1;if(marker&&marker[1][0]===fence[0]&&marker[1].length>=fence.length&&!/\S/.test(line.slice(line.indexOf(marker[1])+marker[1].length)))fence=null;continue;}
+      if(marker){lines.push(line);size+=line.length+1;fence=marker[1];continue;}
+      if(/^[ \t]*\$\$/.test(line)&&!/^[ \t]*\$\$.*\$\$[ \t]*$/.test(line)){lines.push(line);size+=line.length+1;math=!math;continue;}
+      if(math){lines.push(line);size+=line.length+1;continue;}
+      // a paragraph written as one enormous line (a transcript, an export) is broken at
+      // spaces; outside code a soft line break renders as the space it replaces
+      var pieces=[],at;while(line.length>half&&(at=line.lastIndexOf(" ",half))>0){pieces.push(line.slice(0,at));line=line.slice(at+1);}pieces.push(line);
+      for(var k=0;k<pieces.length;k++){lines.push(pieces[k]);size+=pieces[k].length+1;
+        // cut at a blank line once the chunk is full; with none in sight, at any line break
+        if(!pieces[k].trim()&&size>=max)cut(true);else if(size>=1.25*max)cut(false);}
+    }
+    var rest=lines.slice(start).join("\n");if(rest.trim()||!chunks.length)chunks.push(rest);
+    return chunks;
+  }
   function splitBlocks(md){
     var lines=parseFrontmatter(String(md==null?"":md)).body.split(/\r?\n/),out=[],buf=[],fence=null;
     function flush(){if(buf.length){out.push(buf.join("\n"));buf=[];}}
@@ -253,6 +275,6 @@
     return {blocks:blocks,removed:removed,count:count};
   }
 
-  return {esc:esc,frontmatterDir:frontmatterDir,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
+  return {esc:esc,frontmatterDir:frontmatterDir,renderChunks:renderChunks,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
     extractMath:extractMath,preprocess:preprocess,restoreMath:restoreMath,voteDir:voteDir,parseFrontmatter:parseFrontmatter};
 });

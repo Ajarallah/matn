@@ -15,7 +15,7 @@ When you write a plan, spec or report the user should check, save it as a Markdo
 matn review PATH.md
 ```
 
-It opens the file in the reader and waits. Give the command a long timeout (10 minutes or more); if it times out, run it again — the page stays open. When the user presses "Send to agent", it prints their notes and exits 0. Exit 3 means `--timeout` passed with no answer.
+It opens the file in the reader and waits. Give the command a long timeout (10 minutes or more); if it times out, run it again — the page stays open. When the user presses "Send to agent", it prints their notes and exits 0. Exit 3 means no answer: `--timeout` passed, or the user closed the page without deciding (the command says "the review page was closed"). After a close, ask the user before opening it again.
 
 Each note looks like this:
 
