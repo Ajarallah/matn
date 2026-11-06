@@ -16,6 +16,7 @@ function normalizePath(value) {
   }
   return out.join("/");
 }
+function sharedDepth(a, b) { const x = dirname(a).split("/"), y = dirname(b).split("/"); let n = 0; while (n < x.length && n < y.length && x[n] && x[n] === y[n]) n++; return n; }
 function dirname(rel) { const at = rel.lastIndexOf("/"); return at < 0 ? "" : rel.slice(0, at); }
 function decode(value) { try { return decodeURIComponent(value); } catch { return value; } }
 function splitTarget(raw) {
@@ -68,10 +69,15 @@ function resolve(records, fromPath, rawTarget) {
     if (relNoExt === relativeNoExt) score = 500;
     else if (relNoExt === targetNoExt) score = 450;
     else if (name === targetName) score = 300;
+    else if (SearchCore.normalizeSearch(name) === targetNorm) score = 280;
     if (record.titleNorm === targetNorm) score = Math.max(score, 260);
     if ((record.aliases || []).some((alias) => SearchCore.normalizeSearch(alias) === targetNorm)) score = Math.max(score, 250);
-    if (!score || (best && best.score >= score)) continue;
-    best = { score, record };
+    if (!score || (best && best.score > score)) continue;
+    // Two notes with one name: the one nearest the linking note wins, then the shorter path —
+    // never whichever the folder walk happened to list first.
+    const near = from ? sharedDepth(from.rel, record.rel) : 0;
+    if (best && best.score === score && (best.near > near || (best.near === near && best.record.rel.length <= record.rel.length))) continue;
+    best = { score, record, near };
   }
   if (!best) return null;
   return { path: best.record.path, rel: best.record.rel, title: best.record.title, heading: headingFor(best.record, target.heading) };
