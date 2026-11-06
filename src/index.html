@@ -218,6 +218,12 @@ html[dir="rtl"] .findbar{padding:4px 12px 4px 4px}
 .quick-empty{padding:28px 16px;text-align:center;color:var(--ink-3)}
 #doc li[data-task="-"]{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-4)}
 #doc td.tight,#doc th.tight{white-space:nowrap}
+#doc .poem{display:grid;row-gap:.35em;margin:1.4em 0}
+#doc .bayt{display:grid;grid-template-columns:1fr 0 1fr;column-gap:1.25em}
+#doc .sadr,#doc .ajuz{text-align:center;text-wrap:balance}
+#doc .bayt-sep{font-size:0}
+@media (max-width:600px){#doc .bayt{grid-template-columns:1fr;row-gap:0}#doc .bayt-sep{height:0}#doc .sadr{text-align:start}#doc .ajuz{text-align:end;padding-inline-start:2em}}
+#doc.ar-digits ol{list-style-type:arabic-indic}
 #doc .cite{color:var(--ink-3)}
 #doc .ayah-brace{font-size:0}
 #doc .ayah::before{content:"\FD3F"}#doc .ayah::after{content:"\FD3E"}
@@ -1029,7 +1035,18 @@ var CITE_RE=/\([^()\n]{0,80}?ص\s?[٠-٩0-9]+[^()\n]{0,40}\)/g;
 function quietCitations(doc){var walker=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.nodeValue.indexOf("ص")<0||n.parentElement.closest("code,pre,kbd,.katex,.mermaid,.frontmatter,.cite,h1,h2,h3,h4,h5,h6,th")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}}),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
   nodes.forEach(function(node){var text=node.nodeValue,last=0,frag=null,m;CITE_RE.lastIndex=0;while((m=CITE_RE.exec(text))){frag=frag||document.createDocumentFragment();frag.appendChild(document.createTextNode(text.slice(last,m.index)));var span=document.createElement("span");span.className="cite";span.textContent=m[0];frag.appendChild(span);last=m.index+m[0].length;}
     if(frag){frag.appendChild(document.createTextNode(text.slice(last)));node.parentNode.replaceChild(frag,node);}});}
-function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColumns(doc);ayahBrackets(doc);quietCitations(doc);
+// Classical Arabic verse is written one line per verse, its two halves split by "***", "…",
+// "..." or a tab. A paragraph made only of such lines becomes a poem: two hemistichs side by
+// side, stacked on a phone. The separator stays in the text, hidden, so a copy reads as written.
+var BAYT_RE=/^(.*?\S)(\s*(?:\*\*\*|…|\.\.\.)\s*|\t+)(\S.*)$/;
+function versify(doc){doc.querySelectorAll("p").forEach(function(p){if(p.children.length||p.closest("li,blockquote .callout,td,.md-embed"))return;var lines=p.textContent.split("\n").filter(function(l){return l.trim();});if(!lines.length)return;var parts=lines.map(function(l){return BAYT_RE.exec(l.trim());});
+  if(parts.some(function(m){return !m||/[A-Za-z]/.test(m[1]+m[3])||!/[\u0621-\u064A]/.test(m[1])||!/[\u0621-\u064A]/.test(m[3]);}))return;
+  var poem=document.createElement("div");poem.className="poem";poem.dir="rtl";parts.forEach(function(m,i){var bayt=document.createElement("div");bayt.className="bayt";var a=document.createElement("span"),sep=document.createElement("span"),b=document.createElement("span");a.className="sadr";a.textContent=m[1];sep.className="bayt-sep";sep.textContent=m[2]+(i<parts.length-1?"":"");b.className="ajuz";b.textContent=m[3];bayt.appendChild(a);bayt.appendChild(sep);bayt.appendChild(b);poem.appendChild(bayt);});p.parentNode.replaceChild(poem,p);});}
+// When a document writes its numbers in Arabic-Indic digits, the numbers Matn generates (list
+// markers, footnote numbers) follow it instead of mixing ٢٧٥ and 115 on one page.
+function documentDigits(doc){var text="",walker=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.parentElement.closest("pre,code,sup,table,.footnotes,.katex,.frontmatter,.source-link,.anchor,button,.sr-only")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}});while(walker.nextNode())text+=walker.currentNode.nodeValue;var ar=(text.match(/[\u0660-\u0669]/g)||[]).length,latin=(text.match(/[0-9]/g)||[]).length,arabic=ar>=10&&ar>=0.35*(ar+latin); // a writer who types ٠-٩ this often wants them, even where file names and indexes mix in 0-9
+  $("doc").classList.toggle("ar-digits",arabic);if(!arabic)return;doc.querySelectorAll("sup a[href^='#fn'],a.footnote-ref,a[data-footnote-ref]").forEach(function(a){a.textContent=a.textContent.replace(/[0-9]/g,function(d){return String.fromCharCode(0x660+Number(d));});});}
+function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColumns(doc);versify(doc);ayahBrackets(doc);quietCitations(doc);documentDigits(doc);
   options=options||{};
   // pull ```mermaid fences out before highlighting
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");
