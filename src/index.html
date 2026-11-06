@@ -218,9 +218,10 @@ html[dir="rtl"] .findbar{padding:4px 12px 4px 4px}
 .quick-empty{padding:28px 16px;text-align:center;color:var(--ink-3)}
 #doc li[data-task="-"]{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-4)}
 #doc td.tight,#doc th.tight{white-space:nowrap}
+#doc .cite{color:var(--ink-3)}
 #doc .ayah-brace{font-size:0}
 #doc .ayah::before{content:"\FD3F"}#doc .ayah::after{content:"\FD3E"}
-#doc .ayah::before,#doc .ayah::after{font-family:"Amiri",serif;color:var(--ink-3);padding-inline:.12em}
+#doc .ayah::before,#doc .ayah::after{font-family:"Amiri",serif;color:var(--ink-3)}#doc .ayah::after{margin-inline-end:-.2em}
 .quick-group{padding:12px 12px 4px;font-size:var(--t-xs);font-weight:600;color:var(--ink-3)}
 .quick-status{padding:6px 14px;border-top:1px solid var(--line);font-size:var(--t-xs);color:var(--ink-3)}
 
@@ -1022,7 +1023,13 @@ var AYAH_RE=/\{([^{}\n]{2,600})\}/g;
 function ayahBrackets(doc){var walker=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.nodeValue.indexOf("{")<0||n.parentElement.closest("code,pre,kbd,.katex,.mermaid,math,.frontmatter,.ayah")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}}),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
   nodes.forEach(function(node){var text=node.nodeValue,last=0,frag=null,m;AYAH_RE.lastIndex=0;while((m=AYAH_RE.exec(text))){if(/[A-Za-z0-9]/.test(m[1])||!/[\u0621-\u064A]/.test(m[1]))continue;frag=frag||document.createDocumentFragment();frag.appendChild(document.createTextNode(text.slice(last,m.index)));var span=document.createElement("span");span.className="ayah";span.dir="rtl";var open=document.createElement("span"),close=document.createElement("span");open.className=close.className="ayah-brace";open.textContent="{";close.textContent="}";span.appendChild(open);span.appendChild(document.createTextNode(m[1]));span.appendChild(close);frag.appendChild(span);last=m.index+m[0].length;}
     if(frag){frag.appendChild(document.createTextNode(text.slice(last)));node.parentNode.replaceChild(frag,node);}});}
-function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColumns(doc);ayahBrackets(doc);
+// A page citation such as "(زبدة ص٢٦٢)" is set in a quieter ink, as Arabic scholarly print does,
+// so the sentence leads and the source stays findable. Only parentheses that cite a page (ص + digits).
+var CITE_RE=/\([^()\n]{0,80}?ص\s?[٠-٩0-9]+[^()\n]{0,40}\)/g;
+function quietCitations(doc){var walker=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.nodeValue.indexOf("ص")<0||n.parentElement.closest("code,pre,kbd,.katex,.mermaid,.frontmatter,.cite,h1,h2,h3,h4,h5,h6,th")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}}),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(function(node){var text=node.nodeValue,last=0,frag=null,m;CITE_RE.lastIndex=0;while((m=CITE_RE.exec(text))){frag=frag||document.createDocumentFragment();frag.appendChild(document.createTextNode(text.slice(last,m.index)));var span=document.createElement("span");span.className="cite";span.textContent=m[0];frag.appendChild(span);last=m.index+m[0].length;}
+    if(frag){frag.appendChild(document.createTextNode(text.slice(last)));node.parentNode.replaceChild(frag,node);}});}
+function enhance(doc,options){swapRemoteImages(doc);taskStatuses(doc);tightColumns(doc);ayahBrackets(doc);quietCitations(doc);
   options=options||{};
   // pull ```mermaid fences out before highlighting
   var mnodes=[],mcodes=doc.querySelectorAll("pre code.language-mermaid");
