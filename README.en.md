@@ -5,7 +5,8 @@
 ### Arabic Markdown, the way it should read
 
 A local reader that lays Arabic out right-to-left and leaves code and English on
-their own axis, in a Mac-first Liquid Glass interface.
+their own axis, and where you review what coding agents write: highlight, note in
+the margin, then approve or ask for changes.
 
 **[▶ Try the live demo](https://ajarallah.github.io/matn/)** ·
 [Quick start](#quick-start) ·
@@ -72,7 +73,7 @@ npm rm -g @ajarallah/matn
 
 **Reading**
 
-- 🫧 **Real Liquid Glass structure** — a floating library sidebar, separate inspector, and refractive toolbar groups above an opaque content layer, with reduced-transparency and reduced-motion fallbacks.
+- 🗒️ **Notes in the margin** — your notes sit beside the text they belong to, like a book's marginalia; on a phone they open with a tap.
 - 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
 - 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
 - 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
@@ -121,6 +122,10 @@ npm rm -g @ajarallah/matn
 </details>
 
 ## Interface
+
+| Reviewing an agent's plan · notes in the margin |
+|---|
+| ![plan review](./assets/screenshot-review.png) |
 
 | Sepia · Amiri | Dark · syntax + math |
 |---|---|

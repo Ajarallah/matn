@@ -308,11 +308,11 @@ html[dir="ltr"] #files .tree-dir>summary::before{left:calc(10px + var(--depth,0)
 #files .tree-dir[open]>summary::before{transform:rotate(45deg)!important}
 #recent a{display:flex;align-items:center;gap:8px;height:26px;padding:0 8px;border-radius:var(--r-sm);color:var(--ink);text-decoration:none;font-size:var(--t-ui)}
 #recent a:hover{background:var(--fill)}
-#recent a.active{background:var(--accent-fill);color:var(--on-accent)}
+#recent a.active{background:var(--accent-soft);color:var(--accent-ink)}
 .recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
 html[dir="rtl"] .recent-name{text-align:right}
 .recent-when{flex:none;font-size:var(--t-xs);color:var(--ink-3)}
-#recent a.active .recent-when{color:rgb(255 255 255/.8)}
+#recent a.active .recent-when{color:var(--accent-ink)}
 .book-controls{display:flex;align-items:center;gap:6px;padding:0 4px 6px}
 .book-controls button{width:28px;height:24px;border:0;border-radius:var(--r-xs);background:var(--fill);color:var(--ink-2)}
 .book-part{margin:10px 8px 2px;font-size:var(--t-xs);font-weight:600;color:var(--ink-3)}
@@ -642,7 +642,8 @@ body.view-split .source-view{display:block;max-width:none;min-width:0;border-inl
   .findbar{left:8px;right:8px;transform:none}
   .findbar input{width:auto;flex:1}
   .note-dialog,.trash-dialog,.shortcut-dialog{width:calc(100vw - 24px)}
-  .changes-bar,.review-bar{width:calc(100vw - 16px);bottom:max(8px,env(safe-area-inset-bottom))}
+  .changes-bar{width:calc(100vw - 16px);bottom:max(8px,env(safe-area-inset-bottom))}
+  body.side-open .review-bar{display:none}
   .changes-label,#reviewhint{flex:1;min-width:0}
 }
 @media (pointer:coarse){.iconbtn{width:44px;height:44px}.review-bar button,.changes-bar button{min-height:44px}#doc .foldbtn{opacity:1}}
@@ -1087,12 +1088,14 @@ var _scripts={};
 function loadScriptOnce(src){return _scripts[src]||(_scripts[src]=new Promise(function(res,rej){var s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);}));}
 var MERMAID_SRC="./vendor/mermaid.min.js";
 function mermaidTheme(){var t=document.documentElement.getAttribute("data-theme");return (t==="dark"||t==="night")?"dark":"default";}
+// diagrams in the reader's palette (Mermaid's stock theme is lavender); every token read here is hex in all four themes
+function mermaidVars(){var cs=getComputedStyle(document.documentElement),v=function(n){return cs.getPropertyValue(n).trim();};return {darkMode:mermaidTheme()==="dark",background:v("--canvas"),primaryColor:v("--chrome"),secondaryColor:v("--raised"),tertiaryColor:v("--canvas"),primaryBorderColor:v("--accent"),primaryTextColor:v("--ink"),textColor:v("--ink"),lineColor:v("--ink-3"),fontFamily:"inherit"};}
 function renderMermaid(nodes){
   loadScriptOnce(MERMAID_SRC).then(function(){
     var ns=window.__esbuild_esm_mermaid_nm,m=ns&&ns.mermaid;
     var api=m&&(typeof m.initialize==="function"?m:(m["default"]&&typeof m["default"].initialize==="function"?m["default"]:null));
     if(!api)return;
-    try{var theme=mermaidTheme();api.initialize({startOnLoad:false,securityLevel:"strict",theme:theme,fontFamily:"inherit"});Promise.resolve(api.run({nodes:nodes})).then(function(){nodes.forEach(function(node){node.dataset.mermaidTheme=theme;});}).catch(function(){});}catch(e){}
+    try{var theme=mermaidTheme();api.initialize({startOnLoad:false,securityLevel:"strict",theme:"base",themeVariables:mermaidVars(),fontFamily:"inherit"});Promise.resolve(api.run({nodes:nodes})).then(function(){nodes.forEach(function(node){node.dataset.mermaidTheme=theme;});}).catch(function(){});}catch(e){}
   }).catch(function(){});
 }
 // ![[note]], ![[note#Heading]], ![[note#^id]] and ![[image.png]]. Fetched after the page
