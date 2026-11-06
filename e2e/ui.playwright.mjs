@@ -18,6 +18,8 @@ await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# م�
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
 await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
+await writeFile(join(root, "code-ar.md"), "# Plan\n\nWide code:\n\n```sql\n-- النسبةُ من مصدرها الواحد بأوزان القاعدة من النشطين وحدهم دون المؤرشفين والأيام المسدودة داخلها\nselect attendance_weight(state) from attendance_cells where session_date between public.school_today() - 7 and public.school_today();\n```\n");
+await writeFile(join(root, "poem.md"), "# قصيدة\n\nعَلى قَدرِ أَهلِ العَزمِ تَأتي العَزائِمُ *** وَتَأتي عَلى قَدرِ الكِرامِ المَكارِمُ\nوَتَعظُمُ في عَينِ الصَغيرِ صِغارُها … وَتَصغُرُ في عَينِ العَظيمِ العَظائِمُ\n\nسطر عادي *** بلا شطر ثان؟ لا، هذا نثر فيه Code.\n\nسنة ١٤٤٧هـ وفي الباب ٣٣ حديثًا في ١٢ بابًا، و٥ آثار، و٧ أقوال، و٩ فوائد، و٢ تنبيهات[^1].\n\n1. أول\n2. ثان\n\n[^1]: حاشية.\n");
 await writeFile(join(root, "ayah.md"), "# آية\n\nقال تعالى: {إِنَّ مَعَ الْعُسْرِ يُسْرًا} وقوله {config} و`{\"a\": 1}`.\n\nفائدة سلوكية (زبدة ص٢٦٢) وملاحظة (بلا صفحة).\n");
 await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n\n## الفصل الأول\n\nنص.\n\n## الفصل الثاني & ما بعده\n\nنص.\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
@@ -694,6 +696,23 @@ try {
   assert.equal(ayah.before, '"\uFD3F"');
   // a page citation reads quieter; a parenthesis that cites no page does not
   assert.deepEqual(await start.evaluate(() => [...document.querySelectorAll("#doc .cite")].map((el) => el.textContent)), ["(زبدة ص٢٦٢)"]);
+  // verse lines become a poem of two hemistichs; prose with a stray "***" and Latin stays prose
+  await start.goto(`${base}/?path=${encodeURIComponent(join(root, "poem.md"))}`);
+  await start.waitForSelector("#doc .poem");
+  const poem = await start.evaluate(() => ({ verses: document.querySelectorAll("#doc .bayt").length, text: document.querySelector("#doc .poem").textContent, prose: [...document.querySelectorAll("#doc p")].some((p) => p.textContent.includes("Code")), digits: document.getElementById("doc").classList.contains("ar-digits"), ref: document.querySelector("#doc sup a").textContent, marker: getComputedStyle(document.querySelector("#doc ol:not(.footnotes ol)")).listStyleType }));
+  assert.equal(poem.verses, 2);
+  assert.match(poem.text, /العَزائِمُ \*\*\* وَتَأتي/, "the separator stays in the text for copying");
+  assert.ok(poem.prose);
+  // a document written with ٠-٩ gets its footnote and list numbers in ٠-٩ too
+  assert.equal(poem.digits, true);
+  assert.equal(poem.ref, "١");
+  assert.equal(poem.marker, "arabic-indic");
+  // an English plan on a phone: the map button sits where English lines end (right); an Arabic
+  // comment in code wraps whole instead of losing its first words past the edge
+  await start.goto(`${base}/?path=${encodeURIComponent(join(root, "code-ar.md"))}`);
+  await start.waitForSelector("#doc pre .ar-comment");
+  const code = await start.evaluate(() => { const c = document.querySelector("#doc pre .ar-comment"), pre = c.closest("pre"); return { wrap: getComputedStyle(c).whiteSpace, inside: c.getBoundingClientRect().right <= pre.getBoundingClientRect().right + 1, ltr: document.body.classList.contains("doc-ltr") }; });
+  assert.deepEqual(code, { wrap: "pre-wrap", inside: true, ltr: true });
   // a file saved by an older Arabic Windows tool (Windows-1256) opens as Arabic, not garbage
   await start.setInputFiles("#fileinput", { name: "legacy.md", mimeType: "text/markdown", buffer: Buffer.from([0x23, 0x20, 0xc7, 0xe1, 0xda, 0xd1, 0xc8, 0xed, 0xc9]) });
   await start.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("العربية"));
@@ -737,7 +756,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: verse brackets, all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: Arabic code comments, poems and document numerals, verse brackets, all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
