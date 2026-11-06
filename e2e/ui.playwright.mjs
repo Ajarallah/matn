@@ -570,6 +570,12 @@ try {
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("جديد"));
   assert.equal(await reading.locator("#changesbar").count(), 0, "the changes bar does not follow you to another file");
 
+  // A share link carries the document in its #fragment and opens it intact.
+  const shared = await reading.evaluate(async () => { const link = await shareLinkFor("مشاركة.md", "# مشاركة\n\nنص عربي مع English و`code`.\n"); history.replaceState(null, "", location.pathname + link.slice(link.indexOf("#"))); openSharedFromHash(); return link; });
+  assert.match(shared, /^https:\/\/ajarallah\.github\.io\/matn\/#s=[A-Za-z0-9_-]+&n=/);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("مشاركة"));
+  assert.equal(await reading.locator("#fname").innerText(), "مشاركة.md");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");

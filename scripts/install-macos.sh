@@ -15,7 +15,7 @@ BID="com.ajarallah.matn"
 UTI="net.daringfireball.markdown"
 PB=/usr/libexec/PlistBuddy
 LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
-EXTENSIONS=(md markdown mdown mkdn mkd mdwn mdtxt mdtext rmd qmd)
+EXTENSIONS=(md markdown mdown mkdn mkd mdwn mdtxt mdtext rmd qmd mdc mdx)
 
 say() { printf '[matn] %s\n' "$1"; }
 die() { printf '[matn] %s\n' "$1" >&2; exit 1; }

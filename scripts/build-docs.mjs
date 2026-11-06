@@ -51,8 +51,9 @@ var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
 cur="demo:sample";fileRels[cur]=cur;
 readerState=localSnapshot();renderCollections();
-renderSafely(SAMPLE);
-applyAnnotations();
+// a shared link (#s=…) opens its document; otherwise the bundled sample
+if(!openSharedFromHash()){renderSafely(SAMPLE);applyAnnotations();}
+window.addEventListener("hashchange",function(){openSharedFromHash();});
 `; // file-open is handled by the app's own #fileinput listener
 s = s.slice(0, i) + boot + "\n" + s.slice(j);
 

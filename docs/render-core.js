@@ -20,6 +20,7 @@
   }
   function slug(t,i){return (t||"").trim().replace(/\s+/g,"-").replace(/[^\p{L}\p{N}-]/gu,"").slice(0,60)+"-"+i;}
   function unesc(t){return String(t==null?"":t).replace(/&(lt|gt|quot|#39|amp);/g,function(_,k){return {lt:"<",gt:">",quot:'"',"#39":"'",amp:"&"}[k];});}
+  var AGENT_TAGS=/^(thinking|reasoning|analysis|example|examples|instructions|context|output|answer|summary|plan|scratchpad|result|findings|commentary)$/i;
   var SAFE_TAGS=/^(details|summary|br|kbd|sup|sub|b|strong|i|em|u|s|del|ins|mark|small|hr)$/i;
   function safeRenderer(marked){
     var r=new marked.Renderer();
@@ -29,6 +30,8 @@
     r.html=function(html){return String(html).split(/(<\/?[a-zA-Z][^<>]*>)/).map(function(part,i){
       var tag=i%2?/^<(\/?)([a-zA-Z]+)/.exec(part):null;
       if(tag&&SAFE_TAGS.test(tag[2]))return "<"+tag[1]+tag[2].toLowerCase()+">";
+      // tags agents write around reasoning and examples become labelled blocks
+      if(tag&&AGENT_TAGS.test(tag[2]))return tag[1]?"</section>":'<section class="agent-block" data-agent-tag="'+tag[2].toLowerCase()+'">';
       return esc(part);}).join("");};
     r.link=function(href,title,text){var u=safeHref(href,"link");if(!u)return text;return '<a href="'+esc(u)+'"'+(title?' title="'+esc(title)+'"':"")+">"+text+"</a>";};
     // marked hands over alt text already escaped; undo that once so `>=` doesn't become &amp;gt;=

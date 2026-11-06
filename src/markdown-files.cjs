@@ -13,6 +13,8 @@ const MARKDOWN_EXTENSIONS = Object.freeze([
   "mdtext",
   "rmd",
   "qmd",
+  "mdc",
+  "mdx",
 ]);
 
 const MARKDOWN_EXTENSION_RE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
