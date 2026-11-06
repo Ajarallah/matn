@@ -67,10 +67,13 @@ try {
 
   // later chunks get the full treatment: every heading has an id and an outline entry
   const loadMore = page.locator(".large-more");
-  if (await loadMore.count()) { await loadMore.click(); await page.waitForTimeout(400); }
+  // load the whole document: each press appends two more chunks
+  for (let presses = 0; presses < 200 && await loadMore.count(); presses++) await loadMore.click();
+  // the outline is rebuilt after the last chunk lands; wait for that, not a fixed delay
+  await page.waitForFunction(() => document.querySelectorAll("#toc a").length === document.querySelectorAll("#doc h1, #doc h2, #doc h3").length, null, { timeout: 15000 }).catch(() => {});
   const headingState = await page.evaluate(() => { const hs = [...document.querySelectorAll("#doc h1, #doc h2, #doc h3")]; return { total: hs.length, withId: hs.filter((h) => h.id).length, toc: document.querySelectorAll("#toc a").length, dir: hs.filter((h) => h.getAttribute("dir")).length }; });
   assert.equal(headingState.withId, headingState.total, "every heading in a large document has an id");
-  assert.equal(headingState.toc, headingState.total, "every heading in a large document is in the outline");
+  assert.equal(headingState.toc, headingState.total, `every heading in a large document is in the outline: ${JSON.stringify(headingState)}`);
   assert.equal(headingState.dir, headingState.total, "every heading in a large document has its direction");
   const longTasks = await page.evaluate(() => window.__matnLongTasks.slice());
   assert.ok(Math.max(0, ...longTasks) <= 200, `large-document mode exceeded the 200ms long-task budget: ${Math.max(0, ...longTasks).toFixed(1)}ms`);

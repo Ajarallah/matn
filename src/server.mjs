@@ -160,6 +160,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const abs = resolve(absFile), existing = workspaceRecords.get(abs);
     if (!workspaceDir || (abs !== workspaceDir && !abs.startsWith(workspaceDir + sep))) return;
     if (!safeMd(abs)) { workspaceRecords.delete(abs); return; }
+    // macOS reports one save as several events; a record already read at this mtime is current
+    try { if (existing && statSync(abs).mtimeMs === existing.mtimeMs) return; } catch {}
     try { workspaceRecords.set(abs, makeSearchRecord(abs, existing ? existing.rel : relative(workspaceDir, abs).split(sep).join("/"))); }
     catch { workspaceRecords.delete(abs); }
   }

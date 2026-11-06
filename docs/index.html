@@ -108,7 +108,8 @@ body.focus-mode aside#side,body.focus-mode aside#inspector{display:none!importan
 
 /* title bar: one band with the content, a hairline once you scroll */
 header{position:sticky;top:0;z-index:20;height:52px;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--canvas);border-bottom:1px solid transparent;transition:border-color var(--dur),background var(--dur)}
-main.is-scrolled header{border-bottom-color:var(--line);background:color-mix(in srgb,var(--canvas) 88%,transparent);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
+/* opaque: text never shows through the bar above the line being read; the hairline marks the edge */
+main.is-scrolled header{border-bottom-color:var(--line)}
 body.focus-mode header{opacity:0;transition:opacity 220ms}
 body.focus-mode header:hover,body.focus-mode header:focus-within,body.focus-mode.focus-peek header{opacity:1}
 .toolbar-group{display:inline-flex;align-items:center;gap:2px}
@@ -1347,7 +1348,7 @@ function renderSafely(md){try{render(md);return true;}catch(e){$("doc").innerHTM
 var LARGE_RENDER_BYTES=2*1024*1024;
 function renderLarge(md,seq){lastMD=md;var doc=$("doc");if(largeWorker){largeWorker.terminate();largeWorker=null;}doc.classList.remove("start");doc.innerHTML='<div class="empty" role="status" aria-live="polite">'+T("largeProcessing")+'</div>';var chunks=[];
   return new Promise(function(resolve,reject){var worker=largeWorker=new Worker("/render-worker.js?footnotes="+encodeURIComponent(T("footnotes")));worker.onmessage=function(event){if(seq!=null&&seq!==loadSeq){worker.terminate();return;}var result=event.data||{};if(result.type==="chunk"){chunks[result.index]=result.html;return;}if(result.type!=="done")return;worker.terminate();if(largeWorker===worker)largeWorker=null;if(!result.ok){reject(new Error(result.error||"render failed"));return;}doc.innerHTML="";var note=document.createElement("div");note.className="large-document-note";note.setAttribute("role","status");note.textContent=T("largeMode");doc.appendChild(note);var cursor=0,button=document.createElement("button"),observer=null;
-      function appendBatch(){button.remove();var end=Math.min(cursor+3,chunks.length),box=processed?document.createElement("div"):null;for(;cursor<end;cursor++){var template=document.createElement("template");template.innerHTML=chunks[cursor];(box||doc).appendChild(template.content);}
+      function appendBatch(){button.remove();var end=Math.min(cursor+2,chunks.length),box=processed?document.createElement("div"):null;for(;cursor<end;cursor++){var template=document.createElement("template");template.innerHTML=chunks[cursor];(box||doc).appendChild(template.content);}
         // chunks after the first render get the same treatment the first ones had: direction,
         // highlighting, copy buttons, heading ids (kept unique), math and diagrams; their
         // source-line links are dropped because line numbers are only known for the start
