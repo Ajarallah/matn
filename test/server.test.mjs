@@ -735,6 +735,9 @@ test("follow shows a file in the open page, and only the matn command may ask", 
   let text = "";
   while (!text.includes("follow")) text += new TextDecoder().decode((await reader.read()).value);
   assert.match(text, /"type":"follow","path":"[^"]*a\.md"/);
+  assert.deepEqual(await (await post({ path: join(root, "a.md"), review: "f".repeat(32), gate: true })).json(), { delivered: 1 });
+  while (!text.includes('"review"')) text += new TextDecoder().decode((await reader.read()).value);
+  assert.match(text, /"review":"f{32}","gate":true/);
   await reader.cancel();
   assert.equal((await post({ path: join(root, "a.md") }, { origin: base })).status, 403);
   assert.equal((await post({ path: join(root, "a.md") }, { "sec-fetch-site": "same-origin" })).status, 403);

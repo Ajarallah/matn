@@ -414,7 +414,8 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       try { body = await readJson(req, 16 * 1024); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid follow" })); }
       const abs = body && typeof body.path === "string" ? safeMd(body.path) : null;
       if (!abs) return send(400, "application/json", JSON.stringify({ error: "bad file" }));
-      broadcastMessage({ type: "follow", path: abs });
+      const review = REVIEW_ID.test(String(body.review || "")) ? body.review : "";
+      broadcastMessage(review ? { type: "follow", path: abs, review, gate: Boolean(body.gate) } : { type: "follow", path: abs });
       return send(200, "application/json", JSON.stringify({ delivered: clients.size }));
     }
     if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });

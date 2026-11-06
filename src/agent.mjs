@@ -11,7 +11,7 @@ import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createStateStore, defaultDataDir } from "./state-store.mjs";
 import { createStdinSession } from "./stdin-session.mjs";
-import { launch, openBrowser, targetUrl } from "./launch.mjs";
+import { launch, follow, findInstance, openBrowser, targetUrl } from "./launch.mjs";
 
 const require = createRequire(import.meta.url);
 const RenderCore = require("./render-core.cjs");
@@ -58,9 +58,11 @@ async function atomicWrite(file, text) {
 // { decision, markdown }, or null when the deadline passes first.
 export async function runReview({ file, gate = false, timeoutMs = 0, open = true, port = 4711, log = () => {} }) {
   const id = randomBytes(16).toString("hex");
-  const { base } = await launch({ target: file, port });
+  const { base, reused } = await launch({ target: file, port });
   const url = targetUrl(base, file) + "&review=" + id + (gate ? "&gate=1" : "");
-  if (open) openBrowser(url);
+  // a reader already open on this folder moves itself to the review; no new tab per round
+  const shownInOpenPage = reused && (await follow(base, file, { review: id, gate })) > 0;
+  if (open && !shownInOpenPage) openBrowser(url);
   log("[matn] " + url);
   log("[matn] waiting for your review in the reader");
   const deadline = timeoutMs ? Date.now() + timeoutMs : Infinity;
@@ -101,6 +103,9 @@ async function planGate(payload) {
     if (typeof input.plan !== "string" || !input.plan.trim()) return null;
     file = (await createStdinSession(input.plan, { name: "plan.md" })).file;
   }
+  // The plans folder gets a reader of its own that outlives this hook, so the next round
+  // reuses its tab instead of opening another.
+  if (!(await findInstance(file)).reused) { showDetached(dirname(file), ["--no-open"]); await waitForInstance(file); }
   const result = await runReview({ file, gate: true, timeoutMs: 1780 * 1000, log: (line) => console.error(line) });
   return planGateOutput(input, result);
 }
@@ -108,9 +113,14 @@ async function planGate(payload) {
 // ---- follow ----------------------------------------------------------------
 
 // Show `file` in Matn without blocking: reuse an open page when one can serve it.
-export function showDetached(file) {
-  const child = spawn(process.execPath, [MATN_BIN, file], { detached: true, stdio: "ignore" });
+export function showDetached(file, args = []) {
+  const child = spawn(process.execPath, [MATN_BIN, file, ...args], { detached: true, stdio: "ignore" });
   child.unref();
+}
+async function waitForInstance(file, ms = 4000) {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { if ((await findInstance(file)).reused) return true; await new Promise((r) => setTimeout(r, 100)); }
+  return false;
 }
 
 async function followHook(payload) {
