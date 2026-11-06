@@ -333,7 +333,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     refreshStaleRecords();
     const context = LinkCore.context(Array.from(workspaceRecords.values()), abs);
     const snapshot = await stateStore.snapshot(rootReal), current = fingerprint(abs);
-    return { path: abs, rel, tracked, backlinks: context.backlinks.length, changed: fingerprintChanged(snapshot.workspace.fileMeta[rel], current), allowTrash: Boolean(allowFileActions), canOpenEditor: Boolean(editor), canReveal: true };
+    return { path: abs, rel, tracked, backlinks: context.backlinks.length, changed: fingerprintChanged(snapshot.workspace.fileMeta[rel], current), allowTrash: Boolean(allowFileActions), canOpenEditor: typeof actions.canOpenEditor === "boolean" ? actions.canOpenEditor : Boolean(editor), canReveal: true };
   }
   function documentHealth(abs) {
     refreshStaleRecords();

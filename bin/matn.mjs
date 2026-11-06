@@ -96,6 +96,8 @@ let stdinSession = null;
 if (o.target === "-") {
   try {
     await cleanupStdinSessions();
+    // `matn -` typed at a prompt, with nothing piped in, would wait in silence
+    if (process.stdin.isTTY) console.error("[matn] reading Markdown from the keyboard: paste or type it, then press Ctrl-D (Ctrl-C to cancel)");
     stdinSession = await createStdinSession(await readStdin(process.stdin), { name: o.stdinName });
     o.target = stdinSession.file;
     const cleanupSession = () => { try { rmSync(stdinSession.dir, { recursive: true, force: true }); } catch {} };
