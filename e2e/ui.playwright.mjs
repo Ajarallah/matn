@@ -628,6 +628,8 @@ try {
   await reading.goto(gateUrl(gateId));
   await reading.waitForSelector("#reviewapprove:not([hidden])");
   assert.equal(await reading.locator("#reviewsend").isDisabled(), true, "request changes needs a note");
+  // the review bar can show before the new file renders; wait for its text
+  await reading.waitForFunction(() => document.querySelector("#doc")?.textContent.includes("دفعة واحدة"));
   await selectText(reading, "دفعة واحدة");
   await reading.locator('#selectiontools [data-selection-action="note"]').click();
   assert.equal(await reading.locator("#notesuggestbox").isHidden(), false);
@@ -681,6 +683,16 @@ try {
   await start.keyboard.press("Escape");
   await startContext.close();
 
+  // On touch the system's own selection menu sits above the selection, so Matn's goes below.
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const touch = await touchContext.newPage();
+  await touch.goto(`${base}/?path=${encodeURIComponent(join(root, "README.md"))}`);
+  await touch.waitForSelector("#doc p");
+  const selected = await touch.evaluate(() => { const w = document.createTreeWalker(document.querySelector("#doc"), NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.textContent.trim().length > 10 && n.parentElement.getBoundingClientRect().top > 200 ? 1 : 3 }), t = w.nextNode(), r = document.createRange(); r.setStart(t, 0); r.setEnd(t, 8); getSelection().removeAllRanges(); getSelection().addRange(r); return r.getBoundingClientRect().bottom; });
+  await touch.waitForSelector("#selectiontools.open");
+  assert.ok(await touch.locator("#selectiontools").evaluate((el) => el.getBoundingClientRect().top) > selected, "touch toolbar sits below the selection");
+  await touchContext.close();
+
   // The English interface carries no Arabic chrome: labels, tooltips, placeholders and
   // text written before the switch (reading time, relative times) all follow the language.
   await reading.locator("#gearbtn").click();
@@ -699,7 +711,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
