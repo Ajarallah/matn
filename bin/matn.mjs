@@ -2,8 +2,10 @@
 // Matn CLI — open a Markdown file or folder in the RTL reader.
 //   matn [file|dir] [--port N] [--host H] [--no-open]
 
-import { readFileSync, existsSync, statSync, rmSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { readFileSync, existsSync, statSync, rmSync, readdirSync } from "node:fs";
+import { resolve, dirname, join, basename } from "node:path";
+import MarkdownFiles from "../src/markdown-files.cjs";
+const { isMarkdownPath } = MarkdownFiles;
 import { fileURLToPath } from "node:url";
 import { launch, follow, openBrowser, targetUrl } from "../src/launch.mjs";
 import { runReview, runHook, changes, readOptions, setOptions, replyFile, setupCodex } from "../src/agent.mjs";
@@ -97,6 +99,14 @@ if (o.target === "-") {
     process.exit(2);
   }
 }
+// Up to three Markdown names in the same folder close to what was typed.
+function suggestions(abs) {
+  const dir = dirname(abs), want = basename(abs).toLowerCase();
+  let names = [];
+  try { names = readdirSync(dir).filter((n) => isMarkdownPath(n)); } catch { return []; }
+  const distance = (a, b) => { const d = Array.from({ length: b.length + 1 }, (_, i) => i); for (let i = 1; i <= a.length; i++) { let prev = d[0]; d[0] = i; for (let j = 1; j <= b.length; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; } } return d[b.length]; };
+  return names.map((n) => ({ n, d: distance(want, n.toLowerCase()) })).filter((x) => x.d <= Math.max(2, Math.floor(want.length / 3))).sort((a, b) => a.d - b.d).slice(0, 3).map((x) => x.n);
+}
 const readAll = async (stream) => { const chunks = []; for await (const c of stream) chunks.push(c); return Buffer.concat(chunks).toString("utf8"); };
 const fail = (message, code = 2) => { console.error("[matn] " + message); process.exit(code); };
 const isFile = (p) => p && p !== "-" && existsSync(p) && statSync(p).isFile();
@@ -135,6 +145,16 @@ if (o.command === "review") {
   if (!result) process.exit(3);
   process.stdout.write(o.json ? JSON.stringify(result) + "\n" : result.markdown);
   process.exit(0);
+}
+
+// A target that is missing or not Markdown is an error you can act on, not an empty page.
+if (o.target && o.target !== "-" && !o.command) {
+  const abs = resolve(o.target);
+  if (!existsSync(abs)) {
+    const near = suggestions(abs);
+    fail(`no such file or folder: ${o.target}` + (near.length ? `\n       did you mean: ${near.join("  ")}` : ""), 2);
+  }
+  if (statSync(abs).isFile() && !isMarkdownPath(abs)) fail(`not a Markdown file: ${o.target} (Matn reads .md, .markdown, .mdc, .mdx and similar)`, 2);
 }
 
 const { base, reused, defaultArg } = await launch({ target: o.target, port: o.port, host: o.host, editor: o.editor, allowFileActions: o.allowFileActions });
