@@ -683,6 +683,9 @@ try {
   assert.ok(group > 0 && quick[group + 1]?.startsWith("quick-item:"), quick.join(" | "));
   assert.doesNotMatch(await start.locator("#quickresults .quick-snippet").first().innerText(), /\]\(|^#/);
   await start.keyboard.press("Escape");
+  // a file saved by an older Arabic Windows tool (Windows-1256) opens as Arabic, not garbage
+  await start.setInputFiles("#fileinput", { name: "legacy.md", mimeType: "text/markdown", buffer: Buffer.from([0x23, 0x20, 0xc7, 0xe1, 0xda, 0xd1, 0xc8, 0xed, 0xc9]) });
+  await start.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("العربية"));
   await startContext.close();
 
   // On touch the system's own selection menu sits above the selection, so Matn's goes below.
@@ -716,7 +719,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

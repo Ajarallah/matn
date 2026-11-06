@@ -1890,6 +1890,13 @@ window.addEventListener("dragover",function(e){e.preventDefault();});
 window.addEventListener("dragleave",function(e){e.preventDefault();dragN--;if(dragN<=0)dz.classList.remove("show");});
 // A document with no file behind it — dropped, picked from the dialog, or pasted.
 // Three callers used to inline the same eight steps and drift apart.
+// the same rule as the server's decodeText: a byte-order mark wins, valid UTF-8 is UTF-8,
+// anything else is Windows-1256, the encoding older Arabic Windows tools saved in
+function readFileText(file){return file.arrayBuffer().then(function(buf){var b=new Uint8Array(buf);
+  if(b[0]===0xef&&b[1]===0xbb&&b[2]===0xbf)return new TextDecoder("utf-8").decode(b.subarray(3));
+  if(b[0]===0xff&&b[1]===0xfe)return new TextDecoder("utf-16le").decode(b.subarray(2));
+  if(b[0]===0xfe&&b[1]===0xff)return new TextDecoder("utf-16be").decode(b.subarray(2));
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(b);}catch(e){return new TextDecoder("windows-1256").decode(b);}});}
 function readLoose(name,text){clearChangesNow();setDocButtons(true);if(shown)writeReaderState(shown,capturePosition());shown=null;
   loadSeq++;cur="loose:"+name;fileRels[cur]=cur;setViewMode("rendered");$("actionsbtn").disabled=true;
   workspaceOpen=false;$("quickbtn").style.display="none";closeQuick();
@@ -1898,7 +1905,7 @@ function readLoose(name,text){clearChangesNow();setDocButtons(true);if(shown)wri
   renderSafely(String(text));scroller.scrollTop=0;
   $("files-sec").style.display="none";syncSide();
 }
-window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!MARKDOWN_RE.test(f.name))return;var rd=new FileReader();rd.onload=function(){readLoose(f.name,rd.result);};rd.readAsText(f);});
+window.addEventListener("drop",function(e){e.preventDefault();dragN=0;dz.classList.remove("show");var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;if(!MARKDOWN_RE.test(f.name))return;readFileText(f).then(function(text){readLoose(f.name,text);});});
 // Markdown arrives on the clipboard as often as it arrives as a file — an agent's
 // answer, a chunk of a chat. Undo restores whatever was open, since a stray Cmd+V
 // while reading should not cost you your place.
@@ -2024,7 +2031,7 @@ exportbtn.onclick=function(e){e.stopPropagation();var o=exportmenu.classList.tog
 document.addEventListener("click",function(e){if(!exportmenu.contains(e.target)&&e.target!==exportbtn){exportmenu.classList.remove("open");exportbtn.setAttribute("aria-expanded","false");}});
 exportmenu.addEventListener("click",function(e){var b=e.target.closest("[data-export]");if(!b)return;exportmenu.classList.remove("open");doExport(b.getAttribute("data-export"));});
 var fi2=$("fileinput");
-if(fi2)fi2.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){readLoose(f.name,rd.result);};rd.readAsText(f);e.target.value="";});
+if(fi2)fi2.addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;readFileText(f).then(function(text){readLoose(f.name,text);});e.target.value="";});
 
 document.addEventListener("keydown",function(e){
   var mod=e.metaKey||e.ctrlKey,key=e.key.toLowerCase();
