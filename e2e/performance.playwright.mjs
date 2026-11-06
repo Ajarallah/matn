@@ -65,6 +65,13 @@ try {
   assert.equal(diagnosticsAfter.fullIndexes, diagnosticsBefore.fullIndexes, "one file update must not rebuild the workspace index");
   assert.ok(diagnosticsAfter.incrementalRecords - diagnosticsBefore.incrementalRecords <= 1, "one file update must refresh at most one record");
 
+  // later chunks get the full treatment: every heading has an id and an outline entry
+  const loadMore = page.locator(".large-more");
+  if (await loadMore.count()) { await loadMore.click(); await page.waitForTimeout(400); }
+  const headingState = await page.evaluate(() => { const hs = [...document.querySelectorAll("#doc h1, #doc h2, #doc h3")]; return { total: hs.length, withId: hs.filter((h) => h.id).length, toc: document.querySelectorAll("#toc a").length, dir: hs.filter((h) => h.getAttribute("dir")).length }; });
+  assert.equal(headingState.withId, headingState.total, "every heading in a large document has an id");
+  assert.equal(headingState.toc, headingState.total, "every heading in a large document is in the outline");
+  assert.equal(headingState.dir, headingState.total, "every heading in a large document has its direction");
   const longTasks = await page.evaluate(() => window.__matnLongTasks.slice());
   assert.ok(Math.max(0, ...longTasks) <= 200, `large-document mode exceeded the 200ms long-task budget: ${Math.max(0, ...longTasks).toFixed(1)}ms`);
   const peakHeap = await page.evaluate(() => performance.memory?.usedJSHeapSize || null);

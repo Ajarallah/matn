@@ -2,7 +2,7 @@
 // update is an atomic replace so an interrupted write cannot truncate state.
 
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import StateActions from "./state-actions.cjs";
@@ -105,7 +105,7 @@ function cleanState(value) {
   return { version: VERSION, recent, workspaces };
 }
 
-export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.now() } = {}) {
+export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.now(), seenKeep = 1500 } = {}) {
   const file = join(dataDir, "state.json");
   let cache = null;
   let queue = Promise.resolve();
@@ -156,8 +156,18 @@ export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.
 
   // "Seen" copies: the text of a file as it stood when you last finished reading it, so the
   // reader can show what changed since. One file per document, keyed by its real path.
-  // ponytail: never pruned; prune by age if the folder grows past a few hundred MB.
+  // Kept for the files read most recently: past SEEN_KEEP copies, the least recently
+  // touched go, so the folder cannot grow without bound.
   const seenDir = join(dataDir, "seen");
+  let seenWrites = 0;
+  async function pruneSeen() {
+    let names = [];
+    try { names = (await readdir(seenDir)).filter((n) => n.endsWith(".md")); } catch { return; }
+    if (names.length <= seenKeep) return;
+    const dated = await Promise.all(names.map(async (n) => { try { return { n, t: (await stat(join(seenDir, n))).mtimeMs }; } catch { return { n, t: 0 }; } }));
+    dated.sort((a, b) => b.t - a.t);
+    await Promise.all(dated.slice(seenKeep).map(({ n }) => unlink(join(seenDir, n)).catch(() => {})));
+  }
   const seenFile = (absReal) => join(seenDir, createHash("sha256").update(absReal).digest("hex") + ".md");
   async function readSeen(absReal) {
     try { return await readFile(seenFile(absReal), "utf8"); } catch { return null; }
@@ -167,7 +177,8 @@ export function createStateStore({ dataDir = defaultDataDir(), now = () => Date.
     const target = seenFile(absReal), temp = target + "." + process.pid + "." + randomUUID() + ".tmp";
     await writeFile(temp, content, { encoding: "utf8", mode: 0o600 });
     await rename(temp, target);
+    if (++seenWrites % 25 === 1) await pruneSeen();
   }
 
-  return { file, snapshot, updateWorkspace, readSeen, writeSeen };
+  return { file, snapshot, updateWorkspace, readSeen, writeSeen, pruneSeen };
 }

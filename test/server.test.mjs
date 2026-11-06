@@ -48,7 +48,9 @@ test("file API only serves markdown under the configured root", async (t) => {
 
   const listed = await fetch(`${base}/api/list?dir=${enc(root)}`);
   assert.equal(listed.status, 200);
-  assert.deepEqual(await listed.json(), [{ path: join(root, "notes", "a.md"), rel: "notes/a.md" }]);
+  const listedFiles = await listed.json();
+  assert.deepEqual(listedFiles.map(({ path, rel }) => ({ path, rel })), [{ path: join(root, "notes", "a.md"), rel: "notes/a.md" }]);
+  assert.ok(listedFiles[0].mtime > 0, "each file carries its modification time");
 });
 
 test("exposes its containment root and default target", async (t) => {
@@ -182,6 +184,10 @@ test("rejects forged Host headers and emits browser security headers", async (t)
   });
   assert.equal(forgedStatus, 421);
   assert.equal((await fetch(base, { method: "POST" })).status, 405);
+  const headers = (await fetch(`http://127.0.0.1:${server.address().port}/`)).headers;
+  assert.equal(headers.get("cross-origin-resource-policy"), "same-origin");
+  assert.equal(headers.get("cross-origin-opener-policy"), "same-origin");
+  assert.match(headers.get("permissions-policy"), /camera=\(\)/);
 });
 
 test("Host validation rejects malformed authorities and accepts loopback names", async (t) => {
@@ -678,6 +684,21 @@ test("a review waits for the page and hands the notes to whoever asked", async (
   assert.equal((await fetch(`${base}/api/review-wait?id=nope`)).status, 400);
 });
 
+test("the page reports whether it still shows a review, and other sites cannot", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-presence-"));
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir: await mkdtemp(join(tmpdir(), "matn-presence-data-")) });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, id = "c".repeat(32), ask = async () => (await fetch(`${base}/api/review-presence?id=${id}`)).json();
+  assert.deepEqual(await ask().then(({ seen, gone }) => ({ seen, gone })), { seen: 0, gone: 0 });
+  assert.equal((await fetch(`${base}/api/review-presence?id=${id}&state=here`)).status, 204);
+  assert.ok((await ask()).seen > 0);
+  assert.equal((await fetch(`${base}/api/review-presence?id=${id}&state=gone`, { method: "POST", headers: { "sec-fetch-site": "cross-site" } })).status, 403);
+  assert.equal((await ask()).gone, 0, "another site cannot end a review");
+  await fetch(`${base}/api/review-presence?id=${id}&state=gone`, { method: "POST" });
+  assert.ok((await ask()).gone > 0, "sendBeacon's POST is accepted");
+  assert.equal((await fetch(`${base}/api/review-presence?id=x`)).status, 400);
+});
+
 test("links from a single opened file resolve to nearby notes without a folder index", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "matn-nearby-"));
   await writeFile(join(root, "plan.md"), "![[ref#^key]]\n", "utf8");
@@ -729,6 +750,9 @@ test("follow shows a file in the open page, and only the matn command may ask", 
   let text = "";
   while (!text.includes("follow")) text += new TextDecoder().decode((await reader.read()).value);
   assert.match(text, /"type":"follow","path":"[^"]*a\.md"/);
+  assert.deepEqual(await (await post({ path: join(root, "a.md"), review: "f".repeat(32), gate: true })).json(), { delivered: 1 });
+  while (!text.includes('"review"')) text += new TextDecoder().decode((await reader.read()).value);
+  assert.match(text, /"review":"f{32}","gate":true/);
   await reader.cancel();
   assert.equal((await post({ path: join(root, "a.md") }, { origin: base })).status, 403);
   assert.equal((await post({ path: join(root, "a.md") }, { "sec-fetch-site": "same-origin" })).status, 403);

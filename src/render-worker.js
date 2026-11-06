@@ -13,20 +13,10 @@ self.onmessage = (event) => {
   try {
     const markdown = String(event.data?.markdown || "");
     const frontmatter = MatnCore.parseFrontmatter(markdown);
-    const direction = MatnCore.voteDir([frontmatter.body]);
+    // front matter `dir`/`lang` wins, as in the ordinary render path
+    const direction = MatnCore.frontmatterDir(frontmatter.pairs) || MatnCore.voteDir([frontmatter.body]);
     const words = (frontmatter.body.trim().match(/\S+/g) || []).length;
-    const chunks = [];
-    let rest = frontmatter.body;
-    const max = 96 * 1024;
-    while (rest.length > max) {
-      let at = rest.lastIndexOf("\n\n", max);
-      if (at < max / 2) at = rest.lastIndexOf("\n", max);
-      if (at < max / 2) at = rest.lastIndexOf(" ", max);
-      if (at < max / 2) at = max;
-      chunks.push(rest.slice(0, at));
-      rest = rest.slice(at).replace(/^\s+/, "");
-    }
-    if (rest) chunks.push(rest);
+    const chunks = MatnCore.renderChunks(frontmatter.body, 64 * 1024);
     for (let index = 0; index < chunks.length; index++) {
       const math = MatnCore.preprocess(chunks[index]);
       const html = MatnCore.restoreMath(marked.parse(math.src, { renderer: MatnCore.safeRenderer(marked) }), math.store);

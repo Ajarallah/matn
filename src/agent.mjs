@@ -11,7 +11,7 @@ import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createStateStore, defaultDataDir } from "./state-store.mjs";
 import { createStdinSession } from "./stdin-session.mjs";
-import { launch, openBrowser, targetUrl } from "./launch.mjs";
+import { launch, follow, findInstance, openBrowser, targetUrl } from "./launch.mjs";
 
 const require = createRequire(import.meta.url);
 const RenderCore = require("./render-core.cjs");
@@ -58,20 +58,38 @@ async function atomicWrite(file, text) {
 // { decision, markdown }, or null when the deadline passes first.
 export async function runReview({ file, gate = false, timeoutMs = 0, open = true, port = 4711, log = () => {} }) {
   const id = randomBytes(16).toString("hex");
-  const { base } = await launch({ target: file, port });
+  const { base, reused } = await launch({ target: file, port });
   const url = targetUrl(base, file) + "&review=" + id + (gate ? "&gate=1" : "");
-  if (open) openBrowser(url);
+  // a reader already open on this folder moves itself to the review; no new tab per round
+  const shownInOpenPage = reused && (await follow(base, file, { review: id, gate })) > 0;
+  if (open && !shownInOpenPage) openBrowser(url);
   log("[matn] " + url);
   log("[matn] waiting for your review in the reader");
-  const deadline = timeoutMs ? Date.now() + timeoutMs : Infinity;
+  const started = Date.now(), deadline = timeoutMs ? started + timeoutMs : Infinity;
   while (Date.now() < deadline) {
     let response = null;
-    try { response = await fetch(`${base}/api/review-wait?id=${id}`, { signal: AbortSignal.timeout(Math.min(55000, Math.max(1000, deadline - Date.now()))) }); }
-    catch { if (Date.now() < deadline) await new Promise((r) => setTimeout(r, 1000)); continue; }
-    if (response.status === 200) return await response.json();
-    if (response.status !== 204) throw new Error("review failed: HTTP " + response.status);
+    try { response = await fetch(`${base}/api/review-wait?id=${id}`, { signal: AbortSignal.timeout(Math.min(15000, Math.max(1000, deadline - Date.now()))) }); }
+    catch { if (Date.now() < deadline) await new Promise((r) => setTimeout(r, 1000)); }
+    if (response && response.status === 200) return await response.json();
+    if (response && response.status !== 204) throw new Error("review failed: HTTP " + response.status);
+    if (await reviewAbandoned(base, id, started)) { log("[matn] the review page was closed; no answer was given"); return null; }
   }
   return null;
+}
+
+// Nobody is looking at the review: the page said it left and did not come back (a reload
+// comes back within seconds), or it never arrived, or it has been silent longer than a
+// background tab's throttled timers allow.
+export function abandoned({ seen, gone, now }, started, { arrive = 90000, silent = 300000, grace = 8000 } = {}) {
+  if (gone && gone >= seen && now - gone > grace) return true;
+  if (!seen) return now - started > arrive;
+  return now - seen > silent;
+}
+async function reviewAbandoned(base, id, started) {
+  try {
+    const response = await fetch(`${base}/api/review-presence?id=${id}`, { signal: AbortSignal.timeout(3000) });
+    return response.ok && abandoned(await response.json(), started);
+  } catch { return false; }
 }
 
 // ---- plan gate -------------------------------------------------------------
@@ -101,6 +119,9 @@ async function planGate(payload) {
     if (typeof input.plan !== "string" || !input.plan.trim()) return null;
     file = (await createStdinSession(input.plan, { name: "plan.md" })).file;
   }
+  // The plans folder gets a reader of its own that outlives this hook, so the next round
+  // reuses its tab instead of opening another.
+  if (!(await findInstance(file)).reused) { showDetached(dirname(file), ["--no-open"]); await waitForInstance(file); }
   const result = await runReview({ file, gate: true, timeoutMs: 1780 * 1000, log: (line) => console.error(line) });
   return planGateOutput(input, result);
 }
@@ -108,9 +129,14 @@ async function planGate(payload) {
 // ---- follow ----------------------------------------------------------------
 
 // Show `file` in Matn without blocking: reuse an open page when one can serve it.
-export function showDetached(file) {
-  const child = spawn(process.execPath, [MATN_BIN, file], { detached: true, stdio: "ignore" });
+export function showDetached(file, args = []) {
+  const child = spawn(process.execPath, [MATN_BIN, file, ...args], { detached: true, stdio: "ignore" });
   child.unref();
+}
+async function waitForInstance(file, ms = 4000) {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { if ((await findInstance(file)).reused) return true; await new Promise((r) => setTimeout(r, 100)); }
+  return false;
 }
 
 async function followHook(payload) {

@@ -2,15 +2,25 @@
 // Matn CLI — open a Markdown file or folder in the RTL reader.
 //   matn [file|dir] [--port N] [--host H] [--no-open]
 
-import { readFileSync, existsSync, statSync, rmSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { readFileSync, existsSync, statSync, rmSync, readdirSync } from "node:fs";
+import { resolve, dirname, join, basename } from "node:path";
+import MarkdownFiles from "../src/markdown-files.cjs";
+const { isMarkdownPath } = MarkdownFiles;
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { createStateStore } from "../src/state-store.mjs";
 import { launch, follow, openBrowser, targetUrl } from "../src/launch.mjs";
 import { runReview, runHook, changes, readOptions, setOptions, replyFile, setupCodex } from "../src/agent.mjs";
 import { cleanupStdinSessions, createStdinSession, readStdin } from "../src/stdin-session.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const VERSION = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")).version;
+
+async function lastFolder() {
+  const { recent } = await createStateStore().snapshot("").catch(() => ({ recent: [] }));
+  const found = recent.map((entry) => entry.root).find((root) => { try { return statSync(root).isDirectory(); } catch { return false; } });
+  return found || homedir();
+}
 
 function parseArgs(argv) {
   const o = { port: 4711, host: "127.0.0.1", open: true, target: null, editor: process.env.MATN_EDITOR || "", allowFileActions: false };
@@ -86,6 +96,8 @@ let stdinSession = null;
 if (o.target === "-") {
   try {
     await cleanupStdinSessions();
+    // `matn -` typed at a prompt, with nothing piped in, would wait in silence
+    if (process.stdin.isTTY) console.error("[matn] reading Markdown from the keyboard: paste or type it, then press Ctrl-D (Ctrl-C to cancel)");
     stdinSession = await createStdinSession(await readStdin(process.stdin), { name: o.stdinName });
     o.target = stdinSession.file;
     const cleanupSession = () => { try { rmSync(stdinSession.dir, { recursive: true, force: true }); } catch {} };
@@ -96,6 +108,14 @@ if (o.target === "-") {
     console.error("[matn] " + (error && error.message ? error.message : "could not read stdin"));
     process.exit(2);
   }
+}
+// Up to three Markdown names in the same folder close to what was typed.
+function suggestions(abs) {
+  const dir = dirname(abs), want = basename(abs).toLowerCase();
+  let names = [];
+  try { names = readdirSync(dir).filter((n) => isMarkdownPath(n)); } catch { return []; }
+  const distance = (a, b) => { const d = Array.from({ length: b.length + 1 }, (_, i) => i); for (let i = 1; i <= a.length; i++) { let prev = d[0]; d[0] = i; for (let j = 1; j <= b.length; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; } } return d[b.length]; };
+  return names.map((n) => ({ n, d: distance(want, n.toLowerCase()) })).filter((x) => x.d <= Math.max(2, Math.floor(want.length / 3))).sort((a, b) => a.d - b.d).slice(0, 3).map((x) => x.n);
 }
 const readAll = async (stream) => { const chunks = []; for await (const c of stream) chunks.push(c); return Buffer.concat(chunks).toString("utf8"); };
 const fail = (message, code = 2) => { console.error("[matn] " + message); process.exit(code); };
@@ -137,6 +157,20 @@ if (o.command === "review") {
   process.exit(0);
 }
 
+// A target that is missing or not Markdown is an error you can act on, not an empty page.
+if (o.target && o.target !== "-" && !o.command) {
+  const abs = resolve(o.target);
+  if (!existsSync(abs)) {
+    const near = suggestions(abs);
+    fail(`no such file or folder: ${o.target}` + (near.length ? `\n       did you mean: ${near.join("  ")}` : ""), 2);
+  }
+  if (statSync(abs).isFile() && !isMarkdownPath(abs)) fail(`not a Markdown file: ${o.target} (Matn reads .md, .markdown, .mdc, .mdx and similar)`, 2);
+}
+
+// Opened from Finder with no file (the Matn.app icon), the working directory is "/". Serving
+// the whole disk is never what was meant: reopen the last folder read, or the home folder.
+if (!o.target && !o.command && process.cwd() === "/") o.target = await lastFolder();
+
 const { base, reused, defaultArg } = await launch({ target: o.target, port: o.port, host: o.host, editor: o.editor, allowFileActions: o.allowFileActions });
 const url = targetUrl(base, o.target);
 if (reused) {
@@ -148,6 +182,7 @@ if (reused) {
   process.exit(0);
 }
 console.log("متن — Matn  ·  " + base);
+if (!["127.0.0.1", "localhost", "::1"].includes(o.host)) console.error(`[matn] warning: --host ${o.host} makes this reader reachable from your network, with no sign-in. Anyone on it can read ${defaultArg}`);
 if (existsSync(defaultArg)) console.log("[matn] " + (statSync(defaultArg).isDirectory() ? "folder" : "file") + ": " + defaultArg);
 console.log("[matn] Ctrl+C to stop");
 if (o.open) openBrowser(url);

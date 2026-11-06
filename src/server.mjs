@@ -48,7 +48,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
   let indexing = false;
   let workspaceDir = null;
   const diagnostics = { fullIndexes: 0, fullRecords: 0, incrementalRecords: 0 };
-  const reviews = new Map(), reviewWaiters = new Map();
+  const reviews = new Map(), reviewWaiters = new Map(), reviewPresence = new Map();
   const REVIEW_DECISIONS = new Set(["send", "approve", "changes"]);
   const root = targetRoot(defaultArg);
   const rootReal = realpathSync(root);
@@ -333,7 +333,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     refreshStaleRecords();
     const context = LinkCore.context(Array.from(workspaceRecords.values()), abs);
     const snapshot = await stateStore.snapshot(rootReal), current = fingerprint(abs);
-    return { path: abs, rel, tracked, backlinks: context.backlinks.length, changed: fingerprintChanged(snapshot.workspace.fileMeta[rel], current), allowTrash: Boolean(allowFileActions), canOpenEditor: Boolean(editor), canReveal: true };
+    return { path: abs, rel, tracked, backlinks: context.backlinks.length, changed: fingerprintChanged(snapshot.workspace.fileMeta[rel], current), allowTrash: Boolean(allowFileActions), canOpenEditor: typeof actions.canOpenEditor === "boolean" ? actions.canOpenEditor : Boolean(editor), canReveal: true };
   }
   function documentHealth(abs) {
     refreshStaleRecords();
@@ -391,7 +391,13 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     const securityHeaders = {
       "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
       "referrer-policy": "no-referrer",
-      "x-content-type-options": "nosniff"
+      "x-content-type-options": "nosniff",
+      // OWASP Secure Headers: no other site may load these responses (not even as an image
+      // or a script through no-cors), open this page in a shared browsing group, or ask for
+      // devices it never needs.
+      "cross-origin-resource-policy": "same-origin",
+      "cross-origin-opener-policy": "same-origin",
+      "permissions-policy": "camera=(), microphone=(), geolocation=(), usb=(), payment=()"
     };
     const send = (code, type, body, extra) =>
       { res.writeHead(code, Object.assign({ "content-type": type }, securityHeaders, extra)); res.end(body); };
@@ -408,10 +414,14 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       try { body = await readJson(req, 16 * 1024); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid follow" })); }
       const abs = body && typeof body.path === "string" ? safeMd(body.path) : null;
       if (!abs) return send(400, "application/json", JSON.stringify({ error: "bad file" }));
-      broadcastMessage({ type: "follow", path: abs });
+      const review = REVIEW_ID.test(String(body.review || "")) ? body.review : "";
+      broadcastMessage(review ? { type: "follow", path: abs, review, gate: Boolean(body.gate) } : { type: "follow", path: abs });
       return send(200, "application/json", JSON.stringify({ delivered: clients.size }));
     }
-    if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
+    // the review page says it is leaving with navigator.sendBeacon, which can only POST and
+    // cannot carry the session header; it changes nothing but whether `matn review` keeps waiting
+    const presenceBeacon = u.pathname === "/api/review-presence" && req.method === "POST";
+    if (req.method !== "GET" && req.method !== "HEAD" && !stateWrite && !actionWrite && !presenceBeacon) return send(405, "text/plain", "method not allowed", { allow: "GET, HEAD, PUT, POST" });
     if ((stateWrite || actionWrite) && !validWriteRequest(req)) return send(403, "application/json", JSON.stringify({ error: "write request rejected" }));
     // Every /api route is for this page only. A page on another origin cannot read the
     // response anyway, but it can still make the reader index a folder, spawn git, or
@@ -522,7 +532,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       if (!dir || !existsSync(dir) || !withinRoot(dir)) return send(400, "application/json", "[]");
       const root = resolve(dir);
       ensureWatch(root, true);
-      const files = listMd(root).map((p) => ({ path: p, rel: relative(root, p).split(sep).join("/") }));
+      const files = listMd(root).map((p) => { let mtime = 0; try { mtime = statSync(p).mtimeMs; } catch {} return { path: p, rel: relative(root, p).split(sep).join("/"), mtime }; });
       scheduleIndex(files, root);
       stateStore.updateWorkspace(rootReal, {}).catch(() => {});
       return send(200, "application/json", JSON.stringify(files));
@@ -602,6 +612,18 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
     }
     // `matn review` hands the reader a random id and waits here; "Send to agent" in the page
     // posts the notes under that id. Polls end after 50s so no client timeout ever fires.
+    // Whether a page is still showing a review: the page reports "here" on load and every few
+    // seconds, and "gone" as it unloads; `matn review` asks, so a closed tab does not leave
+    // the agent (or Claude Code's plan prompt) waiting half an hour for an answer.
+    if (u.pathname === "/api/review-presence") {
+      const id = u.searchParams.get("id") || "", state = u.searchParams.get("state");
+      if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");
+      const entry = reviewPresence.get(id) || { seen: 0, gone: 0 };
+      if (state === "here") entry.seen = Date.now();
+      else if (state === "gone") entry.gone = Date.now();
+      if (state === "here" || state === "gone") { reviewPresence.set(id, entry); if (reviewPresence.size > 200) reviewPresence.delete(reviewPresence.keys().next().value); return send(204, "text/plain", ""); }
+      return send(200, "application/json", JSON.stringify({ seen: entry.seen, gone: entry.gone, now: Date.now() }));
+    }
     if (u.pathname === "/api/review-wait") {
       const id = u.searchParams.get("id") || "";
       if (!REVIEW_ID.test(id)) return send(400, "text/plain", "bad id");

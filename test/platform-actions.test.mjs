@@ -25,6 +25,12 @@ test("Linux and Windows trash adapters target the OS recycle mechanism", async (
   assert.equal(windows[0][2].env.MATN_TARGET, "C:\\vault\\a.md");
 });
 
-test("opening an editor fails closed when none is configured", async () => {
-  await assert.rejects(createPlatformActions({ run: async () => {} }).openEditor("/vault/a.md"), (error) => error.code === "ENOEDITOR");
+test("opening an editor fails closed when none is configured, except on macOS", async () => {
+  const linux = createPlatformActions({ platform: "linux", run: async () => {} });
+  await assert.rejects(linux.openEditor("/vault/a.md"), (error) => error.code === "ENOEDITOR");
+  assert.equal(linux.canOpenEditor, false);
+  const calls = [], mac = createPlatformActions({ platform: "darwin", run: async (...args) => calls.push(args) });
+  await mac.openEditor("/vault/a.md");
+  assert.deepEqual(calls[0].slice(0, 2), ["open", ["-t", "/vault/a.md"]]);
+  assert.equal(mac.canOpenEditor, true);
 });

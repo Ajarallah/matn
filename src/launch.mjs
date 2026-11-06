@@ -50,9 +50,9 @@ function withinRoot(root, target) {
 }
 
 // Ask the pages of a running instance to show `file`. Resolves to how many listened.
-export async function follow(base, file) {
+export async function follow(base, file, extra = {}) {
   try {
-    const r = await fetch(base + "/api/follow", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: resolve(file) }), signal: AbortSignal.timeout(1500) });
+    const r = await fetch(base + "/api/follow", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: resolve(file), ...extra }), signal: AbortSignal.timeout(1500) });
     if (!r.ok) return 0;
     return Number((await r.json()).delivered) || 0;
   } catch { return 0; }
@@ -61,20 +61,26 @@ export async function follow(base, file) {
 // Servers this process started, so a caller that is not about to exit can close them.
 export const started = new Set();
 
-// If the port is busy, reuse that instance only when it can serve the target (same
-// containment root); otherwise start a fresh, contained instance on the next free port.
+// Reuse any running instance in the port range whose root contains the target (one reader
+// per folder, not one per command); otherwise start a contained instance on the first free
+// port at or after the requested one.
+export async function findInstance(target, { port = 4711, host = "127.0.0.1", span = 16 } = {}) {
+  const abs = resolve(target || ".");
+  let free = null;
+  for (let p = port; p < port + span; p++) {
+    if (!(await portInUse(host, p))) { if (free == null) free = p; continue; }
+    const root = await runningRoot(host, p);
+    if (root && withinRoot(root, abs)) return { port: p, reused: true };
+  }
+  if (free == null) { free = port + span; while (free < port + 64 && (await portInUse(host, free))) free++; }
+  return { port: free, reused: false };
+}
+
 export async function launch({ target, port = 4711, host = "127.0.0.1", editor = "", allowFileActions = false }) {
   const defaultArg = resolve(target || ".");
-  let reused = false;
-  if (await portInUse(host, port)) {
-    const root = await runningRoot(host, port);
-    if (root && withinRoot(root, defaultArg)) reused = true;
-    else {
-      let p = port + 1;
-      while (p < port + 64 && (await portInUse(host, p))) p++;
-      port = p;
-    }
-  }
+  const found = await findInstance(defaultArg, { port, host });
+  const reused = found.reused;
+  port = found.port;
   if (!reused) started.add(await startServer({ port, host, defaultArg, editor, allowFileActions, dataDir: process.env.MATN_DATA_DIR || undefined }));
   return { base: `http://${hostForUrl(host)}:${port}`, reused, defaultArg };
 }

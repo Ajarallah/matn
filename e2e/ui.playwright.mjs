@@ -18,7 +18,7 @@ await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# م�
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
 await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
-await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
+await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n\n## الفصل الأول\n\nنص.\n\n## الفصل الثاني & ما بعده\n\nنص.\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
@@ -407,7 +407,7 @@ try {
   // The shortcuts all worked already; none of them were written down anywhere.
   await reading.keyboard.press("?");
   await reading.waitForSelector("#shortcutdialog[open]");
-  assert.equal(await reading.locator("#shortcutlist dt").count(), 10);
+  assert.equal(await reading.locator("#shortcutlist dt").count(), 11);
   assert.equal(await reading.locator("#shortcutlist dd").last().innerText(), "هذه القائمة");
   // key pairs read left to right even in the Arabic interface, as macOS does
   assert.equal(await reading.locator("#shortcutlist dt").first().evaluate((el) => getComputedStyle(el).direction), "ltr");
@@ -430,16 +430,21 @@ try {
   // <input> came out unclosed and a conforming reader rejected the file outright.
   await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "epub.md"))}`);
   await reading.waitForSelector("#doc h1");
-  const chapter = await reading.evaluate(() => {
-    const dir = document.querySelector("#doc").getAttribute("dir") || "rtl";
-    const body = toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>", ""));
-    return `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" dir="${dir}"><head><title>t</title></head><body>${body}</body></html>`;
-  });
-  assert.equal(await reading.evaluate((xml) => {
-    const parsed = new DOMParser().parseFromString(xml, "application/xhtml+xml");
-    const error = parsed.querySelector("parsererror");
-    return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
-  }, chapter), "", "the EPUB chapter is not well-formed XHTML");
+  const epub = await reading.evaluate(() => epubFiles());
+  const chapter = epub["OEBPS/doc.xhtml"];
+  for (const part of ["OEBPS/doc.xhtml", "OEBPS/nav.xhtml", "OEBPS/content.opf", "META-INF/container.xml"]) {
+    assert.equal(await reading.evaluate(([xml, type]) => {
+      const parsed = new DOMParser().parseFromString(xml, type);
+      const error = parsed.querySelector("parsererror");
+      return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
+    }, [epub[part], part.endsWith(".xhtml") ? "application/xhtml+xml" : "application/xml"]), "", `${part} is not well-formed`);
+  }
+  // the book's contents list the document's headings, and its stylesheet is declared and linked
+  const headingIds = await reading.evaluate(() => [...document.querySelectorAll("#doc h1[id],#doc h2[id]")].map((h) => h.id));
+  for (const id of headingIds) assert.ok(epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id}`) || epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id.replace(/&/g, "&amp;")}`), `contents miss #${id}`);
+  assert.match(epub["OEBPS/content.opf"], /href="style.css" media-type="text\/css"/);
+  assert.match(chapter, /<link rel="stylesheet"[^>]*href="style.css"/);
+  assert.match(epub["OEBPS/style.css"], /pre\{direction:ltr/);
   assert.match(chapter, /<hr\s*\/>/);
   assert.match(chapter, /<br\s*\/>/);
   assert.match(chapter, /<img[^>]*\/>/);
@@ -540,6 +545,9 @@ try {
   await reading.locator("#files a", { hasText: "vault.md" }).first().click();
   await reading.waitForSelector("#changesbar");
   assert.equal(await reading.locator("#doc .diff-changed").count(), 1);
+  // hovering an edited block shows the edit word by word
+  await reading.locator("#doc .diff-changed").first().hover();
+  assert.match(await reading.locator("#doc .diff-changed .diff-words ins").first().innerText(), /وفيه/);
   assert.equal(await reading.locator("#doc .diff-added").count(), 1);
   await reading.locator("#changesbar .changes-read").click();
   assert.equal(await reading.locator("#changesbar").count(), 0);
@@ -576,6 +584,43 @@ try {
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.startsWith("مشاركة"));
   assert.equal(await reading.locator("#fname").innerText(), "مشاركة.md");
 
+  // Find inside the document folds Arabic the way search does: no diacritics needed,
+  // taa marbuta and Arabic-Indic digits match, and the hit covers the original letters.
+  await writeFile(join(root, "arabic-find.md"), "# بحث\n\nهذه خُطَّةٌ للفصل ١٢ من الكتاب.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "arabic-find.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("بحث"));
+  await reading.keyboard.press("/");
+  await reading.locator("#findinput").fill("خطه");
+  assert.equal(await reading.locator("#doc mark.find-cur").innerText(), "خُطَّةٌ");
+  await reading.locator("#findinput").fill("للفصل 12");
+  assert.equal(await reading.locator("#doc mark.find-cur").innerText(), "للفصل ١٢");
+  await reading.keyboard.press("Escape");
+
+  // j / k step through blocks with a reading focus; Escape lets go.
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "typography.md"))}`);
+  await reading.waitForSelector("#doc h1");
+  await reading.evaluate(() => { document.getElementById("scroller").scrollTop = 0; });
+  await reading.keyboard.press("j");
+  const firstStep = await reading.locator("#doc [data-reading]").innerText();
+  await reading.keyboard.press("j");
+  assert.notEqual(await reading.locator("#doc [data-reading]").innerText(), firstStep);
+  await reading.keyboard.press("k");
+  assert.equal(await reading.locator("#doc [data-reading]").innerText(), firstStep);
+  await reading.keyboard.press("Escape");
+  assert.equal(await reading.locator("#doc [data-reading]").count(), 0);
+
+  // Front matter states the direction; it beats counting letters.
+  await writeFile(join(root, "stated-dir.md"), "---\nlang: en\n---\n\n# عنوان عربي\n\nنص عربي قصير.\n");
+  await reading.goto(`${base}/?path=${encodeURIComponent(join(root, "stated-dir.md"))}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("عنوان"));
+  assert.equal(await reading.locator("#doc").getAttribute("dir"), "ltr");
+
+  // A file written just now is at the top of "recently changed".
+  await writeFile(join(root, "just-written.md"), "# كتبه الوكيل الآن\n");
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "vault.md"))}`);
+  await reading.waitForSelector("#recent a");
+  assert.equal(await reading.locator("#recent a .recent-name").first().innerText(), "just-written.md");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");
@@ -583,6 +628,8 @@ try {
   await reading.goto(gateUrl(gateId));
   await reading.waitForSelector("#reviewapprove:not([hidden])");
   assert.equal(await reading.locator("#reviewsend").isDisabled(), true, "request changes needs a note");
+  // the review bar can show before the new file renders; wait for its text
+  await reading.waitForFunction(() => document.querySelector("#doc")?.textContent.includes("دفعة واحدة"));
   await selectText(reading, "دفعة واحدة");
   await reading.locator('#selectiontools [data-selection-action="note"]').click();
   assert.equal(await reading.locator("#notesuggestbox").isHidden(), false);
@@ -612,8 +659,62 @@ try {
   assert.ok(followed.delivered >= 1);
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("خزنة"));
 
+  // The start screen names what it opens, lists the folder's newest files (the only file
+  // list in view on a phone), and greys the buttons that need a document.
+  const startContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const start = await startContext.newPage();
+  await start.goto(`${base}/`);
+  await start.waitForSelector("#doc.start .start-list .start-item");
+  assert.equal(await start.locator("#printbtn").isDisabled(), true, "print needs a document");
+  assert.match(await start.locator(".start-actions button:not([hidden])").first().innerText(), /\.md/);
+  await start.locator(".start-list .start-item").first().click();
+  await start.waitForSelector("#doc:not(.start) h1");
+  assert.equal(await start.locator("#printbtn").isDisabled(), false);
+  // ⌘K: files whose name matches come first; files that only mention the words follow under
+  // their own heading, with a snippet free of Markdown syntax.
+  await start.evaluate(() => openQuick("files"));
+  await start.locator("#quickinput").fill("الدليل");
+  await start.waitForSelector("#quickresults .quick-group");
+  const quick = await start.evaluate(() => [...document.querySelectorAll("#quickresults > *")].map((el) => el.className.split(" ")[0] + ":" + (el.querySelector(".quick-title")?.textContent || el.textContent)));
+  assert.match(quick[0], /^quick-item:الدليل/);
+  const group = quick.findIndex((line) => line.startsWith("quick-group"));
+  assert.ok(group > 0 && quick[group + 1]?.startsWith("quick-item:"), quick.join(" | "));
+  assert.doesNotMatch(await start.locator("#quickresults .quick-snippet").first().innerText(), /\]\(|^#/);
+  await start.keyboard.press("Escape");
+  await startContext.close();
+
+  // On touch the system's own selection menu sits above the selection, so Matn's goes below.
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const touch = await touchContext.newPage();
+  await touch.goto(`${base}/?path=${encodeURIComponent(join(root, "README.md"))}`);
+  await touch.waitForSelector("#doc p");
+  const selected = await touch.evaluate(() => { const w = document.createTreeWalker(document.querySelector("#doc"), NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.textContent.trim().length > 10 && n.parentElement.getBoundingClientRect().top > 200 ? 1 : 3 }), t = w.nextNode(), r = document.createRange(); r.setStart(t, 0); r.setEnd(t, 8); getSelection().removeAllRanges(); getSelection().addRange(r); return r.getBoundingClientRect().bottom; });
+  await touch.waitForSelector("#selectiontools.open");
+  assert.ok(await touch.locator("#selectiontools").evaluate((el) => el.getBoundingClientRect().top) > selected, "touch toolbar sits below the selection");
+  await touchContext.close();
+
+  // The English interface carries no Arabic chrome: labels, tooltips, placeholders and
+  // text written before the switch (reading time, relative times) all follow the language.
+  await reading.locator("#gearbtn").click();
+  await reading.locator('[data-lang-val="en"]').click();
+  // some text (link health) is fetched again after the switch, so give it a moment to settle
+  const scanArabic = () => reading.evaluate(() => {
+    const out = [], ar = /[\u0600-\u06FF]/;
+    document.querySelectorAll("body *").forEach((el) => {
+      if (el.closest("#doc,#files,#recent,#toc,#backlinks,#annotations,#book,#notequote,.toast,.collection-body,script,.margin-notes,[data-lang-val],.sidebar-head strong,#fname") || el.matches("option[value=thmanyah]")) return;
+      for (const a of ["title", "aria-label", "placeholder"]) { const v = el.getAttribute(a); if (v && ar.test(v)) out.push(`${el.id || el.tagName}@${a}: ${v}`); }
+      for (const n of el.childNodes) if (n.nodeType === 3 && ar.test(n.textContent)) out.push(`${el.id || el.tagName}.${el.className}<${el.parentElement?.id || el.parentElement?.className}: ${n.textContent.trim()}`);
+    });
+    return out;
+  });
+  let arabicLeft = await scanArabic();
+  for (let tries = 0; arabicLeft.length && tries < 25; tries++) { await reading.waitForTimeout(200); arabicLeft = await scanArabic(); }
+  assert.deepEqual(arabicLeft, [], "Arabic text left in the English interface");
+  await reading.locator('[data-lang-val="ar"]').click();
+  await reading.keyboard.press("Escape");
+
   await readingContext.close();
-  console.log("playwright: plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

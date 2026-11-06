@@ -1,6 +1,6 @@
 ---
 name: matn-open
-description: Open a Markdown file or a folder of Markdown files in the local Matn reader. Use when the user asks to open, preview, read, or browse `.md`, `.markdown`, `.mdown`, or `.mkd` content in Matn from Claude Code.
+description: Open a Markdown file or a folder of Markdown files in the local Matn reader. Use when the user asks to open, preview, read, or browse Markdown (`.md`, `.markdown`, `.mdc`, `.mdx`, `.qmd`, `.rmd` and the other extensions in `src/markdown-files.cjs`) in Matn while working in this repository.
 ---
 
 # Open in Matn
@@ -15,4 +15,4 @@ bash scripts/matn-open.sh "<absolute-target>"
 
 4. Report the opened absolute path. Do not wait for the Matn server; the launcher detaches it and reuses a compatible running instance.
 
-Never modify the Markdown file as part of opening it. Do not add an automatic hook that opens every Markdown file Claude reads.
+Never modify the Markdown file as part of opening it. Opening files automatically is the plugin's opt-in `follow` setting (`matn agent follow on`), not this skill's job.

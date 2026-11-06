@@ -110,6 +110,17 @@
     return {body:body,pairs:pairs};
   }
 
+  // A document may state its own direction in front matter (dir/direction: rtl|ltr, or a
+  // lang code), which beats counting letters — short or mixed notes vote wrong.
+  var RTL_LANGS=/^(ar|fa|he|ur|ps|ku|ckb|sd|ug|yi|dv)(?:[-_]|$)/i;
+  function frontmatterDir(pairs){
+    for(var i=0;i<(pairs||[]).length;i++){var k=String(pairs[i][0]).toLowerCase(),v=String(pairs[i][1]).toLowerCase().trim();
+      if((k==="dir"||k==="direction")&&(v==="rtl"||v==="ltr"))return v;}
+    for(var j=0;j<(pairs||[]).length;j++){var key=String(pairs[j][0]).toLowerCase(),val=String(pairs[j][1]).trim();
+      if((key==="lang"||key==="language")&&/^[a-z]{2,3}(?:[-_][a-z0-9]+)?$/i.test(val))return RTL_LANGS.test(val)?"rtl":"ltr";}
+    return null;
+  }
+
   // ---- Obsidian-flavoured syntax ------------------------------------------------
   // One definition for the page and the large-file worker, so both read a vault alike.
   var IMAGE_RE=/\.(?:png|jpe?g|gif|webp|avif|svg)$/i;
@@ -123,6 +134,9 @@
     var parts=target.split("#"),label=alias||(parts[0]+(parts[1]&&parts[1][0]!=="^"?" › "+parts[1]:""));
     return '<div class="md-embed" data-embed="'+esc(target)+'"><a class="md-embed-src wikilink internal-link" href="#" data-wiki="'+esc(target)+'"><svg class="md-embed-ico pi" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12.5a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-4Z"/><path fill-rule="evenodd" d="M6.75 2.5a2.75 2.75 0 0 0-2.75 2.75v9.5a2.75 2.75 0 0 0 2.75 2.75h6.5a2.75 2.75 0 0 0 2.75-2.75v-6a.75.75 0 0 0-.22-.53l-5.5-5.5a.75.75 0 0 0-.53-.22h-3Zm-1.25 2.75c0-.69.56-1.25 1.25-1.25h2.25v3.75c0 .966.784 1.75 1.75 1.75h3.75v5.25c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-9.5Zm7.94 2.75-2.94-2.94v2.69c0 .138.112.25.25.25h2.69Z"/></svg>'+esc(label)+'</a><div class="md-embed-body"></div></div>';
   }
+  // [[note#Heading]] reads "note › Heading" and [[#Heading]] reads "Heading", as in Obsidian;
+  // the raw "#" and "^" are addressing, not words
+  function wikiLabel(target){var at=target.indexOf("#");if(at<0)return target;var note=target.slice(0,at).trim(),sub=target.slice(at+1).replace(/^\^/,"").trim();return note?(sub?note+" › "+sub:note):sub;}
   function obsidianExtensions(){
     return [
       {name:"embed",level:"block",
@@ -135,7 +149,7 @@
         renderer:function(t){return embedHTML(t.target,t.alias,true);}},
       {name:"wikilink",level:"inline",
         start:function(s){var i=s.indexOf("[[");return i<0?undefined:i;},
-        tokenizer:function(s){var m=new RegExp("^\\[\\["+WIKI_RE).exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:(m[2]||m[1]).trim()};},
+        tokenizer:function(s){var m=new RegExp("^\\[\\["+WIKI_RE).exec(s);if(m)return{type:"wikilink",raw:m[0],target:m[1].trim(),text:m[2]?m[2].trim():wikiLabel(m[1].trim())};},
         renderer:function(t){return '<a class="wikilink internal-link" href="#" data-wiki="'+esc(t.target)+'" title="'+esc(t.target)+'">'+esc(t.text)+"</a>";}},
       {name:"mdmark",level:"inline",
         start:function(s){var i=s.indexOf("==");return i<0?undefined:i;},
@@ -182,6 +196,28 @@
   // ---- What changed since you last read --------------------------------------------
   // Blocks are what a reader sees as one unit: a paragraph, one list item, a heading,
   // a whole fence, a whole table. Rewrapping a paragraph is not a change.
+  // Large files render in chunks. A cut may fall only on a blank line outside a code fence
+  // or a $$ block: a fence split in two leaves its closing ``` to open a new fence, and
+  // everything after it renders as code. A block longer than `max` stays whole.
+  function renderChunks(body,max){
+    var source=String(body==null?"":body).split("\n"),half=Math.max(1,max>>1),lines=[],chunks=[],start=0,size=0,fence=null,math=false;
+    function cut(dropLast){chunks.push(lines.slice(start,dropLast?lines.length-1:lines.length).join("\n"));start=lines.length;size=0;}
+    for(var i=0;i<source.length;i++){
+      var line=source[i],marker=/^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
+      if(fence){lines.push(line);size+=line.length+1;if(marker&&marker[1][0]===fence[0]&&marker[1].length>=fence.length&&!/\S/.test(line.slice(line.indexOf(marker[1])+marker[1].length)))fence=null;continue;}
+      if(marker){lines.push(line);size+=line.length+1;fence=marker[1];continue;}
+      if(/^[ \t]*\$\$/.test(line)&&!/^[ \t]*\$\$.*\$\$[ \t]*$/.test(line)){lines.push(line);size+=line.length+1;math=!math;continue;}
+      if(math){lines.push(line);size+=line.length+1;continue;}
+      // a paragraph written as one enormous line (a transcript, an export) is broken at
+      // spaces; outside code a soft line break renders as the space it replaces
+      var pieces=[],at;while(line.length>half&&(at=line.lastIndexOf(" ",half))>0){pieces.push(line.slice(0,at));line=line.slice(at+1);}pieces.push(line);
+      for(var k=0;k<pieces.length;k++){lines.push(pieces[k]);size+=pieces[k].length+1;
+        // cut at a blank line once the chunk is full; with none in sight, at any line break
+        if(!pieces[k].trim()&&size>=max)cut(true);else if(size>=1.25*max)cut(false);}
+    }
+    var rest=lines.slice(start).join("\n");if(rest.trim()||!chunks.length)chunks.push(rest);
+    return chunks;
+  }
   function splitBlocks(md){
     var lines=parseFrontmatter(String(md==null?"":md)).body.split(/\r?\n/),out=[],buf=[],fence=null;
     function flush(){if(buf.length){out.push(buf.join("\n"));buf=[];}}
@@ -200,6 +236,19 @@
   function blockKey(src){return src.replace(/\s+/g," ").trim();}
   function words(t){return t.split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);}
   function similar(x,y){var a=words(x),b=words(y),seen={},common=0,i;for(i=0;i<a.length;i++)seen[a[i]]=(seen[a[i]]||0)+1;for(i=0;i<b.length;i++)if(seen[b[i]]>0){seen[b[i]]--;common++;}return common*2>=Math.max(a.length,b.length);}
+  // Word-level diff inside an edited block: LCS over words and the spaces between them,
+  // so the reader sees exactly which words the agent changed.
+  function wordDiff(before,after){
+    var a=String(before||"").split(/\s+/).filter(Boolean),b=String(after||"").split(/\s+/).filter(Boolean),n=a.length,m=b.length,i,j,out=[];
+    if(n*m>250000)return [{t:"del",w:before},{t:"ins",w:after}];
+    var dp=new Array(n+1);for(i=0;i<=n;i++)dp[i]=new Uint16Array(m+1);
+    for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+    function push(t,w){var last=out[out.length-1];if(last&&last.t===t)last.w+=" "+w;else out.push({t:t,w:w});}
+    for(i=0,j=0;i<n||j<m;){if(i<n&&j<m&&a[i]===b[j]){push("same",a[i]);i++;j++;}else if(i<n&&(j>=m||dp[i+1][j]>=dp[i][j+1])){push("del",a[i]);i++;}else{push("ins",b[j]);j++;}}
+    return out;
+  }
+  // Markdown source of a block reduced to the words a reader sees.
+  function plainBlock(src){return String(src||"").replace(/^[ \t]*(?:#{1,6}|[-*+]|\d+[.)]|>)[ \t]+/gm,"").replace(/!?\[([^\]]*)\]\([^)]*\)/g,"$1").replace(/[*_`~]+/g,"").replace(/\s+/g," ").trim();}
   function blockDiff(before,after){
     var a=splitBlocks(before),b=splitBlocks(after),ak=a.map(blockKey),bk=b.map(blockKey),n=a.length,m=b.length,pairs=[],i,j;
     if(n*m<=4000000){
@@ -226,6 +275,6 @@
     return {blocks:blocks,removed:removed,count:count};
   }
 
-  return {esc:esc,splitBlocks:splitBlocks,blockDiff:blockDiff,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
+  return {esc:esc,frontmatterDir:frontmatterDir,renderChunks:renderChunks,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
     extractMath:extractMath,preprocess:preprocess,restoreMath:restoreMath,voteDir:voteDir,parseFrontmatter:parseFrontmatter};
 });

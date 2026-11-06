@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import searchCore from "../src/search-core.cjs";
 
 test("normalizeSearch handles Arabic diacritics, tatweel, alef, and ya variants", () => {
-  assert.equal(searchCore.normalizeSearch("خُـطَّة"), "خطة");
+  assert.equal(searchCore.normalizeSearch("خُـطَّة"), "خطه");
   assert.equal(searchCore.normalizeSearch("إلى آفاق أُخرى"), "الي افاق اخري");
   assert.equal(searchCore.normalizeSearch("Markdown API"), "markdown api");
 });
@@ -68,4 +68,33 @@ test("records keep no per-character map, so large folders fit in memory", () => 
   assert.equal(record.contentMap, undefined);
   const [hit] = searchCore.searchRecords([record], "المطلوبة");
   assert.match(hit.snippet, /المَطلوبة/);
+});
+
+test("Arabic search folds what writers spell differently: digits, taa marbuta, hamza seats, Persian letters", async () => {
+  const { default: core } = await import("../src/search-core.cjs");
+  const same = (a, b) => assert.equal(core.normalizeSearch(a), core.normalizeSearch(b), `${a} ≠ ${b}`);
+  same("الفصل ١٢", "الفصل 12");
+  same("۲۰۲۶", "2026");
+  same("مدرسة", "مدرسه");
+  same("مسؤول", "مسوول");
+  same("مسئول", "مسيول");
+  same("کتاب", "كتاب");
+  same("فارسی", "فارسي");
+  same("مُعَلِّمٌ", "معلم");
+  assert.notEqual(core.normalizeSearch("كتب"), core.normalizeSearch("كتاب"));
+});
+
+test("each hit says whether its name matched or only its text, so a switcher can group them", () => {
+  const records = [
+    searchCore.createRecord({ path: "/plan.md", rel: "plan.md", mtimeMs: 1, content: "# خطة الإشعارات\nنص" }),
+    searchCore.createRecord({ path: "/notes/meeting.md", rel: "notes/meeting.md", mtimeMs: 2, content: "# اجتماع\nناقشنا الإشعارات اليوم" })
+  ];
+  const hits = searchCore.searchRecords(records, "الاشعارات", { mode: "all" });
+  assert.deepEqual(hits.map((hit) => [hit.path, hit.byName]), [["/plan.md", true], ["/notes/meeting.md", false]]);
+});
+
+test("snippets read as text, without Markdown syntax", () => {
+  const record = searchCore.createRecord({ path: "/m.md", rel: "m.md", mtimeMs: 1, content: "# اجتماع الفريق\n\n- ناقشنا **الإشعارات** و[الطابور](queue.md) و`notify.ts`\n" });
+  const [hit] = searchCore.searchRecords([record], "الاشعارات");
+  assert.equal(hit.snippet, "اجتماع الفريق ناقشنا الإشعارات والطابور وnotify.ts");
 });

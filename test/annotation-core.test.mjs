@@ -54,3 +54,14 @@ test("review notes carry suggested replacements and skip notes already sent", as
   assert.match(md, /\(no comment\)\n\nSuggested replacement:\n\n> ship one region\n> then the rest/);
   assert.doesNotMatch(md, /old round/);
 });
+
+test("CriticMarkup writes each note into the text where it belongs", () => {
+  const out = AnnotationCore.criticMarkup({ source: "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء.\n", annotations: [
+    { quote: "كل المناطق دفعة واحدة", note: "خطر كبير", suggestion: "منطقة واحدة أولًا", status: "attached" },
+    { quote: "نراقب الأخطاء", note: "كم ساعة؟", status: "attached" },
+    { quote: "نص **منسق** غير موجود حرفيًا", note: "بعيد", status: "attached" },
+  ] });
+  assert.match(out, /ننقل \{~~كل المناطق دفعة واحدة~>منطقة واحدة أولًا~~\}\{>>خطر كبير<<\}\./);
+  assert.match(out, /\{==نراقب الأخطاء==\}\{>>كم ساعة؟<<\}/);
+  assert.match(out, /---\n\n- \{==نص \*\*منسق\*\* غير موجود حرفيًا==\}\{>>بعيد<<\}/);
+});

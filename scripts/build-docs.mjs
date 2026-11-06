@@ -51,8 +51,16 @@ var SAMPLE=(document.getElementById("sample")||{}).textContent||"";
 $("fname").textContent="نموذج · متن";document.title="متن · Matn";
 cur="demo:sample";fileRels[cur]=cur;
 readerState=localSnapshot();renderCollections();
-// a shared link (#s=…) opens its document; otherwise the bundled sample
-if(!openSharedFromHash()){renderSafely(SAMPLE);applyAnnotations();}
+// a shared link (#s=…) opens its document; ?url=… or ?gh=owner/repo[/path] opens a public
+// Markdown file (GitHub serves raw files with CORS); otherwise the bundled sample
+function rawUrlFor(params){var gh=params.get("gh"),url=params.get("url");
+  if(gh){var m=/^([\\w.-]+)\\/([\\w.-]+)(?:\\/(.+))?$/.exec(gh.replace(/^https?:\\/\\/github\\.com\\//,""));if(!m||/^\\.+$/.test(m[1])||/^\\.+$/.test(m[2])||/(^|\\/)\\.\\.(\\/|$)/.test(m[3]||""))return null;return "https://raw.githubusercontent.com/"+m[1]+"/"+m[2]+"/HEAD/"+(m[3]||"README.md");}
+  if(url){var b=/^https:\\/\\/github\\.com\\/([\\w.-]+)\\/([\\w.-]+)\\/blob\\/(.+)$/.exec(url);if(b)return "https://raw.githubusercontent.com/"+b[1]+"/"+b[2]+"/"+b[3];return /^https:\\/\\//.test(url)?url:null;}
+  return null;}
+var remote=rawUrlFor(new URLSearchParams(location.search));
+if(openSharedFromHash()){}
+else if(remote){fetch(remote).then(function(r){if(!r.ok)throw new Error(String(r.status));return r.text();}).then(function(md){readLoose(decodeURIComponent(remote.split("/").pop()||"remote.md"),md);document.querySelectorAll("#doc img[src]").forEach(function(img){var src=img.getAttribute("src");if(!/^(?:[a-z]+:|\\/\\/|#)/i.test(src))img.src=new URL(src,remote).href;});}).catch(function(){showToast(T("remoteFailed"));renderSafely(SAMPLE);applyAnnotations();});}
+else{renderSafely(SAMPLE);applyAnnotations();}
 window.addEventListener("hashchange",function(){openSharedFromHash();});
 `; // file-open is handled by the app's own #fileinput listener
 s = s.slice(0, i) + boot + "\n" + s.slice(j);

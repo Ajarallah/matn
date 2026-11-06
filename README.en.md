@@ -5,7 +5,8 @@
 ### Arabic Markdown, the way it should read
 
 A local reader that lays Arabic out right-to-left and leaves code and English on
-their own axis, in a Mac-first Liquid Glass interface.
+their own axis, and where you review what coding agents write: highlight, note in
+the margin, then approve or ask for changes.
 
 **[▶ Try the live demo](https://ajarallah.github.io/matn/)** ·
 [Quick start](#quick-start) ·
@@ -15,7 +16,7 @@ their own axis, in a Mac-first Liquid Glass interface.
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-0f6d63.svg)](./LICENSE)
 [![release](https://img.shields.io/github/v/release/Ajarallah/matn?color=0f6d63&label=release)](https://github.com/Ajarallah/matn/releases)
-![node: >=18](https://img.shields.io/badge/node-%3E%3D18-0f6d63.svg)
+![node: >=22](https://img.shields.io/badge/node-%3E%3D22-0f6d63.svg)
 ![runtime deps: none](https://img.shields.io/badge/runtime%20deps-none-0f6d63.svg)
 
 </div>
@@ -42,7 +43,7 @@ npm install -g @ajarallah/matn
 matn README.md
 ```
 
-> Requires Node.js ≥ 18. Nothing else — no runtime dependencies, no build step, so
+> Requires Node.js ≥ 22. Nothing else — no runtime dependencies, no build step, so
 > installing takes about a second.
 
 **Run without installing:**
@@ -72,7 +73,7 @@ npm rm -g @ajarallah/matn
 
 **Reading**
 
-- 🫧 **Real Liquid Glass structure** — a floating library sidebar, separate inspector, and refractive toolbar groups above an opaque content layer, with reduced-transparency and reduced-motion fallbacks.
+- 🗒️ **Notes in the margin** — your notes sit beside the text they belong to, like a book's marginalia; on a phone they open with a tap.
 - 🪶 **True RTL** — the document follows its *dominant* language, so an Arabic file stays right-to-left even when a heading or line starts with Latin. Latin runs still read left-to-right within the line.
 - 🎨 **Four themes** — Light · Sepia · Dark · Night (OLED black); follows your system by default.
 - 🔤 **Arabic fonts, embedded** — System, Noto Naskh, Amiri, IBM Plex Sans Arabic, Tajawal (all SIL OFL, bundled, **offline**). Optional Thmanyah Display + Text.
@@ -116,11 +117,15 @@ npm rm -g @ajarallah/matn
 - 📦 **Zero runtime dependencies** — pure Node plus vendored assets, fully offline; never phones home.
 - 🔒 **Contained** — binds to `127.0.0.1`, serves only from the folder you opened, escapes raw HTML, and blocks unsafe URL schemes.
 - 📄 **Common Markdown formats** — opens `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd`,
-  `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, and `.qmd`.
+  `.mdwn`, `.mdtxt`, `.mdtext`, `.rmd`, `.qmd`, Cursor rules (`.mdc`), and `.mdx`.
 
 </details>
 
 ## Interface
+
+| Reviewing an agent's plan · notes in the margin |
+|---|
+| ![plan review](./assets/screenshot-review.png) |
 
 | Sepia · Amiri | Dark · syntax + math |
 |---|---|

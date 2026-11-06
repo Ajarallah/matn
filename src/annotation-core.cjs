@@ -59,5 +59,31 @@ function reviewMarkdown({ rel, source, annotations }) {
   return out.join("\n") + "\n";
 }
 
-return { createAnchor, reattach, reviewMarkdown };
+// CriticMarkup (criticmarkup.com): the notes written into the text itself, so any editor,
+// Marked, or an agent reads each note where it belongs. A suggestion becomes a substitution
+// {~~old~>new~~}, a note on a highlight {==text==}{>>note<<}. Quotes are rendered text; a quote
+// the source does not contain verbatim (it spans formatting) is listed at the end instead.
+function criticMarkup({ source, annotations }) {
+  let text = String(source || "");
+  const unplaced = [];
+  const clean = (value) => String(value || "").replace(/\r?\n+/g, " ").replace(/(<<|>>|~~|==|\{|\})/g, (m) => "\u200b" + m).trim();
+  const items = (annotations || []).filter((item) => item && item.quote && item.status !== "orphan")
+    .map((item) => ({ item, at: text.indexOf(item.quote) }))
+    .sort((a, b) => b.at - a.at);
+  for (const { item, at } of items) {
+    if (at < 0 || item.quote.includes("\n")) { unplaced.push(item); continue; }
+    const note = clean(item.note), suggestion = clean(item.suggestion);
+    const mark = suggestion ? `{~~${item.quote}~>${suggestion}~~}` : `{==${item.quote}==}`;
+    text = text.slice(0, at) + mark + (note ? `{>>${note}<<}` : "") + text.slice(at + item.quote.length);
+  }
+  const orphans = (annotations || []).filter((item) => item && item.status === "orphan");
+  const rest = unplaced.concat(orphans);
+  if (rest.length) {
+    text = text.replace(/\s*$/, "\n\n---\n\n");
+    for (const item of rest) text += `- {==${clean(item.quote)}==}${item.note ? `{>>${clean(item.note)}<<}` : ""}\n`;
+  }
+  return text;
+}
+
+return { createAnchor, reattach, reviewMarkdown, criticMarkup };
 });

@@ -247,3 +247,54 @@ test("tags agents write around reasoning become labelled blocks, attributes drop
   assert.match(html, /data-agent-tag="example">[\s\S]*<strong>bold<\/strong>[\s\S]*<\/section>/);
   assert.doesNotMatch(html, /onclick/);
 });
+
+test("word diff names exactly the words an edit changed", () => {
+  const parts = core.wordDiff("ننقل كل المناطق دفعة واحدة", "ننقل منطقة واحدة أولًا");
+  assert.deepEqual(parts.filter((p) => p.t === "del").map((p) => p.w.trim()), ["كل المناطق دفعة"]);
+  assert.deepEqual(parts.filter((p) => p.t === "ins").map((p) => p.w.trim()), ["منطقة", "أولًا"]);
+  assert.equal(core.plainBlock("- **نص** مع [رابط](x.md) و`كود`"), "نص مع رابط وكود");
+});
+
+test("front matter can state the document's direction", () => {
+  assert.equal(core.frontmatterDir([["dir", "rtl"]]), "rtl");
+  assert.equal(core.frontmatterDir([["direction", "LTR"]]), "ltr");
+  assert.equal(core.frontmatterDir([["lang", "ar-SA"]]), "rtl");
+  assert.equal(core.frontmatterDir([["lang", "en"]]), "ltr");
+  assert.equal(core.frontmatterDir([["title", "x"]]), null);
+  assert.equal(core.frontmatterDir([["lang", "not a code"]]), null);
+});
+
+test("wikilinks to a section read as words, not addresses", () => {
+  const render = obsidianMarked();
+  assert.match(render("[[ملاحظة#قسم]]"), />ملاحظة › قسم<\/a>/);
+  assert.match(render("[[#قسم]]"), />قسم<\/a>/);
+  assert.match(render("[[ملاحظة#^abc1]]"), />ملاحظة › abc1<\/a>/);
+  assert.match(render("[[ملاحظة#قسم|بديل]]"), />بديل<\/a>/);
+  assert.match(render("[[ملاحظة]]"), /data-wiki="ملاحظة"[^>]*>ملاحظة<\/a>/);
+});
+
+test("large files are cut only between blocks, never inside a code fence or a $$ block", async () => {
+  const { default: core } = await import("../src/render-core.cjs");
+  const fence = "```js\nconst a = 1;\n\nconst b = 2;\n\n\nconst c = 3;\n```";
+  const math = "$$\na = b\n\nc = d\n$$";
+  const body = ["# أ", "فقرة ".repeat(30), fence, "فقرة ".repeat(30), math, "نهاية"].join("\n\n");
+  const chunks = core.renderChunks(body, 40);
+  const words = (text) => text.replace(/\s+/g, " ").trim();
+  assert.equal(words(chunks.join("\n\n")), words(body), "nothing is lost");
+  for (const chunk of chunks) {
+    assert.equal((chunk.match(/^```/gm) || []).length % 2, 0, `a fence is split:\n${chunk}`);
+    assert.equal((chunk.match(/^\$\$/gm) || []).length % 2, 0, `a $$ block is split:\n${chunk}`);
+  }
+  assert.ok(chunks.length >= 4);
+  assert.deepEqual(core.renderChunks("قصير", 1024), ["قصير"]);
+  assert.deepEqual(core.renderChunks("", 1024), [""]);
+});
+
+test("a paragraph written as one huge line still renders in chunks", async () => {
+  const { default: core } = await import("../src/render-core.cjs");
+  const body = "# أ\n\n" + "كلمة عربية طويلة ".repeat(2000);
+  const chunks = core.renderChunks(body, 1024);
+  assert.ok(chunks.length > 10);
+  assert.ok(chunks.every((chunk) => chunk.length <= 1.75 * 1024 + 64), Math.max(...chunks.map((c) => c.length)));
+  assert.equal(chunks.join(" ").replace(/\s+/g, " ").trim(), body.replace(/\s+/g, " ").trim());
+});

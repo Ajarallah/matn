@@ -58,3 +58,16 @@ test("block references resolve to the block, and image embeds are not note links
   assert.deepEqual(LinkCore.references(records[0]).map((item) => [item.kind, item.target]), [["embed-image", "diagram.png"], ["wiki", "b"]]);
   assert.deepEqual(LinkCore.outgoing(records[0]).map((item) => item.target), ["b"]);
 });
+
+test("two notes with one name: the nearest to the linking note wins; Arabic names fold", () => {
+  const vault = [
+    SearchCore.createRecord({ path: "/v/a/plan.md", rel: "a/plan.md", content: "# A plan" }),
+    SearchCore.createRecord({ path: "/v/b/plan.md", rel: "b/plan.md", content: "# B plan" }),
+    SearchCore.createRecord({ path: "/v/b/notes.md", rel: "b/notes.md", content: "[[plan]]" }),
+    SearchCore.createRecord({ path: "/v/a/notes.md", rel: "a/notes.md", content: "[[plan]]" }),
+    SearchCore.createRecord({ path: "/v/مدرسة.md", rel: "مدرسة.md", content: "# x" }),
+  ];
+  assert.equal(LinkCore.resolve(vault, "/v/b/notes.md", "plan").rel, "b/plan.md");
+  assert.equal(LinkCore.resolve(vault, "/v/a/notes.md", "plan").rel, "a/plan.md");
+  assert.equal(LinkCore.resolve(vault, "/v/a/notes.md", "مدرسه").rel, "مدرسة.md");
+});

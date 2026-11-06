@@ -43,10 +43,13 @@ export function createPlatformActions({ platform = process.platform, run = runCo
     return run("xdg-open", [dirname(path)]);
   }
 
+  // With no editor named, macOS still has one: `open -t` hands the file to the user's default
+  // text editor (never to Matn, which is a viewer, not a text editor).
   async function openEditor(path) {
-    if (!editor) throw Object.assign(new Error("no external editor configured"), { code: "ENOEDITOR" });
-    return run(editor, [path], { detached: true });
+    if (editor) return run(editor, [path], { detached: true });
+    if (platform === "darwin") return run("open", ["-t", path]);
+    throw Object.assign(new Error("no external editor configured"), { code: "ENOEDITOR" });
   }
 
-  return { trash, reveal, openEditor };
+  return { trash, reveal, openEditor, canOpenEditor: Boolean(editor) || platform === "darwin" };
 }
