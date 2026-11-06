@@ -200,6 +200,19 @@
   function blockKey(src){return src.replace(/\s+/g," ").trim();}
   function words(t){return t.split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);}
   function similar(x,y){var a=words(x),b=words(y),seen={},common=0,i;for(i=0;i<a.length;i++)seen[a[i]]=(seen[a[i]]||0)+1;for(i=0;i<b.length;i++)if(seen[b[i]]>0){seen[b[i]]--;common++;}return common*2>=Math.max(a.length,b.length);}
+  // Word-level diff inside an edited block: LCS over words and the spaces between them,
+  // so the reader sees exactly which words the agent changed.
+  function wordDiff(before,after){
+    var a=String(before||"").split(/\s+/).filter(Boolean),b=String(after||"").split(/\s+/).filter(Boolean),n=a.length,m=b.length,i,j,out=[];
+    if(n*m>250000)return [{t:"del",w:before},{t:"ins",w:after}];
+    var dp=new Array(n+1);for(i=0;i<=n;i++)dp[i]=new Uint16Array(m+1);
+    for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+    function push(t,w){var last=out[out.length-1];if(last&&last.t===t)last.w+=" "+w;else out.push({t:t,w:w});}
+    for(i=0,j=0;i<n||j<m;){if(i<n&&j<m&&a[i]===b[j]){push("same",a[i]);i++;j++;}else if(i<n&&(j>=m||dp[i+1][j]>=dp[i][j+1])){push("del",a[i]);i++;}else{push("ins",b[j]);j++;}}
+    return out;
+  }
+  // Markdown source of a block reduced to the words a reader sees.
+  function plainBlock(src){return String(src||"").replace(/^[ \t]*(?:#{1,6}|[-*+]|\d+[.)]|>)[ \t]+/gm,"").replace(/!?\[([^\]]*)\]\([^)]*\)/g,"$1").replace(/[*_`~]+/g,"").replace(/\s+/g," ").trim();}
   function blockDiff(before,after){
     var a=splitBlocks(before),b=splitBlocks(after),ak=a.map(blockKey),bk=b.map(blockKey),n=a.length,m=b.length,pairs=[],i,j;
     if(n*m<=4000000){
@@ -226,6 +239,6 @@
     return {blocks:blocks,removed:removed,count:count};
   }
 
-  return {esc:esc,splitBlocks:splitBlocks,blockDiff:blockDiff,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
+  return {esc:esc,splitBlocks:splitBlocks,blockDiff:blockDiff,wordDiff:wordDiff,plainBlock:plainBlock,safeHref:safeHref,slug:slug,safeRenderer:safeRenderer,obsidianExtensions:obsidianExtensions,sliceSection:sliceSection,isImage:function(p){return IMAGE_RE.test(String(p||""));},
     extractMath:extractMath,preprocess:preprocess,restoreMath:restoreMath,voteDir:voteDir,parseFrontmatter:parseFrontmatter};
 });

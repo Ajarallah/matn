@@ -540,6 +540,9 @@ try {
   await reading.locator("#files a", { hasText: "vault.md" }).first().click();
   await reading.waitForSelector("#changesbar");
   assert.equal(await reading.locator("#doc .diff-changed").count(), 1);
+  // hovering an edited block shows the edit word by word
+  await reading.locator("#doc .diff-changed").first().hover();
+  assert.match(await reading.locator("#doc .diff-changed .diff-words ins").first().innerText(), /وفيه/);
   assert.equal(await reading.locator("#doc .diff-added").count(), 1);
   await reading.locator("#changesbar .changes-read").click();
   assert.equal(await reading.locator("#changesbar").count(), 0);

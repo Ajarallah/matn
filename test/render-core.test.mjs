@@ -247,3 +247,10 @@ test("tags agents write around reasoning become labelled blocks, attributes drop
   assert.match(html, /data-agent-tag="example">[\s\S]*<strong>bold<\/strong>[\s\S]*<\/section>/);
   assert.doesNotMatch(html, /onclick/);
 });
+
+test("word diff names exactly the words an edit changed", () => {
+  const parts = core.wordDiff("ننقل كل المناطق دفعة واحدة", "ننقل منطقة واحدة أولًا");
+  assert.deepEqual(parts.filter((p) => p.t === "del").map((p) => p.w.trim()), ["كل المناطق دفعة"]);
+  assert.deepEqual(parts.filter((p) => p.t === "ins").map((p) => p.w.trim()), ["منطقة", "أولًا"]);
+  assert.equal(core.plainBlock("- **نص** مع [رابط](x.md) و`كود`"), "نص مع رابط وكود");
+});
