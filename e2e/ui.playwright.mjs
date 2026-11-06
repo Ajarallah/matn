@@ -610,6 +610,12 @@ try {
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("عنوان"));
   assert.equal(await reading.locator("#doc").getAttribute("dir"), "ltr");
 
+  // A file written just now is at the top of "recently changed".
+  await writeFile(join(root, "just-written.md"), "# كتبه الوكيل الآن\n");
+  await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "vault.md"))}`);
+  await reading.waitForSelector("#recent a");
+  assert.equal(await reading.locator("#recent a .recent-name").first().innerText(), "just-written.md");
+
   // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
   const planFile = join(root, "gate-plan.md");
   await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");

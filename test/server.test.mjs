@@ -48,7 +48,9 @@ test("file API only serves markdown under the configured root", async (t) => {
 
   const listed = await fetch(`${base}/api/list?dir=${enc(root)}`);
   assert.equal(listed.status, 200);
-  assert.deepEqual(await listed.json(), [{ path: join(root, "notes", "a.md"), rel: "notes/a.md" }]);
+  const listedFiles = await listed.json();
+  assert.deepEqual(listedFiles.map(({ path, rel }) => ({ path, rel })), [{ path: join(root, "notes", "a.md"), rel: "notes/a.md" }]);
+  assert.ok(listedFiles[0].mtime > 0, "each file carries its modification time");
 });
 
 test("exposes its containment root and default target", async (t) => {

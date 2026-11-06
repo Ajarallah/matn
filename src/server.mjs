@@ -522,7 +522,7 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       if (!dir || !existsSync(dir) || !withinRoot(dir)) return send(400, "application/json", "[]");
       const root = resolve(dir);
       ensureWatch(root, true);
-      const files = listMd(root).map((p) => ({ path: p, rel: relative(root, p).split(sep).join("/") }));
+      const files = listMd(root).map((p) => { let mtime = 0; try { mtime = statSync(p).mtimeMs; } catch {} return { path: p, rel: relative(root, p).split(sep).join("/"), mtime }; });
       scheduleIndex(files, root);
       stateStore.updateWorkspace(rootReal, {}).catch(() => {});
       return send(200, "application/json", JSON.stringify(files));
