@@ -45,13 +45,15 @@ function lineOf(source, quote) {
   return at < 0 ? 0 : text.slice(0, at).split("\n").length;
 }
 function reviewMarkdown({ rel, source, annotations }) {
-  const items = (annotations || []).slice().map((item) => ({ ...item, line: item.status === "orphan" ? 0 : lineOf(source, item.quote) }))
+  const items = (annotations || []).filter((item) => !item.sentAt).map((item) => ({ ...item, line: item.status === "orphan" ? 0 : lineOf(source, item.quote) }))
     .sort((a, b) => (a.line || Infinity) - (b.line || Infinity));
   const out = [`# Review: ${rel}`, "", `${items.length} ${items.length === 1 ? "note" : "notes"} on this file. Each quotes the text it is about; line numbers are for the file as it is now.`];
   items.forEach((item, index) => {
     const where = [item.line ? `line ${item.line}` : "", item.heading ? `under "${item.heading}"` : ""].filter(Boolean).join(", ");
     out.push("", `## ${index + 1}.${where ? " " + where.charAt(0).toUpperCase() + where.slice(1) : ""}`, "", ...String(item.quote).trim().split(/\r?\n/).map((line) => "> " + line.trim()), "");
-    out.push(item.note && item.note.trim() ? item.note.trim() : "(highlighted, no comment)");
+    const suggestion = String(item.suggestion || "").trim();
+    out.push(item.note && item.note.trim() ? item.note.trim() : suggestion ? "(no comment)" : "(highlighted, no comment)");
+    if (suggestion) out.push("", "Suggested replacement:", "", ...suggestion.split(/\r?\n/).map((line) => "> " + line));
     if (item.status === "orphan") out.push("", "_The quoted text is no longer in the file._");
   });
   return out.join("\n") + "\n";

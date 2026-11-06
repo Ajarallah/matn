@@ -49,7 +49,7 @@ function cleanAnnotation(value) {
     id: value.id.slice(0, 120), path: value.path.slice(0, 1000), quote: value.quote.slice(0, 5000),
     prefix: String(value.prefix || "").slice(-100), suffix: String(value.suffix || "").slice(0, 100), heading: String(value.heading || "").slice(0, 240),
     color: ["yellow", "green", "blue", "rose"].includes(value.color) ? value.color : "yellow", note: String(value.note || "").slice(0, 20000),
-    status: value.status === "orphan" ? "orphan" : "attached", createdAt: Number(value.createdAt) || Date.now(), updatedAt: Number(value.updatedAt) || Date.now()
+    status: value.status === "orphan" ? "orphan" : "attached", suggestion: String(value.suggestion || "").slice(0, 20000), sentAt: Number(value.sentAt) || 0, createdAt: Number(value.createdAt) || Date.now(), updatedAt: Number(value.updatedAt) || Date.now()
   };
 }
 

@@ -670,11 +670,11 @@ test("a review waits for the page and hands the notes to whoever asked", async (
   assert.deepEqual(await sent.json(), { delivered: true });
   const got = await waiting;
   assert.equal(got.status, 200);
-  assert.equal(await got.text(), "# Review: plan.md\n");
+  assert.deepEqual(await got.json(), { decision: "send", markdown: "# Review: plan.md\n" });
 
   const late = "b".repeat(32);
-  await send({ origin: base, "x-matn-session": token }, { id: late, markdown: "later" });
-  assert.equal(await (await fetch(`${base}/api/review-wait?id=${late}`)).text(), "later");
+  await send({ origin: base, "x-matn-session": token }, { id: late, markdown: "later", decision: "bogus" });
+  assert.deepEqual(await (await fetch(`${base}/api/review-wait?id=${late}`)).json(), { decision: "send", markdown: "later" });
   assert.equal((await fetch(`${base}/api/review-wait?id=nope`)).status, 400);
 });
 
@@ -691,4 +691,46 @@ test("links from a single opened file resolve to nearby notes without a folder i
   assert.equal(body.rel, "ref.md");
   assert.equal(body.heading.id, "^key");
   assert.equal((await fetch(`${base}/api/resolve?from=${enc(join(root, "plan.md"))}&target=${enc("../../etc/passwd")}`)).status, 404);
+});
+
+test("a review decision reaches the agent and the reviewed text becomes the seen copy", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-decision-")), dataDir = await mkdtemp(join(tmpdir(), "matn-decision-data-"));
+  const plan = join(root, "plan.md");
+  await writeFile(plan, "# plan v1\n", "utf8");
+  const { createStateStore } = await import("../src/state-store.mjs");
+  const { realpath } = await import("node:fs/promises");
+  await createStateStore({ dataDir }).updateWorkspace(await realpath(root), { annotations: [{ id: "n1", path: "plan.md", quote: "plan v1", note: "why?" }] });
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root, dataDir });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); await rm(dataDir, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`, id = "c".repeat(32);
+  const token = /<meta name="matn-session" content="([a-f0-9]{64})">/.exec(await (await fetch(base + "/")).text())[1];
+  const sent = await fetch(`${base}/api/review`, { method: "POST", headers: { "content-type": "application/json", origin: base, "x-matn-session": token }, body: JSON.stringify({ id, markdown: "# Review: plan.md\n", decision: "changes", path: plan }) });
+  assert.equal(sent.status, 200);
+  assert.deepEqual(await (await fetch(`${base}/api/review-wait?id=${id}`)).json(), { decision: "changes", markdown: "# Review: plan.md\n" });
+  await writeFile(plan, "# plan v2\n", "utf8");
+  assert.equal(await (await fetch(`${base}/api/seen?path=${encodeURIComponent(plan)}`)).text(), "# plan v1\n");
+  const state = await (await fetch(`${base}/api/state`)).json();
+  assert.ok(state.workspace.annotations[0].sentAt > 0, "sent notes are stamped so they are not sent twice");
+});
+
+test("follow shows a file in the open page, and only the matn command may ask", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "matn-follow-"));
+  await writeFile(join(root, "a.md"), "# a\n", "utf8");
+  const server = await startServer({ port: 0, host: "127.0.0.1", defaultArg: root });
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = (body, headers = {}) => fetch(`${base}/api/follow`, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+
+  assert.deepEqual(await (await post({ path: join(root, "a.md") })).json(), { delivered: 0 });
+  const events = await fetch(`${base}/api/events`);
+  const reader = events.body.getReader();
+  await reader.read();
+  assert.deepEqual(await (await post({ path: join(root, "a.md") })).json(), { delivered: 1 });
+  let text = "";
+  while (!text.includes("follow")) text += new TextDecoder().decode((await reader.read()).value);
+  assert.match(text, /"type":"follow","path":"[^"]*a\.md"/);
+  await reader.cancel();
+  assert.equal((await post({ path: join(root, "a.md") }, { origin: base })).status, 403);
+  assert.equal((await post({ path: join(root, "a.md") }, { "sec-fetch-site": "same-origin" })).status, 403);
+  assert.equal((await post({ path: join(tmpdir(), "elsewhere.md") })).status, 400);
 });

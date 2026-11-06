@@ -1,0 +1,3 @@
+#!/bin/sh
+# Puts `matn` on the agent's PATH when Matn is installed as a Claude Code plugin.
+exec node "$(dirname "$0")/matn.mjs" "$@"

@@ -541,8 +541,44 @@ try {
   assert.equal(await reading.locator("#changesbar").count(), 0);
   assert.equal(await reading.locator("#doc .diff-added, #doc .diff-changed").count(), 0);
 
+  // Plan gate: comment with a suggestion, request changes, then see the revision against the notes.
+  const planFile = join(root, "gate-plan.md");
+  await writeFile(planFile, "# خطة\n\nننقل كل المناطق دفعة واحدة.\n\nنراقب الأخطاء ساعة.\n");
+  const gateId = "d".repeat(32), gateUrl = (id) => `${base}/?path=${encodeURIComponent(planFile)}&review=${id}&gate=1`;
+  await reading.goto(gateUrl(gateId));
+  await reading.waitForSelector("#reviewapprove:not([hidden])");
+  assert.equal(await reading.locator("#reviewsend").isDisabled(), true, "request changes needs a note");
+  await selectText(reading, "دفعة واحدة");
+  await reading.locator('#selectiontools [data-selection-action="note"]').click();
+  assert.equal(await reading.locator("#notesuggestbox").isHidden(), false);
+  await reading.fill("#notetext", "خطر كبير");
+  await reading.fill("#notesuggest", "منطقة واحدة أولًا");
+  await reading.locator("#notesave").click();
+  const gateWait = fetch(`${base}/api/review-wait?id=${gateId}`).then((r) => r.json());
+  await reading.locator("#reviewsend").click();
+  const gateResult = await gateWait;
+  assert.equal(gateResult.decision, "changes");
+  assert.match(gateResult.markdown, /خطر كبير[\s\S]*Suggested replacement:\n\n> منطقة واحدة أولًا/);
+  await writeFile(planFile, "# خطة\n\nننقل منطقة واحدة أولًا ثم البقية.\n\nنراقب الأخطاء ساعة.\n");
+  await reading.goto(gateUrl("e".repeat(32)));
+  await reading.waitForSelector("#changesbar");
+  assert.match(await reading.locator("#changesbar .changes-label").innerText(), /ملاحظاتك السابقة: تغيّر نص 1 من 1/);
+  assert.equal(await reading.locator("#reviewsend").isDisabled(), true, "notes already sent are not sent again");
+  const approveWait = fetch(`${base}/api/review-wait?id=${"e".repeat(32)}`).then((r) => r.json());
+  await reading.locator("#reviewapprove").click();
+  assert.match(await reading.locator("#reviewapprove").innerText(), /للتأكيد/, "approving asks for a second press");
+  await reading.locator("#reviewapprove").click();
+  assert.equal((await approveWait).decision, "approve");
+
+  // `matn <file>` on a running reader shows the file in the open page.
+  await reading.goto(`${base}/?path=${encodeURIComponent(planFile)}`);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("خطة"));
+  const followed = await fetch(`${base}/api/follow`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: join(root, "vault.md") }) }).then((r) => r.json());
+  assert.ok(followed.delivered >= 1);
+  await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("خزنة"));
+
   await readingContext.close();
-  console.log("playwright: Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
