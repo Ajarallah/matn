@@ -697,6 +697,16 @@ test("the page reports whether it still shows a review, and other sites cannot",
   await fetch(`${base}/api/review-presence?id=${id}&state=gone`, { method: "POST" });
   assert.ok((await ask()).gone > 0, "sendBeacon's POST is accepted");
   assert.equal((await fetch(`${base}/api/review-presence?id=x`)).status, 400);
+
+  // the page's live-reload stream carries the review: closing it is the tab closing
+  const streamed = "d".repeat(32), controller = new AbortController();
+  const stream = await fetch(`${base}/api/events?review=${streamed}`, { signal: controller.signal });
+  const ask2 = async () => (await fetch(`${base}/api/review-presence?id=${streamed}`)).json();
+  assert.ok((await ask2()).seen > 0);
+  assert.equal((await ask2()).gone, 0);
+  controller.abort(); await stream.body?.cancel().catch(() => {});
+  for (let i = 0; i < 50 && !(await ask2()).gone; i++) await new Promise((r) => setTimeout(r, 20));
+  assert.ok((await ask2()).gone > 0, "a dropped stream marks the review gone");
 });
 
 test("links from a single opened file resolve to nearby notes without a folder index", async (t) => {

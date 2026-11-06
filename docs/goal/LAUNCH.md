@@ -27,16 +27,3 @@ cd ~/Developer/experiments/matn && git switch main && git pull && npm test && np
 ```text
 /plugin install matn --marketplace Ajarallah/matn
 ```
-
-## 3. فحص EPUB بأداة epubcheck (اختياري)
-
-الأداة تحتاج Java، وهي غير مثبّتة على جهازك. صدّر أي ملف إلى EPUB من قائمة «حفظ»، ثم:
-
-```bash
-brew install epubcheck && epubcheck ~/Downloads/PLAN.epub
-```
-
-## 4. فحوص تحتاج جهازك (اختيارية)
-
-- **إغلاق تبويب المراجعة في Chrome الحقيقي:** شغّل `matn review PLAN.md`، ثم أغلق التبويب. المتوقع أن يخرج الأمر خلال نحو 10 ثوانٍ برسالة «the review page was closed». في المحاكاة الخفية لا يصل حدث الإغلاق، فيخرج بعد 5 دقائق.
-- **«افتح في المحرر» بلا إعداد:** من قائمة الملف في متن. المتوقع أن يفتح الملف في محرر النصوص الافتراضي (`open -t`).

@@ -444,7 +444,9 @@ try {
   for (const id of headingIds) assert.ok(epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id}`) || epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id.replace(/&/g, "&amp;")}`), `contents miss #${id}`);
   assert.match(epub["OEBPS/content.opf"], /href="style.css" media-type="text\/css"/);
   assert.match(chapter, /<link rel="stylesheet"[^>]*href="style.css"/);
-  assert.match(epub["OEBPS/style.css"], /pre\{direction:ltr/);
+  // epubcheck: no direction in EPUB CSS (code takes dir="ltr"), and a real UUID
+  assert.doesNotMatch(epub["OEBPS/style.css"], /direction|unicode-bidi/);
+  assert.match(epub["OEBPS/content.opf"], /urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</);
   assert.match(chapter, /<hr\s*\/>/);
   assert.match(chapter, /<br\s*\/>/);
   assert.match(chapter, /<img[^>]*\/>/);

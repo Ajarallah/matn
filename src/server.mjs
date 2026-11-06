@@ -689,6 +689,14 @@ export function startServer({ port = 4711, host = "127.0.0.1", defaultArg = proc
       res.writeHead(200, Object.assign({ "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }, securityHeaders));
       res.write("retry: 2000\n\n");
       clients.add(res);
+      // A page showing a review names it on its live-reload stream. Closing the tab drops the
+      // connection at once, which unload events cannot promise: that is the reliable "gone".
+      const review = u.searchParams.get("review") || "";
+      if (REVIEW_ID.test(review)) {
+        const entry = reviewPresence.get(review) || { seen: 0, gone: 0 };
+        entry.open = (entry.open || 0) + 1; entry.seen = Date.now(); reviewPresence.set(review, entry);
+        req.on("close", () => { entry.open--; if (entry.open <= 0) entry.gone = Date.now(); });
+      }
       req.on("close", () => clients.delete(res));
       return;
     }

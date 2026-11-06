@@ -1987,15 +1987,19 @@ function exportFailed(){showToast(T("exportFailed"));}
 // stylesheet keeps code left to right and tables ruled in Apple Books and Thorium.
 function epubFiles(){
   var dir=$("doc").getAttribute("dir")||"rtl",lang=dir==="rtl"?"ar":"en",title=esc($("fname").textContent),html=docHTML();
-  var css=html.slice(html.indexOf("<style>")+7,html.indexOf("</style>")).replace(/body\{[^}]*\}/,"body{line-height:1.7}");
-  var body=toXhtmlBody(html.split("<body>")[1].replace("</body></html>",""));
+  // EPUB forbids `direction` and `unicode-bidi` in style sheets; code keeps its direction through dir="ltr" instead
+  var css=html.slice(html.indexOf("<style>")+7,html.indexOf("</style>")).replace(/body\{[^}]*\}/,"body{line-height:1.7}").replace(/(?:direction|unicode-bidi):[^;}]*;?/g,"");
+  var body=toXhtmlBody(html.split("<body>")[1].replace("</body></html>","")).replace(/<pre(?![^>]*\sdir=)/g,'<pre dir="ltr"')
+    // XHTML that epubcheck accepts: Mermaid's labels put <p> inside <span>, and KaTeX leaves spaces between MathML elements
+    .replace(/(<span class="nodeLabel"[^>]*>)<p>([\s\S]*?)<\/p>/g,"$1$2").replace(/<math[\s\S]*?<\/math>/g,function(m){return m.replace(/>\s+</g,"><");});
+  var props=(/<svg[\s>]/.test(body)?["svg"]:[]).concat(/<math[\s>]/.test(body)?["mathml"]:[]).join(" ");
   var heads=[];$("doc").querySelectorAll("h1[id],h2[id]").forEach(function(h){var text=(h.dataset.title||h.textContent).trim();if(text)heads.push({level:h.tagName==="H1"?1:2,id:h.id,text:text});});
   var items="",open=false;heads.forEach(function(h,k){var li='<li><a href="doc.xhtml#'+esc(h.id)+'">'+esc(h.text)+'</a>';if(h.level===1||k===0){if(open)items+="</ol></li>";items+=li;open=false;var next=heads[k+1];if(next&&next.level===2){items+="<ol>";open=true;}else items+="</li>";}else items+=li+"</li>";});if(open)items+="</ol></li>";
   if(!items)items='<li><a href="doc.xhtml">'+title+'</a></li>';
   var head='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="'+lang+'" lang="'+lang+'" dir="'+dir+'"><head><meta charset="utf-8"/><title>'+title+'</title><link rel="stylesheet" type="text/css" href="style.css"/></head>';
   return {
     "META-INF/container.xml":'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
-    "OEBPS/content.opf":'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'" xml:lang="'+lang+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:matn-'+Date.now()+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+lang+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>',
+    "OEBPS/content.opf":'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'" xml:lang="'+lang+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():"00000000-0000-4000-8000-"+("000000000000"+Date.now().toString(16)).slice(-12))+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+lang+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"'+(props?' properties="'+props+'"':'')+'/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>',
     "OEBPS/nav.xhtml":head+'<body><nav epub:type="toc" id="toc"><h1>'+esc(T("contents"))+'</h1><ol>'+items+'</ol></nav></body></html>',
     "OEBPS/style.css":css,
     "OEBPS/doc.xhtml":head+"<body>"+body+"</body></html>"
