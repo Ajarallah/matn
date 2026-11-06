@@ -19,3 +19,11 @@ cd ~/Developer/experiments/matn && git switch main && git pull && npm test && np
 ```text
 /plugin install matn --marketplace Ajarallah/matn
 ```
+
+## 3. فحص EPUB بأداة epubcheck (اختياري)
+
+الأداة تحتاج Java، وهي غير مثبّتة على جهازك. صدّر أي ملف إلى EPUB من قائمة «حفظ»، ثم:
+
+```bash
+brew install epubcheck && epubcheck ~/Downloads/PLAN.epub
+```

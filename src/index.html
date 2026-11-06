@@ -699,7 +699,7 @@ html[dir="ltr"] :is(.quick-title,.quick-path,.quick-snippet,.collection-title,.c
         <div class="menu" id="exportmenu" role="menu">
           <button role="menuitem" data-export="pdf">PDF</button>
           <button role="menuitem" data-export="html">HTML</button>
-          <button role="menuitem" data-export="docx">Word (docx)</button>
+          <button role="menuitem" data-export="docx" data-i18n-attr="title:docxNote">Word (docx)</button>
           <button role="menuitem" data-export="epub">EPUB</button>
           <button role="menuitem" data-export="md">Markdown</button>
           <button role="menuitem" data-export="critic">ملاحظاتي داخل النص (CriticMarkup)</button>
@@ -845,6 +845,8 @@ Object.assign(I18N.ar,{toggleLibrary:"إظهار المكتبة أو إخفاؤ�
 Object.assign(I18N.en,{toggleLibrary:"Show or hide the library",focusMode:"Focus mode",sourceView:"Markdown source",prevChapter:"Previous chapter",nextChapter:"Next chapter",bookChapters:"Book chapters",inspectorTabs:"Details sections",selectionActions:"Selection actions",readingSettings:"Reading settings",smaller:"Smaller",larger:"Larger",tighter:"Less spacing",looser:"More spacing",resetDefaults:"Restore defaults",previous:"Previous",next:"Next",close:"Close",closeEsc:"Close (Esc)",notePlaceholder:"Write your note…",highlightColor:"Highlight colour",findInDoc:"Find in document",fontSystem:"System font · interface",fontNaskh:"Noto Naskh · long reading",fontAmiri:"Amiri · classic Naskh",fontPlex:"IBM Plex · modern",fontTajawal:"Tajawal · geometric"});
 Object.assign(I18N.ar,{folderCount:"ملفات Markdown في هذا المجلد: {n}",openFile:"افتح",latestFiles:"أحدث الملفات"});
 Object.assign(I18N.en,{folderCount:"Markdown files in this folder: {n}",openFile:"Open",latestFiles:"Latest files"});
+Object.assign(I18N.ar,{exportFailed:"تعذّر التصدير. أعد المحاولة.",docxNote:"يفتحه Microsoft Word. أما Pages وGoogle Docs فلا يقرآن طريقة الحفظ هذه"});
+Object.assign(I18N.en,{exportFailed:"Export failed. Try again.",docxNote:"Opens in Microsoft Word. Pages and Google Docs cannot read this kind of file"});
 Object.assign(I18N.ar,{remoteFailed:"تعذّر جلب الملف من الرابط.",recentlyChanged:"تغيّر حديثًا",exportNotes:"المفضلة والتعليقات (.md)",exportCritic:"ملاحظاتي داخل النص (CriticMarkup)",scStep:"الكتلة التالية والسابقة",lhLabels:"متقارب|مريح|واسع",finishedReading:"أنهيته",stoppedHere:"هنا توقفت",sizeLabels:"صغير جدًا|صغير|متوسط|كبير|كبير جدًا",shareLink:"انسخ رابط مشاركة",shareCopied:"نُسخ الرابط. المستند داخل الرابط نفسه، ولا يُرفع إلى أي خادم.",shareLong:"نُسخ الرابط، لكنه طويل جدًا وقد لا تقبله بعض التطبيقات.",shareBroken:"الرابط المشترك تالف أو ناقص.",shareUnsupported:"هذا المتصفح لا يدعم الضغط اللازم للمشاركة.",orphanNote:"النص الذي كانت عليه لم يعد في الملف",copyHeadingLink:"انسخ رابط العنوان",noResults:"لا نتائج",changedShort:"تغيّر",fontSizeLabel:"حجم الخط",lineHeightLabel:"تباعد الأسطر",notMarkdown:"هذا الملف ليس Markdown، فلا يفتحه متن",noteDiscard:"تجاهل الملاحظة التي كتبتها؟",approveConfirm:"اضغط مرة أخرى للتأكيد",reviewStored:"حُفظت ملاحظاتك؛ تصل إلى الوكيل حين يطلبها",remoteImage:"صورة من الإنترنت لا يحمّلها متن حفاظًا على خصوصيتك؛ انقر لفتحها",suggestLabel:"نص بديل تقترحه (اختياري)",reviewGateHint:"وافق، أو ظلّل ما تريد تغييره",suggestHint:"اكتب النص الذي تريده مكان المظلَّل",approvePlan:"وافق على الخطة",requestChanges:"اطلب تعديلًا",planApproved:"وافقت على الخطة؛ سيبدأ الوكيل التنفيذ",noteChanged:"تغيّر",noteSame:"لم يتغيّر",notesTouched:"ملاحظاتك السابقة: تغيّر نص {n} من {of}",followed:"فُتح هذا الملف من الطرفية"});
 Object.assign(I18N.en,{remoteFailed:"Could not fetch the file from that link.",recentlyChanged:"Recently changed",exportNotes:"Favorites and notes (.md)",exportCritic:"My notes inside the text (CriticMarkup)",scStep:"Next and previous block",lhLabels:"Tight|Comfortable|Airy",finishedReading:"Finished",stoppedHere:"You stopped here",sizeLabels:"Tiny|Small|Medium|Large|Huge",shareLink:"Copy share link",shareCopied:"Link copied. The document lives inside the link; nothing is uploaded.",shareLong:"Link copied, but it is very long; some apps may cut it.",shareBroken:"This shared link is damaged or incomplete.",shareUnsupported:"This browser cannot compress the document for sharing.",orphanNote:"The text it was on is no longer in the file",copyHeadingLink:"Copy the heading link",noResults:"No results",changedShort:"changed",fontSizeLabel:"Font size",lineHeightLabel:"Line spacing",notMarkdown:"This file is not Markdown, so Matn does not open it",noteDiscard:"Discard the note you typed?",approveConfirm:"Press again to confirm",reviewStored:"Your notes are saved; the agent gets them when it asks",remoteImage:"Matn does not load images from the internet, for privacy; click to open it",suggestLabel:"Suggested replacement (optional)",reviewGateHint:"Approve, or highlight what should change",suggestHint:"The text you want instead of the highlight",approvePlan:"Approve plan",requestChanges:"Request changes",planApproved:"Plan approved; the agent will start",noteChanged:"changed",noteSame:"unchanged",notesTouched:"your earlier notes: {n} of {of} changed",followed:"Opened from the terminal"});
 Object.assign(I18N.ar,{changeAdded:"جديد",changeEdited:"عُدِّل",changeRemoved:"حُذف",embedMissing:"غير موجودة",reviewDone:"أُرسلت"});
@@ -1875,24 +1877,38 @@ function docHTML(){
   var css="body{font-family:"+(FONTS[S.font]||FONTS.system)+";line-height:"+S.lh+";font-size:"+S.size+"px;max-width:46em;margin:2em auto;padding:0 1.5em;color:#1b1a17;background:#fff}pre{direction:ltr;text-align:left;background:#f4f3ee;padding:1em;border-radius:8px;overflow-x:auto}code{background:#eee;padding:.1em .35em;border-radius:4px}blockquote{border-inline-start:2px solid #999;margin-inline-start:0;padding:.2em 1em;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.4em .8em}img,svg{max-width:100%}";
   return "<!doctype html><html lang=\""+(dir==="rtl"?"ar":"en")+"\" dir=\""+dir+"\"><head><meta charset=\"utf-8\"><title>"+esc($("fname").textContent)+"</title><style>"+css+"</style></head><body>"+exportableDoc().replace(/<button class=\"copybtn\"[^<]*<\/button>/g,"")+"</body></html>";
 }
+function exportFailed(){showToast(T("exportFailed"));}
+// An EPUB that reads like a book: its contents list the document's headings, and the
+// stylesheet keeps code left to right and tables ruled in Apple Books and Thorium.
+function epubFiles(){
+  var dir=$("doc").getAttribute("dir")||"rtl",lang=dir==="rtl"?"ar":"en",title=esc($("fname").textContent),html=docHTML();
+  var css=html.slice(html.indexOf("<style>")+7,html.indexOf("</style>")).replace(/body\{[^}]*\}/,"body{line-height:1.7}");
+  var body=toXhtmlBody(html.split("<body>")[1].replace("</body></html>",""));
+  var heads=[];$("doc").querySelectorAll("h1[id],h2[id]").forEach(function(h){var text=(h.dataset.title||h.textContent).trim();if(text)heads.push({level:h.tagName==="H1"?1:2,id:h.id,text:text});});
+  var items="",open=false;heads.forEach(function(h,k){var li='<li><a href="doc.xhtml#'+esc(h.id)+'">'+esc(h.text)+'</a>';if(h.level===1||k===0){if(open)items+="</ol></li>";items+=li;open=false;var next=heads[k+1];if(next&&next.level===2){items+="<ol>";open=true;}else items+="</li>";}else items+=li+"</li>";});if(open)items+="</ol></li>";
+  if(!items)items='<li><a href="doc.xhtml">'+title+'</a></li>';
+  var head='<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="'+lang+'" lang="'+lang+'" dir="'+dir+'"><head><meta charset="utf-8"/><title>'+title+'</title><link rel="stylesheet" type="text/css" href="style.css"/></head>';
+  return {
+    "META-INF/container.xml":'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
+    "OEBPS/content.opf":'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'" xml:lang="'+lang+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:matn-'+Date.now()+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+lang+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>',
+    "OEBPS/nav.xhtml":head+'<body><nav epub:type="toc" id="toc"><h1>'+esc(T("contents"))+'</h1><ol>'+items+'</ol></nav></body></html>',
+    "OEBPS/style.css":css,
+    "OEBPS/doc.xhtml":head+"<body>"+body+"</body></html>"
+  };
+}
 function doExport(kind){
   if(kind==="pdf"){window.print();return;}
   if(kind==="notes"){var workspace=readerState.workspace||{},lines=["# "+T("favorites")+" و"+T("annotations"),"","## "+T("favorites"),""];(workspace.favorites||[]).forEach(function(item){var label=item.heading||item.quote||item.path,href=item.path+(item.heading?"#"+item.heading:"");lines.push("- ["+label.replace(/\]/g,"\\]")+"]("+href+")");if(item.quote)lines.push("  > "+item.quote.replace(/\n/g," "));});lines.push("","## "+T("annotations"),"");(workspace.annotations||[]).forEach(function(item){lines.push("### ["+(item.heading||item.path)+"]("+item.path+(item.heading?"#"+item.heading:"")+")","","> "+item.quote.replace(/\n/g," "),"");if(item.note)lines.push(item.note,"");if(item.status==="orphan")lines.push("_"+T("orphanNote")+"_","");});saveBlob(new Blob([lines.join("\n")],{type:"text/markdown;charset=utf-8"}),"matn-notes.md");return;}
   if(kind==="md"){saveBlob(new Blob([lastMD],{type:"text/markdown"}),fname("md"));return;}
   if(kind==="critic"){saveBlob(new Blob([MatnAnnotations.criticMarkup({source:lastMD,annotations:fileAnnotations(true)})],{type:"text/markdown"}),fname("critic.md"));return;}
   if(kind==="html"){saveBlob(new Blob([docHTML()],{type:"text/html"}),fname("html"));return;}
-  if(kind==="docx"){loadScriptOnce(DOCX_SRC).then(function(){saveBlob(window.htmlDocx.asBlob(docHTML()),fname("docx"));}).catch(function(){});return;}
+  if(kind==="docx"){loadScriptOnce(DOCX_SRC).then(function(){saveBlob(window.htmlDocx.asBlob(docHTML()),fname("docx"));}).catch(exportFailed);return;}
   if(kind==="epub"){loadScriptOnce(ZIP_SRC).then(function(){
-    var dir=$("doc").getAttribute("dir")||"rtl",title=esc($("fname").textContent);
-    var xhtml='<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="'+(dir==="rtl"?"ar":"en")+'" lang="'+(dir==="rtl"?"ar":"en")+'" dir="'+dir+'"><head><title>'+title+'</title></head><body>'+toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>",""))+"</body></html>";
-    var zip=new window.JSZip();
+    var zip=new window.JSZip(),files=epubFiles();
     zip.file("mimetype","application/epub+zip",{compression:"STORE"});
-    zip.file("META-INF/container.xml",'<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
-    zip.file("OEBPS/content.opf",'<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" dir="'+dir+'"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:matn-'+Date.now()+'</dc:identifier><dc:title>'+title+'</dc:title><dc:language>'+(dir==="rtl"?"ar":"en")+'</dc:language><meta property="dcterms:modified">'+new Date().toISOString().replace(/\.\d+Z/,"Z")+'</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="c1" href="doc.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="'+(dir==="rtl"?"rtl":"ltr")+'"><itemref idref="c1"/></spine></package>');
-    zip.file("OEBPS/nav.xhtml",'<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>nav</title></head><body><nav epub:type="toc"><ol><li><a href="doc.xhtml">'+title+'</a></li></ol></nav></body></html>');
-    zip.file("OEBPS/doc.xhtml",xhtml);
-    zip.generateAsync({type:"blob",mimeType:"application/epub+zip"}).then(function(b){saveBlob(b,fname("epub"));});
-  }).catch(function(){});return;}
+    Object.keys(files).forEach(function(path){zip.file(path,files[path]);});
+    return zip.generateAsync({type:"blob",mimeType:"application/epub+zip"}).then(function(b){saveBlob(b,fname("epub"));});
+  }).catch(exportFailed);return;}
 }
 var exportbtn=$("exportbtn"),exportmenu=$("exportmenu");
 exportbtn.onclick=function(e){e.stopPropagation();var o=exportmenu.classList.toggle("open");exportbtn.setAttribute("aria-expanded",o?"true":"false");};

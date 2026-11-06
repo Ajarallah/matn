@@ -18,7 +18,7 @@ await writeFile(join(root, "typography.md"), "---\ntitle: دليل\n---\n\n# م�
 await writeFile(join(root, "outline.md"), "# دليل طويل\n\n" + ["الإعدادات","التثبيت","البداية","الخطوط","المعادلات","المخططات","الروابط","البحث","التصدير","الطباعة","الأمان","الأداء"].map((name) => `## ${name}\n\nفقرة عن ${name}.\n`).join("\n"));
 await writeFile(join(root, "vault.md"), "# خزنة #مشروع\n\nنص ==مميَّز== هنا.\n\n%%سر لا يظهر%%\n\n> [!faq]- سؤال مطوي\n> جواب.\n\n![[guide#التثبيت]]\n\n![[pixel.png]]\n");
 await writeFile(join(root, "pixel.png"), Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082", "hex"));
-await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n"); 
+await writeFile(join(root, "epub.md"), "# كتاب\n\nفقرة.\n\n---\n\nسطر  \nوسطر ثانٍ.\n\n![صورة](missing.png)\n\n- [ ] مهمة\n\n## الفصل الأول\n\nنص.\n\n## الفصل الثاني & ما بعده\n\nنص.\n"); 
 await writeFile(join(root, "change.md"), "# متغيّر\n\n" + Array.from({ length: 12 }, (_, i) => `## قسم ${i + 1}\n\n${"فقرة عربية للاختبار. ".repeat(20)}\n`).join("\n"));
 await writeFile(join(root, "SUMMARY.md"), "# Summary\n\n- [البداية](README.md)\n  - [الدليل](docs/guide.md#التثبيت)\n- [خارجي](https://example.com)\n");
 const actions = { trash: async () => {}, reveal: async () => {}, openEditor: async () => {} };
@@ -430,16 +430,21 @@ try {
   // <input> came out unclosed and a conforming reader rejected the file outright.
   await reading.goto(`${base}/?dir=${encodeURIComponent(root)}&path=${encodeURIComponent(join(root, "epub.md"))}`);
   await reading.waitForSelector("#doc h1");
-  const chapter = await reading.evaluate(() => {
-    const dir = document.querySelector("#doc").getAttribute("dir") || "rtl";
-    const body = toXhtmlBody(docHTML().split("<body>")[1].replace("</body></html>", ""));
-    return `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" dir="${dir}"><head><title>t</title></head><body>${body}</body></html>`;
-  });
-  assert.equal(await reading.evaluate((xml) => {
-    const parsed = new DOMParser().parseFromString(xml, "application/xhtml+xml");
-    const error = parsed.querySelector("parsererror");
-    return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
-  }, chapter), "", "the EPUB chapter is not well-formed XHTML");
+  const epub = await reading.evaluate(() => epubFiles());
+  const chapter = epub["OEBPS/doc.xhtml"];
+  for (const part of ["OEBPS/doc.xhtml", "OEBPS/nav.xhtml", "OEBPS/content.opf", "META-INF/container.xml"]) {
+    assert.equal(await reading.evaluate(([xml, type]) => {
+      const parsed = new DOMParser().parseFromString(xml, type);
+      const error = parsed.querySelector("parsererror");
+      return error ? error.textContent.replace(/\s+/g, " ").slice(0, 160) : "";
+    }, [epub[part], part.endsWith(".xhtml") ? "application/xhtml+xml" : "application/xml"]), "", `${part} is not well-formed`);
+  }
+  // the book's contents list the document's headings, and its stylesheet is declared and linked
+  const headingIds = await reading.evaluate(() => [...document.querySelectorAll("#doc h1[id],#doc h2[id]")].map((h) => h.id));
+  for (const id of headingIds) assert.ok(epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id}`) || epub["OEBPS/nav.xhtml"].includes(`doc.xhtml#${id.replace(/&/g, "&amp;")}`), `contents miss #${id}`);
+  assert.match(epub["OEBPS/content.opf"], /href="style.css" media-type="text\/css"/);
+  assert.match(chapter, /<link rel="stylesheet"[^>]*href="style.css"/);
+  assert.match(epub["OEBPS/style.css"], /pre\{direction:ltr/);
   assert.match(chapter, /<hr\s*\/>/);
   assert.match(chapter, /<br\s*\/>/);
   assert.match(chapter, /<img[^>]*\/>/);
