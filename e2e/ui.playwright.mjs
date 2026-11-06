@@ -652,8 +652,25 @@ try {
   assert.ok(followed.delivered >= 1);
   await reading.waitForFunction(() => document.querySelector("#doc h1")?.textContent.includes("خزنة"));
 
+  // The English interface carries no Arabic chrome: labels, tooltips, placeholders and
+  // text written before the switch (reading time, relative times) all follow the language.
+  await reading.locator("#gearbtn").click();
+  await reading.locator('[data-lang-val="en"]').click();
+  const arabicLeft = await reading.evaluate(() => {
+    const out = [], ar = /[\u0600-\u06FF]/;
+    document.querySelectorAll("body *").forEach((el) => {
+      if (el.closest("#doc,#files,#recent,#toc,#backlinks,#annotations,#book,#notequote,.toast,.collection-body,script,.margin-notes,[data-lang-val],.sidebar-head strong,#fname") || el.matches("option[value=thmanyah]")) return;
+      for (const a of ["title", "aria-label", "placeholder"]) { const v = el.getAttribute(a); if (v && ar.test(v)) out.push(`${el.id || el.tagName}@${a}: ${v}`); }
+      for (const n of el.childNodes) if (n.nodeType === 3 && ar.test(n.textContent)) out.push(`${el.id || el.tagName}.${el.className}<${el.parentElement?.id || el.parentElement?.className}: ${n.textContent.trim()}`);
+    });
+    return out;
+  });
+  assert.deepEqual(arabicLeft, [], "Arabic text left in the English interface");
+  await reading.locator('[data-lang-val="ar"]').click();
+  await reading.keyboard.press("Escape");
+
   await readingContext.close();
-  console.log("playwright: plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
