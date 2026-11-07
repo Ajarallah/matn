@@ -687,6 +687,14 @@ try {
   assert.ok(group > 0 && quick[group + 1]?.startsWith("quick-item:"), quick.join(" | "));
   assert.doesNotMatch(await start.locator("#quickresults .quick-snippet").first().innerText(), /\]\(|^#/);
   await start.keyboard.press("Escape");
+  // accessibility: the search box is a combobox over a named list; each heading costs one tab stop
+  // (its fold button, named by the section); the copy-link and source-line marks stay off the tab path
+  const a11y = await start.evaluate(() => ({ role: document.getElementById("quickinput").getAttribute("role"), list: document.getElementById("quickresults").getAttribute("aria-label"), fold: document.querySelector("#doc .foldbtn")?.getAttribute("aria-label") || "", offPath: [...document.querySelectorAll("#doc .anchor,#doc .source-link")].every((el) => el.tabIndex === -1), navs: [...document.querySelectorAll("nav")].every((n) => n.getAttribute("aria-label")) }));
+  assert.equal(a11y.role, "combobox");
+  assert.ok(a11y.list);
+  assert.match(a11y.fold, /: \S/, "the fold button names its section");
+  assert.ok(a11y.offPath);
+  assert.ok(a11y.navs, "every navigation landmark has a name");
   // verses quoted between braces are set in ornate brackets; the text keeps its braces
   await start.goto(`${base}/?path=${encodeURIComponent(join(root, "ayah.md"))}`);
   await start.waitForSelector("#doc .ayah");
@@ -726,7 +734,20 @@ try {
   const selected = await touch.evaluate(() => { const w = document.createTreeWalker(document.querySelector("#doc"), NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.textContent.trim().length > 10 && n.parentElement.getBoundingClientRect().top > 200 ? 1 : 3 }), t = w.nextNode(), r = document.createRange(); r.setStart(t, 0); r.setEnd(t, 8); getSelection().removeAllRanges(); getSelection().addRange(r); return r.getBoundingClientRect().bottom; });
   await touch.waitForSelector("#selectiontools.open");
   assert.ok(await touch.locator("#selectiontools").evaluate((el) => el.getBoundingClientRect().top) > selected, "touch toolbar sits below the selection");
+  // a tap opens a diagram full screen, fitted to the phone; Esc closes it
+  await touch.evaluate(() => getSelection().removeAllRanges());
+  await touch.waitForSelector("#doc .mermaid svg");
+  await touch.locator("#doc .mermaid").first().tap();
+  await touch.waitForSelector("#viewer[open] #viewerstage svg");
+  assert.ok(await touch.evaluate(() => document.querySelector("#viewerstage svg").getBoundingClientRect().width <= innerWidth));
+  await touch.keyboard.press("Escape");
+  await touch.waitForFunction(() => !document.getElementById("viewer").open);
   await touchContext.close();
+
+  // highlights download in Readwise's CSV
+  const [readwise] = await Promise.all([reading.waitForEvent("download"), reading.evaluate(() => doExport("readwise"))]);
+  assert.equal(readwise.suggestedFilename(), "matn-readwise.csv");
+  assert.match(await readFile(await readwise.path(), "utf8"), /^\ufeff"Highlight","Title","Author","URL","Note","Location"\r\n"/);
 
   // Notes on every file go to the agent in one hand-off, a section per file
   await reading.evaluate(() => doExport("agentall"));
@@ -756,7 +777,7 @@ try {
   await reading.keyboard.press("Escape");
 
   await readingContext.close();
-  console.log("playwright: Arabic code comments, poems and document numerals, verse brackets, all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
+  console.log("playwright: accessibility names and tab path, figure viewer, Readwise export, Arabic code comments, poems and document numerals, verse brackets, all-files hand-off, legacy Arabic encodings, touch selection toolbar, start screen, grouped quick open, English interface free of Arabic chrome, plan gate with suggestions and revision status, follow, Obsidian embeds and syntax, changes since last read, selection actions, reading modes, folding, document map, RTL sidebar, menus, mobile drawer, reading-surface direction, target sizes, live-reload state, outline filter, shortcut sheet, EPUB well-formedness, clipboard reading, change-jump, and single-file annotations passed");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

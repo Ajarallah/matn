@@ -193,6 +193,12 @@ matn setup codex
 
 Any agent that runs commands can also use `matn review FILE` (with `--gate`, `--json`, `--timeout`) and `matn changes FILE --reader NAME --mark` directly.
 
+**Apps that cannot run commands** (Claude Desktop and other chat apps) reach Matn as an MCP server, with the tools `matn_open`, `matn_review` and `matn_changes`. Add it to the app's MCP configuration:
+
+```json
+{ "mcpServers": { "matn": { "command": "matn", "args": ["mcp"] } } }
+```
+
 ## Open `.md` on double-click
 
 **macOS** — make Matn the default reader for Markdown, in one step:
