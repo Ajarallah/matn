@@ -95,5 +95,18 @@ function workspaceReview(files) {
   return out.join("\n") + "\n";
 }
 
-return { createAnchor, reattach, reviewMarkdown, criticMarkup, workspaceReview };
+// Readwise's bulk CSV import: Highlight is required; Title, Author, URL, Note and Location are
+// optional. Quotes are doubled, every field quoted, so Arabic commas and newlines survive.
+function readwiseCsv(annotations, { author = "" } = {}) {
+  const cell = (value) => '"' + String(value == null ? "" : value).replace(/"/g, '""') + '"';
+  const rows = [["Highlight", "Title", "Author", "URL", "Note", "Location"].map(cell).join(",")];
+  for (const item of annotations || []) {
+    if (!item || !item.quote) continue;
+    const title = String(item.path || "").replace(/^.*\//, "").replace(/\.[^.]+$/, "");
+    rows.push([item.quote, title, author, "", [item.note, item.suggestion ? "Suggested: " + item.suggestion : ""].filter(Boolean).join("\n"), item.heading || ""].map(cell).join(","));
+  }
+  return rows.join("\r\n") + "\r\n";
+}
+
+return { createAnchor, reattach, reviewMarkdown, criticMarkup, workspaceReview, readwiseCsv };
 });

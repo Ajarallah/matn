@@ -192,6 +192,12 @@ matn setup codex
 
 وأي وكيل يشغّل أوامر يستطيع استعمال `matn review FILE` (مع `--gate` و`--json` و`--timeout`) و`matn changes FILE --reader NAME --mark` مباشرة.
 
+
+**التطبيقات التي لا تشغّل أوامر** (Claude Desktop وغيره من تطبيقات المحادثة) تصل إلى متن عبر خادم MCP، بثلاث أدوات: `matn_open` و`matn_review` و`matn_changes`. أضفه إلى إعدادات MCP في التطبيق:
+
+```json
+{ "mcpServers": { "matn": { "command": "matn", "args": ["mcp"] } } }
+```
 ## فتح `.md` بنقرة مزدوجة
 
 **macOS** — اجعل متن القارئ الافتراضي لماركداون بخطوة واحدة:

@@ -24,7 +24,7 @@ async function lastFolder() {
 
 function parseArgs(argv) {
   const o = { port: 4711, host: "127.0.0.1", open: true, target: null, editor: process.env.MATN_EDITOR || "", allowFileActions: false };
-  if (["review", "changes", "last", "agent", "hook", "setup"].includes(argv[0])) { o.command = argv[0]; argv = argv.slice(1); }
+  if (["review", "changes", "last", "agent", "hook", "setup", "mcp"].includes(argv[0])) { o.command = argv[0]; argv = argv.slice(1); }
   o.rest = argv;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -66,6 +66,8 @@ For coding agents:
   matn agent [opts]        show or set: gate on|off, follow on|off,
                            replies save|arabic|off
   matn setup codex         install the Matn skill for Codex (~/.agents/skills)
+  matn mcp                 run as an MCP server over stdio (tools: matn_open,
+                           matn_review, matn_changes) for apps that cannot run commands
   matn hook <name>         Claude Code hook entry point (plan-gate, follow, reply)
 
 Options:
@@ -135,6 +137,13 @@ if (o.command === "agent") {
 if (o.command === "setup") {
   if (o.rest[0] !== "codex") fail("usage: matn setup codex");
   console.log("[matn] installed " + await setupCodex());
+  process.exit(0);
+}
+// Matn as an MCP server over stdio, for chat apps that cannot run commands. stdout is the
+// protocol channel, so nothing else may write to it.
+if (o.command === "mcp") {
+  const { serve } = await import("../src/mcp.mjs");
+  await serve({ version: VERSION });
   process.exit(0);
 }
 if (o.command === "changes") {

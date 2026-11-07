@@ -79,3 +79,17 @@ test("notes from several files hand off as one review, one section per file", as
   assert.match(md, /### 1\. Line 2/);
   assert.doesNotMatch(md, /empty\.md|old/);
 });
+
+test("highlights export in Readwise's CSV, with Arabic, commas, quotes and line breaks intact", async () => {
+  const { default: core } = await import("../src/annotation-core.cjs");
+  const csv = core.readwiseCsv([
+    { quote: "قال: \"الحق\"، والصبر", path: "notes/كتاب.md", note: "سطر أول\nسطر ثان", heading: "الباب الأول" },
+    { quote: "", path: "x.md" },
+    { quote: "Plain", path: "plan.md", suggestion: "Better" }
+  ]);
+  const lines = csv.split("\r\n");
+  assert.equal(lines[0], '"Highlight","Title","Author","URL","Note","Location"');
+  assert.match(csv, /"قال: ""الحق""، والصبر","كتاب","","","سطر أول\nسطر ثان","الباب الأول"/);
+  assert.match(csv, /"Plain","plan","","","Suggested: Better",""/);
+  assert.equal(csv.match(/\r\n/g).length, 3, "the empty highlight is skipped");
+});
